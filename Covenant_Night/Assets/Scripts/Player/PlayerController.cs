@@ -23,7 +23,7 @@ public class PlayerController : MonoBehaviour
     public float crouchNoiseRadius = 0f;
 
     [Header("Footstep Audio")]
-    public AudioSource footstepSource;
+    public AudioSource footstepSource;  // fallback if FootstepAudio component absent
     public float footstepInterval = 0.45f;
 
     // Read by GuardVision to apply wall-press suppression
@@ -31,12 +31,17 @@ public class PlayerController : MonoBehaviour
     public Vector3 Velocity   => _velocity;
 
     CharacterController _cc;
+    FootstepAudio       _footstepAudio;
     Vector3 _velocity;
     Vector3 _moveVelocity;
     float   _footstepTimer;
     bool    _isCrouching;
 
-    void Awake() => _cc = GetComponent<CharacterController>();
+    void Awake()
+    {
+        _cc           = GetComponent<CharacterController>();
+        _footstepAudio = GetComponent<FootstepAudio>();
+    }
 
     void Update()
     {
@@ -103,8 +108,11 @@ public class PlayerController : MonoBehaviour
 
         AudioEventSystem.Emit(transform.position, noiseRadius);
 
-        if (footstepSource != null && !_isCrouching)
-            footstepSource.Play();
+        if (!_isCrouching)
+        {
+            if (_footstepAudio != null) _footstepAudio.TriggerStep();
+            else footstepSource?.Play();
+        }
     }
 
     // Called by PlayerAbilities

@@ -16,6 +16,10 @@ public class ZoneManager : MonoBehaviour
     public Transform jonathan;
     public Transform david;
     public PlayerAbilities abilities;
+    public DavidCompanion  davidCompanion;
+
+    [Header("Story Beats (one per zone; shown before loading)")]
+    public StoryBeatData[] zoneEntryBeats;
 
     [Header("Transition")]
     public CanvasGroup fadePanel;
@@ -62,6 +66,15 @@ public class ZoneManager : MonoBehaviour
             yield return SceneManager.UnloadSceneAsync(_loadedZoneScene);
         }
 
+        // Show story panels for the upcoming zone (skip on checkpoint restart)
+        if (!restoreCheckpoint &&
+            zoneEntryBeats != null && index < zoneEntryBeats.Length &&
+            zoneEntryBeats[index] != null &&
+            StoryPanelController.Instance != null)
+        {
+            yield return StartCoroutine(StoryPanelController.Instance.Show(zoneEntryBeats[index].beats));
+        }
+
         yield return StartCoroutine(LoadZone(index, restoreCheckpoint));
 
         yield return StartCoroutine(Fade(0f));
@@ -80,7 +93,13 @@ public class ZoneManager : MonoBehaviour
         if (restoreCheckpoint)
             RestoreFromCheckpoint();
         else
+        {
+            abilities.ResetForZone();   // stone count back to 3 before saving
             SaveCheckpoint();
+        }
+
+        davidCompanion?.ResetForZone();
+        HUD.Instance?.ResetForZone();
 
         ZoneNameCard.Instance?.Show(sceneName.Replace("_", " "));
         HUD.Instance?.UpdateZone(index + 1, zoneSceneNames.Length);
