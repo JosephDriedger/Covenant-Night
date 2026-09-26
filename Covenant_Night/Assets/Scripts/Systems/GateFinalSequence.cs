@@ -60,7 +60,7 @@ public class GateFinalSequence : MonoBehaviour
 
         if (AlarmSystem.Instance != null && AlarmSystem.Instance.IsAlarmed)
         {
-            Say("The alarm is up — the commander will not listen!");
+            Say("The commander will not listen while the alarm is sounding.");
             return;
         }
 

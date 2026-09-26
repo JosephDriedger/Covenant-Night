@@ -53,16 +53,16 @@ public class FailStateHandler : MonoBehaviour
         switch (reason)
         {
             case FailReason.DavidCaptured:
-                title = "David Seized";
-                line  = "Saul's guards have him.\nLeave David waiting in cover when you scout ahead.";
+                title = "David Is Seized";
+                line  = "The guards have taken David.\nNext time, leave him waiting in cover while you scout ahead.";
                 break;
             case FailReason.JonathanCaptured:
                 title = "Caught";
-                line  = "Jonathan is taken.";
+                line  = "The guards have taken Jonathan.";
                 break;
             default:
                 title = "The City Closes In";
-                line  = "The alarm rings and every exit is barred.\nHide until it passes.";
+                line  = "The alarm has sounded and every exit is barred.\nFind a place to hide until it passes.";
                 break;
         }
 

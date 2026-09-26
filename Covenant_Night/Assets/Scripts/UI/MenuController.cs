@@ -263,7 +263,7 @@ public class MenuController : MonoBehaviour
             _pending = b;
             var label = b.GetComponentInChildren<TMP_Text>();
             _pendingText = label.text;
-            label.text = "Click again to confirm";
+            label.text = "Click Again to Confirm";
         });
     }
 
@@ -276,9 +276,9 @@ public class MenuController : MonoBehaviour
 
     void RefreshSettingsLabels()
     {
-        volumeLabel.text = $"Volume   {Mathf.RoundToInt(GameSettings.Volume * 100f)}%";
-        lookLabel.text = $"Look speed   {GameSettings.LookScale:0.0}x";
-        invertBtn.GetComponentInChildren<TMP_Text>().text = $"Invert look Y:  {(GameSettings.InvertY ? "On" : "Off")}";
-        fullscreenBtn.GetComponentInChildren<TMP_Text>().text = $"Fullscreen:  {(GameSettings.Fullscreen ? "On" : "Off")}";
+        volumeLabel.text = $"Volume: {Mathf.RoundToInt(GameSettings.Volume * 100f)}%";
+        lookLabel.text = $"Look Speed: {GameSettings.LookScale:0.0}x";
+        invertBtn.GetComponentInChildren<TMP_Text>().text = $"Invert Look Y: {(GameSettings.InvertY ? "On" : "Off")}";
+        fullscreenBtn.GetComponentInChildren<TMP_Text>().text = $"Fullscreen: {(GameSettings.Fullscreen ? "On" : "Off")}";
     }
 }

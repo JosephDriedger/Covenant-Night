@@ -274,7 +274,7 @@ public static class PersistentBuilder
         hud.zoneText = MakeText(t, "ZoneText", "Zone 1 / 5", 34, Parchment, new Vector2(0, 1), new Vector2(0, 1), new Vector2(40, -30), new Vector2(600, 50), TextAlignmentOptions.TopLeft);
         hud.stoneCountText = MakeText(t, "StoneCount", "Stones: 3", 34, Parchment, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, -30), new Vector2(500, 50), TextAlignmentOptions.TopRight);
         hud.davidModeText = MakeText(t, "DavidMode", "David: Follow", 32, new Color(0.7f, 0.9f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 95), new Vector2(600, 46), TextAlignmentOptions.BottomLeft);
-        hud.harpText = MakeText(t, "HarpText", "Harp: ready", 30, Gold, new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 50), new Vector2(600, 42), TextAlignmentOptions.BottomLeft);
+        hud.harpText = MakeText(t, "HarpText", "Harp: Ready", 30, Gold, new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 50), new Vector2(600, 42), TextAlignmentOptions.BottomLeft);
 
         // alarm banner
         var alarm = MakeImage(t, "AlarmTimer", new Color(0.35f, 0.02f, 0.02f, 0.75f));
@@ -282,7 +282,7 @@ public static class PersistentBuilder
         art.anchorMin = art.anchorMax = new Vector2(0.5f, 1); art.pivot = new Vector2(0.5f, 1);
         art.anchoredPosition = new Vector2(0, -28); art.sizeDelta = new Vector2(620, 96);
         hud.alarmTimerRoot = alarm.gameObject;
-        hud.alarmTimerText = MakeText(alarm.transform, "AlarmText", "HIDE: 30", 60, new Color(1f, 0.85f, 0.8f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(600, 90), TextAlignmentOptions.Center, FontStyles.Bold);
+        hud.alarmTimerText = MakeText(alarm.transform, "AlarmText", "Hide: 30", 60, new Color(1f, 0.85f, 0.8f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(600, 90), TextAlignmentOptions.Center, FontStyles.Bold);
 
         hud.messageText = MakeText(t, "Message", "", 36, Gold, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 210), new Vector2(1500, 60), TextAlignmentOptions.Center);
 
@@ -315,7 +315,7 @@ public static class PersistentBuilder
         var heading = MakeText(t, "Heading", "", 32, Gold, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -618), new Vector2(1400, 46), TextAlignmentOptions.Center, FontStyles.Bold);
         var body = MakeText(t, "Body", "", 31, Parchment, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -672), new Vector2(1420, 300), TextAlignmentOptions.Top);
         body.lineSpacing = 6;
-        var prompt = MakeText(t, "ContinuePrompt", "press any key or button  >", 24, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(600, 36), TextAlignmentOptions.Center);
+        var prompt = MakeText(t, "ContinuePrompt", "Press Any Key or Button", 24, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(600, 36), TextAlignmentOptions.Center);
 
         ctl.panelGroup = group;
         ctl.headingText = heading;
@@ -476,7 +476,7 @@ public static class PersistentBuilder
         var shade = MakeImage(title, "Shade", new Color(0.01f, 0.01f, 0.03f, 0.62f));
         Stretch(shade.rectTransform);
         MakeText(title, "Name", "COVENANT NIGHT", 140, Gold, mid, mid, new Vector2(0, 280), new Vector2(1700, 180), TextAlignmentOptions.Center, FontStyles.Bold);
-        MakeText(title, "Verse", "1 Samuel 19-20", 40, Parchment, mid, mid, new Vector2(0, 170), new Vector2(1200, 60), TextAlignmentOptions.Center);
+        MakeText(title, "Verse", "1 Samuel 19 and 20", 40, Parchment, mid, mid, new Vector2(0, 170), new Vector2(1200, 60), TextAlignmentOptions.Center);
         var bSize = new Vector2(560, 72);
         ctl.playBtn          = MakeButton(title, "Play",     "Play",     new Vector2(0, 30),   bSize);
         ctl.titleControlsBtn = MakeButton(title, "Controls", "Controls", new Vector2(0, -58),  bSize);
@@ -505,15 +505,15 @@ public static class PersistentBuilder
         MakeColumn(controls, "KeyboardHeader", "Keyboard & Mouse", 30, Gold, -380, 375, 620, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "GamepadHeader", "Gamepad", 30, Gold, 250, 375, 620, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "Actions",
-            "Move\nLook\nSneak  (silent)\nSprint  (loud)\nShadow-step at a wall\nThrow a stone\nDavid: follow, wait, run\nHarp\nPause",
+            "Move\nLook\nSneak (Silent)\nSprint (Loud)\nShadow-Step at a Wall\nThrow a Stone\nDavid: Follow, Wait, Run\nHarp\nPause",
             27, Parchment, -880, 325, 480, 420);
         MakeColumn(controls, "Keyboard",
-            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft click\n1, 2, 3    (E swaps follow / wait)\nH\nEsc",
+            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft Click\n1, 2, 3 (E Toggles Follow and Wait)\nH\nEsc",
             27, Parchment, -380, 325, 620, 420);
         MakeColumn(controls, "Gamepad",
-            "Left stick\nRight stick\nHold B / Circle\nClick L3\nHold A / Cross\nX / Square\nD-pad Left, Right, Down    (Y / Triangle swaps)\nD-pad Up\nStart",
+            "Left Stick\nRight Stick\nHold B / Circle\nClick L3\nHold A / Cross\nX / Square\nD-Pad Left, Right, Down (Y Toggles)\nD-Pad Up\nStart",
             27, Parchment, 250, 325, 620, 420);
-        MakeColumn(controls, "NotesHeader", "Field notes", 32, Gold, -880, -85, 800, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "NotesHeader", "Field Notes", 32, Gold, -880, -85, 800, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "Notes",
             "Guard cones: green sees nothing, amber is suspicious, red is chasing you.\n" +
             "Sneak near guards and dogs. Sprinting and thrown stones can be heard from far off.\n" +
@@ -554,12 +554,12 @@ public static class PersistentBuilder
         MakeText(t, "Title", "COVENANT NIGHT", 120, Gold, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -110), new Vector2(1700, 160), TextAlignmentOptions.Center, FontStyles.Bold);
         MakeText(t, "Sub", "David is beyond the gate. The covenant holds.", 40, Parchment, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -290), new Vector2(1500, 60), TextAlignmentOptions.Center);
         MakeText(t, "Body",
-            "A stealth game of loyalty, shadow, and sacrifice\nBased on 1 Samuel 19-20\n\n" +
+            "A stealth game of loyalty, shadow, and sacrifice\nBased on 1 Samuel 19 and 20\n\n" +
             "Design, code, sound and illustration by one person.\n" +
             "See CREDITS.txt for attribution.\n\n" +
             "Thank you for playing.",
             32, new Color(0.85f, 0.83f, 0.78f), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -400), new Vector2(1500, 420), TextAlignmentOptions.Top);
-        MakeText(t, "Prompt", "press any key to play again", 28, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(900, 40), TextAlignmentOptions.Center);
+        MakeText(t, "Prompt", "Press Any Key to Play Again", 28, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(900, 40), TextAlignmentOptions.Center);
 
         fail.winPanel = group;
         canvas.SetActive(false);

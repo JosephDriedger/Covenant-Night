@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
   - heading: Potter's Alley
-    text: Sleeping dogs wake the whole quarter if you stray near them. The rooftops
-      offer a way across, but the sky is open.
+    text: Dogs sleep in their pens along the narrow alley, and they will wake the
+      whole quarter if Jonathan strays too close. The rooftops offer another way
+      across, but there is no cover under the open sky.
     sprite: {fileID: 21300000, guid: ad52a5c81cfd0e14cbebeb1607d7b1c7, type: 3}

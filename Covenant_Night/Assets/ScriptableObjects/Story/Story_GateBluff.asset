@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
   - heading: The Bluff
-    text: '"By the king''s order, no one leaves."
+    text: '"By order of the king, no one leaves Gibeah tonight," the commander says.
 
 
-      Jonathan lifts his hand.
-      His father''s signet ring catches the flame. The commander steps aside, and
-      the gate groans open.'
+      Jonathan
+      raises his hand, and his father''s signet ring catches the torchlight. The
+      commander studies it, then steps aside, and the great gate groans open.'
     sprite: {fileID: 21300000, guid: 5d9970ad33f1ff6499e6b31fb9a75ab3, type: 3}

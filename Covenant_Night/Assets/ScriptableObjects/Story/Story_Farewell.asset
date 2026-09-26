@@ -14,5 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
   - heading: The Farewell
-    text: David passes through into the dark hills. He turns once.
+    text: 'David passes through the gate and into the dark hills. He turns back once.
+
+
+      Jonathan
+      stays at the threshold and watches until his friend is out of sight.'
     sprite: {fileID: 21300000, guid: d6494967ad5097145b156c1ae6ffbc83, type: 3}

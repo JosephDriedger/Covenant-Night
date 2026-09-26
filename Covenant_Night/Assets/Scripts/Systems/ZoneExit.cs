@@ -60,7 +60,7 @@ public class ZoneExit : MonoBehaviour
 
         if (lockDuringAlarm && AlarmSystem.Instance != null && AlarmSystem.Instance.IsAlarmed)
         {
-            Say("The way is barred — the alarm is up!");
+            Say("The way is barred while the alarm is sounding.");
             return;
         }
 
@@ -71,7 +71,7 @@ public class ZoneExit : MonoBehaviour
             if (david != null && pc != null &&
                 Vector3.Distance(david.transform.position, pc.transform.position) > davidMaxDistance)
             {
-                Say("Wait for David — he must come with you.");
+                Say("Wait for David. He must come with you.");
                 return;
             }
         }

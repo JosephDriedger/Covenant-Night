@@ -56,7 +56,7 @@ public class HUD : MonoBehaviour
 
         // Hidden indicator while the alarm countdown is held
         if (alarmTimerRoot != null && alarmTimerRoot.activeSelf && AlarmSystem.Instance != null && AlarmSystem.Instance.PlayerHidden)
-            alarmTimerText.text = "HIDDEN — hold still";
+            alarmTimerText.text = "Hidden: Stay Still";
     }
 
     public void UpdateStoneCount(int count)
@@ -77,7 +77,7 @@ public class HUD : MonoBehaviour
     public void UpdateAlarmTimer(float seconds)
     {
         if (alarmTimerText != null && !(AlarmSystem.Instance != null && AlarmSystem.Instance.PlayerHidden))
-            alarmTimerText.text = $"HIDE: {Mathf.CeilToInt(Mathf.Max(0f, seconds))}";
+            alarmTimerText.text = $"Hide: {Mathf.CeilToInt(Mathf.Max(0f, seconds))}";
     }
 
     public void ShowHarpUsed()
@@ -91,7 +91,7 @@ public class HUD : MonoBehaviour
         if (harpUsedIndicator != null) harpUsedIndicator.SetActive(_harpUsed);
         if (harpText != null)
         {
-            harpText.text = _harpUsed ? "Harp: used" : "Harp: ready";
+            harpText.text = _harpUsed ? "Harp: Used" : "Harp: Ready";
             harpText.color = _harpUsed ? new Color(0.6f, 0.6f, 0.6f) : new Color(1f, 0.9f, 0.55f);
         }
     }

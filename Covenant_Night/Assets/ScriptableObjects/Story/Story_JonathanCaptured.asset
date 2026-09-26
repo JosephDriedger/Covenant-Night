@@ -14,5 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
   - heading: Before the King
-    text: Jonathan stands before Saul. He says nothing.
+    text: 'Saul''s guards drag Jonathan before the throne. "Where is the son of Jesse?"
+      the king demands.
+
+
+      Jonathan lifts his chin and says nothing.'
     sprite: {fileID: 21300000, guid: 25a3fe8e76d12934da1f6c93f6bd8e87, type: 3}

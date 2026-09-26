@@ -70,48 +70,51 @@ public static class StoryBuilder
 
         s.intro = Make("Story_Intro",
             B("The Warning",
-              "\"The king's men are gathering, my lord. They come for David at dawn.\"\n\n" +
-              "You choose the covenant.", warning),
+              "Before midnight, a servant wakes Jonathan. \"The king's men are gathering,\" he whispers. \"They mean to take David at dawn.\"\n\n" +
+              "Jonathan has sworn a covenant with David, and he intends to keep it.", warning),
             B("The Plan",
-              "\"The eastern gate. Before the sun.\"\n\n" +
+              "Jonathan hurries to David's room and wakes him. \"We leave by the eastern gate,\" he says, \"before the sun is up.\"\n\n" +
               "David takes up his harp and follows.", wake),
-            B("Slip Past the Guards",
-              "A guard's lantern cone shows what he sees: green, nothing. Amber, a doubt. Red, and he gives chase.\n\n" +
-              "Walk softly. Keep to the shadows and out of torchlight.", cones),
-            B("Lead David Out",
-              "A stone thrown far off draws a guard from his post.\n\n" +
-              "Leave David waiting in cover while you scout, then bring him on to the golden marker.", leadDav));
+            B("Slipping Past the Guards",
+              "Jonathan has trained beside these men and knows how they watch. The glow of a guard's lantern shows what he can see. " +
+              "Green means he sees nothing, amber means he suspects something, and red means he is coming.\n\n" +
+              "So Jonathan keeps to the shadows, stays out of torchlight and walks softly.", cones),
+            B("Leading David Out",
+              "A stone thrown into the dark will draw a guard away from his post.\n\n" +
+              "David waits in cover while Jonathan scouts ahead. When the way is clear, Jonathan brings him on to the next golden marker.", leadDav));
 
         s.zone2 = Make("Story_Zone2",
             B("The Market Quarter",
-              "Torches and open ground. Slip between the stalls and carts, and through the dark between the fires.", market));
+              "Beyond the palace wall, the market square lies open under torchlight. Jonathan finds cover behind the stalls and carts, and keeps to the dark between the fires.", market));
         s.zone3 = Make("Story_Zone3",
             B("Potter's Alley",
-              "Sleeping dogs wake the whole quarter if you stray near them. The rooftops offer a way across, but the sky is open.", alley));
+              "Dogs sleep in their pens along the narrow alley, and they will wake the whole quarter if Jonathan strays too close. The rooftops offer another way across, but there is no cover under the open sky.", alley));
         s.zone4 = Make("Story_Zone4",
             B("Well Square",
-              "Sentries watch from the rooftops, their sight long and unbroken. Go under a roof, or sneak behind the low terrace wall.", well));
+              "Sentries watch from the rooftops, and very little escapes them. Jonathan can pass beneath the roofs of the houses, or slip along the terrace behind its low wall.", well));
         s.zone5 = Make("Story_Zone5",
             B("The Eastern Gate",
-              "The commander is Saul's man. No one sneaks past him. Bring David to the gate, and show him the one thing he dares not refuse.", approach));
+              "The gate commander serves Saul, and no one sneaks past him. Jonathan must bring David to the gate and show the commander the one thing he dares not refuse.", approach));
 
         s.gateBluff = Make("Story_GateBluff",
             B("The Bluff",
-              "\"By the king's order, no one leaves.\"\n\n" +
-              "Jonathan lifts his hand. His father's signet ring catches the flame. The commander steps aside, and the gate groans open.", bluff));
+              "\"By order of the king, no one leaves Gibeah tonight,\" the commander says.\n\n" +
+              "Jonathan raises his hand, and his father's signet ring catches the torchlight. The commander studies it, then steps aside, and the great gate groans open.", bluff));
 
         s.farewell = Make("Story_Farewell",
             B("The Farewell",
-              "David passes through into the dark hills. He turns once.", farewell));
+              "David passes through the gate and into the dark hills. He turns back once.\n\n" +
+              "Jonathan stays at the threshold and watches until his friend is out of sight.", farewell));
 
         s.epilogue = Make("Story_Epilogue",
             B("Epilogue",
               "\"Go in peace. We have sworn friendship with each other in the name of the Lord. The Lord is witness between you and me forever.\"\n\n" +
-              "- 1 Samuel 20:42", empty));
+              "1 Samuel 20:42", empty));
 
         s.jonathanCaptured = Make("Story_JonathanCaptured",
             B("Before the King",
-              "Jonathan stands before Saul. He says nothing.", throne));
+              "Saul's guards drag Jonathan before the throne. \"Where is the son of Jesse?\" the king demands.\n\n" +
+              "Jonathan lifts his chin and says nothing.", throne));
 
         AssetDatabase.SaveAssets();
         return s;
