@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Place on a trigger collider (alcove, shadow, hay pile, etc.).
@@ -6,6 +7,13 @@ using UnityEngine;
 // the alarm stands down (AlarmSystem). Replaces the old Time.timeScale = 0 hack.
 public class HidingSpot : MonoBehaviour
 {
+    public static readonly List<HidingSpot> All = new List<HidingSpot>();
+
+    public Vector3 Center { get { var c = GetComponent<Collider>(); return c != null ? c.bounds.center : transform.position; } }
+
+    void OnEnable()  => All.Add(this);
+    void OnDisable() => All.Remove(this);
+
     [Tooltip("Optional glow that pulses while an alarm is active, pointing the player to safety.")]
     public Light markerLight;
     public float idleIntensity  = 0.4f;

@@ -43,7 +43,7 @@ public class AlarmSystem : MonoBehaviour
         if (PlayerHidden)
         {
             _hiddenTimer += Time.deltaTime;
-            if (_hiddenTimer >= standDownDelay) StandDown();
+            if (_hiddenTimer >= standDownDelay * GameDifficulty.Tuning.standDown) StandDown();
             return;
         }
 
@@ -62,7 +62,7 @@ public class AlarmSystem : MonoBehaviour
         if (!IsAlarmed)
         {
             IsAlarmed = true;
-            TimeRemaining = hideWindow;
+            TimeRemaining = hideWindow * GameDifficulty.Tuning.hideWindow;
             _hiddenTimer = 0f;
             OnAlarmRaised?.Invoke();
             HUD.Instance?.ShowAlarmTimer(true);

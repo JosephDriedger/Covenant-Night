@@ -24,7 +24,9 @@ public class PlayerAbilities : MonoBehaviour
     bool   _wallPressed;
     Camera _cam;
 
-    void Start() => SetStoneCount(stonesPerZone);
+    int StonesThisZone => Mathf.Max(1, stonesPerZone + GameDifficulty.Tuning.stoneDelta);
+
+    void Start() => SetStoneCount(StonesThisZone);
 
     void Update()
     {
@@ -179,7 +181,7 @@ public class PlayerAbilities : MonoBehaviour
 
     public void ResetForZone()
     {
-        SetStoneCount(stonesPerZone);
+        SetStoneCount(StonesThisZone);
         _wallPressed = false;
         controller.SetWallPressed(false);
     }

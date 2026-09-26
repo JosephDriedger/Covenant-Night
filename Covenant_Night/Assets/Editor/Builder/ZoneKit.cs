@@ -438,13 +438,15 @@ public class ZoneKit
         return go.GetComponent<ZoneExit>();
     }
 
-    public ZoneEntry Entry(string display, string subtitle, Vector2 jonathanXZ, float yaw, Vector2[] runWaypoints)
+    public ZoneEntry Entry(string display, string subtitle, Vector2 jonathanXZ, float yaw, Vector2[] runWaypoints, float difficulty = 1f, float ambient = 0.35f)
     {
         var go = new GameObject("ZoneEntry");
         go.transform.SetParent(root, false);
         entry = go.AddComponent<ZoneEntry>();
         entry.displayName = display;
         entry.subtitle = subtitle;
+        entry.difficulty = difficulty;
+        entry.ambientVisibility = ambient;
 
         Vector3 jp = new Vector3(jonathanXZ.x, 0.05f, jonathanXZ.y);
         Quaternion rot = Quaternion.Euler(0, yaw, 0);

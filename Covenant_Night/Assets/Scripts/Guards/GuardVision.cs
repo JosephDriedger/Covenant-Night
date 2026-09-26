@@ -37,6 +37,10 @@ public class GuardVision : MonoBehaviour
     public Transform LastSpottedTarget { get; private set; }
     public Vector3 LastSeenPosition    { get; private set; }
     public float TimeSinceSeen         { get; private set; } = 999f;
+    // Base values scaled by the chosen difficulty.
+    public float EffectiveRange => maxRange * GameDifficulty.Tuning.vision;
+    public float EffectiveCone  => Mathf.Min(170f, coneAngle * GameDifficulty.Tuning.cone);
+
     public bool  SeesTarget            { get; private set; }
     public bool  SeesPlayer            { get; private set; }   // per target: a hidden target counts as seen only within hiddenNoticeRange
     public bool  SeesDavid             { get; private set; }
@@ -75,7 +79,7 @@ public class GuardVision : MonoBehaviour
             TimeSinceSeen     = 0f;
 
             float vis  = Torch.VisibilityAt(pc.transform.position);
-            float gain = awarenessRate * gainMultiplier
+            float gain = awarenessRate * gainMultiplier * GameDifficulty.Tuning.gain
                          * Mathf.Lerp(1.6f, 0.4f, Mathf.Clamp01(dist / Mathf.Max(0.01f, range)))
                          * Mathf.Lerp(0.35f, 1f, vis);
             if (pc.IsWallPressed) gain *= 0.5f;
@@ -102,7 +106,7 @@ public class GuardVision : MonoBehaviour
         if (!seen)
         {
             TimeSinceSeen += dt;
-            Awareness = Mathf.Max(0f, Awareness - awarenessDecay * dt);
+            Awareness = Mathf.Max(0f, Awareness - awarenessDecay * GameDifficulty.Tuning.decay * dt);
         }
     }
 
@@ -135,7 +139,7 @@ public class GuardVision : MonoBehaviour
 
         // Effective range: torch light widens it, shadow / crouching shrink it
         float vis = Torch.VisibilityAt(t.position);
-        effectiveRange = maxRange * Mathf.Lerp(0.6f, 1f, vis) * (crouching ? 0.75f : 1f) * (sprinting ? 1.15f : 1f);
+        effectiveRange = EffectiveRange * Mathf.Lerp(0.6f, 1f, vis) * (crouching ? 0.75f : 1f) * (sprinting ? 1.15f : 1f);
         if (hidden)           effectiveRange = hiddenNoticeRange;
         else if (wallPressedStill) effectiveRange = Mathf.Min(effectiveRange, wallPressRange);
 
@@ -146,7 +150,7 @@ public class GuardVision : MonoBehaviour
         Vector3 f = eyePoint.forward; f.y = 0f;
         if (distance > closeNoticeRange)
         {
-            if (h.sqrMagnitude > 0.0001f && f.sqrMagnitude > 0.0001f && Vector3.Angle(f, h) > coneAngle * 0.5f) return false;
+            if (h.sqrMagnitude > 0.0001f && f.sqrMagnitude > 0.0001f && Vector3.Angle(f, h) > EffectiveCone * 0.5f) return false;
             float vAng = Mathf.Atan2(Mathf.Abs(flat.y), h.magnitude) * Mathf.Rad2Deg;
             if (vAng > verticalLimit) return false;
         }

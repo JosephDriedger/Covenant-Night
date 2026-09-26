@@ -78,8 +78,8 @@ public class GuardConeVisual : MonoBehaviour
         if (fwd.sqrMagnitude < 0.0001f) return;
         fwd.Normalize();
 
-        float half = vision.coneAngle * 0.5f;
-        float range = vision.maxRange;
+        float half = vision.EffectiveCone * 0.5f;
+        float range = vision.EffectiveRange;
         int sightMask = GameLayers.SightBlockers;
         int groundMask = GameLayers.Solid;
 

@@ -66,6 +66,8 @@ public class FailStateHandler : MonoBehaviour
                 break;
         }
 
+        if (GameDifficulty.Hardcore) line += "\nHardcore: the night begins again from the start.";
+
         if (failTitle != null) failTitle.text = title;
         if (failReasonText != null) failReasonText.text = line;
 
@@ -100,7 +102,8 @@ public class FailStateHandler : MonoBehaviour
             failPanel.gameObject.SetActive(false);
         }
 
-        ZoneManager.Instance?.RestartCurrentZone();
+        if (GameDifficulty.Hardcore) ZoneManager.Instance?.RestartRun();
+        else ZoneManager.Instance?.RestartCurrentZone();
     }
 
     IEnumerator ShowWinSequence()

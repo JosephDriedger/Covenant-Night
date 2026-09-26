@@ -66,6 +66,12 @@ public class GuardFSM : MonoBehaviour
     float   _sentryT;
     float   _repathTimer;
     bool    _scanning;          // alarmed guard searching at the last known position
+
+    // Hardcore guards check the hiding spots near where they lost you.
+    readonly List<Vector3> _search = new List<Vector3>();
+    bool    _searchBuilt;
+    bool    _hasSearchDest;
+    Vector3 _searchDest;
     float   _commanderTimer;
     bool    _pausedApplied;
 
@@ -137,6 +143,9 @@ public class GuardFSM : MonoBehaviour
         _arrived = false;
         _lookTimer = 0f;
         _scanning = false;
+        _search.Clear();
+        _searchBuilt = false;
+        _hasSearchDest = false;
         indicator?.SetState(next);
 
         if (AgentReady) _agent.updateRotation = true;
@@ -144,7 +153,7 @@ public class GuardFSM : MonoBehaviour
         switch (next)
         {
             case GuardState.Unaware:
-                if (AgentReady) { _agent.speed = patrolSpeed; _agent.isStopped = false; }
+                if (AgentReady) { _agent.speed = patrolSpeed * GameDifficulty.Tuning.speed; _agent.isStopped = false; }
                 _needDestination = true;
                 _waiting = false;
                 if (patrolPath != null && patrolPath.Length > 0 && prev != GuardState.Unaware)
@@ -154,14 +163,14 @@ public class GuardFSM : MonoBehaviour
             case GuardState.Suspicious:
                 if (AgentReady)
                 {
-                    _agent.speed = investigateSpeed;
+                    _agent.speed = investigateSpeed * GameDifficulty.Tuning.speed;
                     _agent.isStopped = false;
                     _agent.SetDestination(_investigateTarget);
                 }
                 break;
 
             case GuardState.Alarmed:
-                if (AgentReady) { _agent.speed = alarmSpeed; _agent.isStopped = false; }
+                if (AgentReady) { _agent.speed = alarmSpeed * GameDifficulty.Tuning.speed; _agent.isStopped = false; }
                 _repathTimer = 0f;
                 break;
         }
@@ -188,7 +197,7 @@ public class GuardFSM : MonoBehaviour
 
     void UpdateSuspicious()
     {
-        if (_stateTimer >= investigateTimeout) { SetState(GuardState.Unaware); return; }
+        if (_stateTimer >= investigateTimeout * GameDifficulty.Tuning.investigate) { SetState(GuardState.Unaware); return; }
 
         if (guardType == GuardType.Sentry)
         {
@@ -216,7 +225,46 @@ public class GuardFSM : MonoBehaviour
         _lookTimer += Time.deltaTime;
         transform.rotation = Quaternion.Euler(0f, _lookBaseYaw + Mathf.Sin(_lookTimer * 2.2f) * 75f, 0f);
         if (_lookTimer >= lookAroundTime && Awareness < 0.2f)
+        {
+            // Hardcore: check the hiding spots near the point before giving up (at most three legs)
+            if (GameDifficulty.Tuning.smart)
+            {
+                if (!_searchBuilt) { BuildSearch(_investigateTarget); _searchBuilt = true; }
+                if (NextSearch(out Vector3 spot))
+                {
+                    _investigateTarget = spot;
+                    _arrived = false;
+                    _lookTimer = 0f;
+                    _stateTimer = 0f;
+                    _agent.updateRotation = true;
+                    _agent.SetDestination(spot);
+                    return;
+                }
+            }
             SetState(GuardState.Unaware);
+        }
+    }
+
+    // Hiding spots within reach of a point, nearest first (at most three).
+    void BuildSearch(Vector3 around)
+    {
+        _search.Clear();
+        foreach (var h in HidingSpot.All)
+            if (h != null && Vector3.Distance(h.Center, around) < 10f) _search.Add(h.Center);
+        _search.Sort((a, b) => Vector3.Distance(a, around).CompareTo(Vector3.Distance(b, around)));
+        if (_search.Count > 3) _search.RemoveRange(3, _search.Count - 3);
+    }
+
+    bool NextSearch(out Vector3 spot)
+    {
+        spot = default;
+        while (_search.Count > 0)
+        {
+            Vector3 c = _search[0];
+            _search.RemoveAt(0);
+            if (NavMesh.SamplePosition(c, out var hit, 2f, NavMesh.AllAreas)) { spot = hit.position; return true; }
+        }
+        return false;
     }
 
     void UpdateAlarmed()
@@ -226,7 +274,7 @@ public class GuardFSM : MonoBehaviour
 
         if (guardType == GuardType.Sentry)
         {
-            FaceTowards(_vision.TimeSinceSeen < 2f ? _vision.LastSeenPosition : _alarmPosition, 120f);
+            FaceTowards(_vision.TimeSinceSeen < 2f * GameDifficulty.Tuning.memory ? _vision.LastSeenPosition : _alarmPosition, 120f);
             return;
         }
 
@@ -236,7 +284,8 @@ public class GuardFSM : MonoBehaviour
         if (_repathTimer <= 0f)
         {
             _repathTimer = 0.2f;
-            Vector3 dest = _vision.TimeSinceSeen < 4f ? _vision.LastSeenPosition : _alarmPosition;
+            Vector3 dest = _vision.TimeSinceSeen < 4f * GameDifficulty.Tuning.memory ? _vision.LastSeenPosition
+                         : _hasSearchDest ? _searchDest : _alarmPosition;
             _agent.SetDestination(dest);
         }
 
@@ -253,6 +302,21 @@ public class GuardFSM : MonoBehaviour
             }
             _lookTimer += Time.deltaTime;
             transform.rotation = Quaternion.Euler(0f, _lookBaseYaw + Mathf.Sin(_lookTimer * 2.2f) * 75f, 0f);
+
+            // Hardcore: after a look around, go and check the hiding spots nearby
+            if (GameDifficulty.Tuning.smart && _lookTimer >= 2.5f)
+            {
+                if (!_searchBuilt) { BuildSearch(_hasSearchDest ? _searchDest : _alarmPosition); _searchBuilt = true; }
+                if (NextSearch(out Vector3 spot))
+                {
+                    _searchDest = spot;
+                    _hasSearchDest = true;
+                    _repathTimer = 0f;
+                    _lookTimer = 0f;
+                    _scanning = false;
+                    _agent.updateRotation = true;
+                }
+            }
         }
         else if (_scanning)
         {
@@ -279,7 +343,7 @@ public class GuardFSM : MonoBehaviour
     bool Near(Vector3 p)
     {
         Vector3 d = p - transform.position;
-        return Mathf.Abs(d.y) < 1.6f && new Vector2(d.x, d.z).magnitude <= catchDistance;
+        return Mathf.Abs(d.y) < 1.6f && new Vector2(d.x, d.z).magnitude <= catchDistance * GameDifficulty.Tuning.catchDistance;
     }
 
     // ── Patrol / Sentry Helpers ─────────────────────────────────────────────
@@ -326,7 +390,7 @@ public class GuardFSM : MonoBehaviour
 
     void DoSentryRotate()
     {
-        _sentryT += Time.deltaTime * sentryRotateSpeed;
+        _sentryT += Time.deltaTime * sentryRotateSpeed * GameDifficulty.Tuning.speed;
         float angle = _sentryBaseAngle + Mathf.Sin(_sentryT * Mathf.Deg2Rad) * (sentryArcDegrees * 0.5f);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0f, angle, 0f), 60f * Time.deltaTime);
     }

@@ -36,7 +36,9 @@ public class Torch : MonoBehaviour
         if (flame != null) flame.localScale = _baseFlameScale * (1f + n * 0.5f);
     }
 
-    public const float AmbientVisibility = 0.35f;   // moonlight only
+    // Moonlight only. The night grows brighter zone by zone as dawn approaches (set by ZoneManager from the zone's entry),
+    // so later zones are easier to be seen in.
+    public static float AmbientVisibility = 0.35f;
 
     // 0.35 (deep shadow) .. 1.0 (standing in a torch's pool of light)
     public static float VisibilityAt(Vector3 position)

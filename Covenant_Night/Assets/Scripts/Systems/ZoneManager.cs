@@ -87,6 +87,13 @@ public class ZoneManager : MonoBehaviour
         StartCoroutine(TransitionToZone(CurrentZoneIndex, restoreCheckpoint: true));
     }
 
+    // Hardcore: a capture sends the whole run back to the first zone (its story panels are skipped).
+    public void RestartRun()
+    {
+        if (IsTransitioning) return;
+        StartCoroutine(TransitionToZone(0, restoreCheckpoint: false, skipBeats: true));
+    }
+
     // Debug / automated tests: jump straight to a zone, skipping story panels.
     public void JumpToZone(int index)
     {
@@ -146,6 +153,8 @@ public class ZoneManager : MonoBehaviour
 
         Scene scene = SceneManager.GetSceneByName(sceneName);
         CurrentEntry = FindEntry(scene);
+        GameDifficulty.ZoneScale = CurrentEntry != null ? CurrentEntry.difficulty : 1f;
+        Torch.AmbientVisibility = CurrentEntry != null ? CurrentEntry.ambientVisibility : 0.35f;
 
         var cp = CheckpointFor(index);
         Vector3 jPos, dPos; Quaternion jRot;

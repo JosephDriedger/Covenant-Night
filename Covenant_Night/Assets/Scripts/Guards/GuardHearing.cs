@@ -16,7 +16,7 @@ public class GuardHearing : MonoBehaviour
     void OnSoundHeard(Vector3 origin, float radius)
     {
         if (GameManager.Instance != null && GameManager.Instance.IsPaused) return;
-        if (Vector3.Distance(transform.position, origin) <= radius * hearingMultiplier)
+        if (Vector3.Distance(transform.position, origin) <= radius * hearingMultiplier * GameDifficulty.Tuning.hearing)
             _fsm?.OnSoundHeard(origin);
     }
 }
