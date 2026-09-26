@@ -13,12 +13,7 @@ MonoBehaviour:
   m_Name: Story_Zone2
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
-  - heading: 'Beat 3: The Escape  -  The Market Quarter'
-    text: 'You have drilled with these guards; you know their rounds. Beyond the
-      palace walls the plaza opens wide, lit by torch and fire.
-
-
-      Cover is
-      scarce. Use the stalls and carts, and the dark gaps between the torches. The
-      lane to the west is quiet - but its fires burn bright.'
+  - heading: The Market Quarter
+    text: Torches and open ground. Slip between the stalls and carts, and through
+      the dark between the fires.
     sprite: {fileID: 21300000, guid: 90c86f1ab72db784c859f56579741381, type: 3}

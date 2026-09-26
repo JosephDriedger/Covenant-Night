@@ -13,52 +13,32 @@ MonoBehaviour:
   m_Name: Story_Intro
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
-  - heading: 'COVENANT NIGHT  -  Beat 1: The Warning'
-    text: 'A servant shakes you from sleep. "My lord - the king''s men are gathering.
-      By morning they will be at David''s door."
+  - heading: The Warning
+    text: '"The king''s men are gathering, my lord. They come for David at dawn."
 
 
-      Your father Saul has already
-      tried to kill David, twice, in open court. Tonight he sends assassins. You
-      cannot obey your king and protect your friend.
-
-
-      You choose the covenant.'
+      You
+      choose the covenant.'
     sprite: {fileID: 21300000, guid: 53565fcdf7fdd1441bbeb4a3b4262649, type: 3}
-  - heading: 'Beat 2: Wake David'
-    text: 'You slip into David''s quarters and wake him. There is no time for long
-      words.
+  - heading: The Plan
+    text: '"The eastern gate. Before the sun."
 
 
-      "The eastern gate," you whisper. "We reach it before dawn."
-
-
-      David
-      - anointed by Samuel as Israel''s future king - takes up his harp and follows.
-      If a guard sees him, it is over.'
+      David takes up his harp and
+      follows.'
     sprite: {fileID: 21300000, guid: 8e06c2766017d8847976c9f7d18aae72, type: 3}
-  - heading: How to slip through Gibeah
-    text: 'MOVE  WASD          LOOK  Mouse          SPRINT  Shift (loud)         
-      CREEP  hold C (silent)
-
-      SHADOW STEP  hold Space beside a wall - nearly
-      invisible while still
-
-      THROW A STONE  Left mouse - draws guards to the
-      sound
-
-      DAVID  1 Follow    2 Wait    3 Run to the next golden marker   
-      E toggle Follow/Wait
-
-      HARP  H - calms Suspicious guards who cannot see
-      David (once per zone)
+  - heading: Slip Past the Guards
+    text: 'A guard''s lantern cone shows what he sees: green, nothing. Amber, a doubt.
+      Red, and he gives chase.
 
 
-      GAMEPAD  left stick move, right stick look, A/Cross
-      shadow-step (hold), X/Square throw, B/Circle creep, L3 sprint, D-pad Left/Right/Down/Up
-      = Follow/Wait/Run/Harp
+      Walk softly. Keep to the shadows and out of
+      torchlight.'
+    sprite: {fileID: 21300000, guid: 5467147b2dbde1b4885fce3ae6720510, type: 3}
+  - heading: Lead David Out
+    text: 'A stone thrown far off draws a guard from his post.
 
 
-      Guards'' cones show what they see: green, amber,
-      red. Torchlight makes you easier to spot. No combat - only patience.'
-    sprite: {fileID: 0}
+      Leave David
+      waiting in cover while you scout, then bring him on to the golden marker.'
+    sprite: {fileID: 21300000, guid: f0db8d24db82794469d3aad32d641d7b, type: 3}

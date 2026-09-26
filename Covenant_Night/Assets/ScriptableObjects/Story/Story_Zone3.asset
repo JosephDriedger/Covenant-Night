@@ -13,11 +13,7 @@ MonoBehaviour:
   m_Name: Story_Zone3
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
-  - heading: 'Beat 3: The Escape  -  Potter''s Alley'
-    text: 'Narrow lanes, kilns still warm, dogs asleep in their pens - for now. Stray
-      from the path and they will wake the whole quarter.
-
-
-      There is a way
-      across the rooftops, but the roofs are open to the sky and to watching eyes.'
+  - heading: Potter's Alley
+    text: Sleeping dogs wake the whole quarter if you stray near them. The rooftops
+      offer a way across, but the sky is open.
     sprite: {fileID: 21300000, guid: ad52a5c81cfd0e14cbebeb1607d7b1c7, type: 3}

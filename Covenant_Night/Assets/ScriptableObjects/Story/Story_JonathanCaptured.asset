@@ -14,17 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
   - heading: Before the King
-    text: 'Saul''s guards drag Jonathan into the hall and throw him before the throne.
-
-
-      "Where
-      is the son of Jesse?" the king demands.'
-    sprite: {fileID: 21300000, guid: 25a3fe8e76d12934da1f6c93f6bd8e87, type: 3}
-  - heading: Before the King
-    text: 'Jonathan lifts his chin and says nothing. Not a word of the covenant.
-      Not a word of the gate.
-
-
-      In the uproar that follows, the night is given
-      a second chance...'
+    text: Jonathan stands before Saul. He says nothing.
     sprite: {fileID: 21300000, guid: 25a3fe8e76d12934da1f6c93f6bd8e87, type: 3}

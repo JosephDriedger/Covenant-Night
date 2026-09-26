@@ -13,11 +13,7 @@ MonoBehaviour:
   m_Name: Story_Zone4
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
-  - heading: 'Beat 3: The Escape  -  Well Square'
-    text: 'Sentries keep watch from the rooftops, their sight lines long and unbroken.
-
-
-      Slip
-      beneath their gaze: through the houses, where roofs give cover, or along the
-      raised terrace behind its low wall.'
+  - heading: Well Square
+    text: Sentries watch from the rooftops, their sight long and unbroken. Go under
+      a roof, or sneak behind the low terrace wall.
     sprite: {fileID: 21300000, guid: d7db70c6fc9093f47b7b7a59dcdb8ec6, type: 3}

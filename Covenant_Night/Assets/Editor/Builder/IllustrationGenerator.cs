@@ -334,6 +334,64 @@ public static class IllustrationGenerator
         return c;
     }
 
+    // A guard's lantern throws nested cones (green, amber, red); Jonathan waits just outside the light.
+    static Canvas GuardCones()
+    {
+        var dark = new Color(0.02f, 0.02f, 0.03f, 1);
+        var c = Sky(41);
+        c.Moon(120, 80, 22);
+        c.Hills(290, 10, 42, new Color(0.07f, 0.08f, 0.17f, 1));
+        c.Skyline(360, 47, new Color(0.05f, 0.05f, 0.1f, 1), Warm, 70, 170);
+        c.Rect(0, 372, W, H, new Color(0.03f, 0.03f, 0.05f, 1));
+
+        void Wedge(float end, Color col) =>
+            c.Poly(new[] { new Vector2(232, 312), new Vector2(end, 368), new Vector2(end, 432), new Vector2(250, 432) }, col);
+        Wedge(600, new Color(0.25f, 0.85f, 0.35f, 0.20f));
+        Wedge(455, new Color(1f, 0.7f, 0.15f, 0.24f));
+        Wedge(340, new Color(1f, 0.2f, 0.15f, 0.30f));
+
+        c.Figure(200, 410, 200, dark, false);                                          // guard
+        c.Rect(170, 175, 174, 410, new Color(0.05f, 0.04f, 0.04f, 1));                 // spear shaft
+        c.Poly(new[] { new Vector2(166, 178), new Vector2(178, 178), new Vector2(172, 152) }, new Color(0.5f, 0.5f, 0.55f, 1));
+        c.Glow(232, 312, 70, Warm, 0.9f);
+        c.Disc(232, 312, 7, new Color(1f, 0.9f, 0.5f, 1));                             // lantern
+
+        c.Rect(668, 240, W, H, new Color(0.05f, 0.04f, 0.07f, 1));                      // wall he hides beside
+        c.Figure(704, 428, 190, new Color(0.01f, 0.01f, 0.02f, 1));                     // Jonathan, just outside the light
+        c.Vignette(0.7f);
+        return c;
+    }
+
+    // David waits in cover by the golden marker while Jonathan lures a guard away with a thrown stone.
+    static Canvas LeadDavid()
+    {
+        var dark = new Color(0.02f, 0.02f, 0.03f, 1);
+        var c = Sky(51);
+        c.Moon(600, 90, 24);
+        c.Hills(290, 10, 52, new Color(0.07f, 0.08f, 0.17f, 1));
+        c.Skyline(360, 57, new Color(0.05f, 0.05f, 0.1f, 1), Warm, 70, 170);
+        c.Rect(0, 372, W, H, new Color(0.03f, 0.03f, 0.05f, 1));
+
+        c.Figure(140, 400, 130, new Color(0.03f, 0.03f, 0.05f, 1));                     // David, hunched in cover
+        c.Rect(50, 352, 250, 432, new Color(0.09f, 0.08f, 0.1f, 1));                    // low wall
+        c.Glow(300, 428, 70, new Color(1f, 0.8f, 0.2f), 0.9f);                          // golden marker
+        c.Disc(300, 428, 6, new Color(1f, 0.92f, 0.5f, 1));
+        c.Figure(370, 425, 215, dark);                                                  // Jonathan
+
+        for (int i = 0; i <= 14; i++)                                                   // the thrown stone's arc
+        {
+            float t = i / 14f;
+            c.Disc(415 + t * 320, Mathf.Lerp(268, 396, t) - 95f * Mathf.Sin(Mathf.PI * t), 3f, new Color(0.9f, 0.9f, 0.85f, 0.35f + 0.5f * t));
+        }
+
+        c.Figure(610, 410, 190, dark, false);                                           // the guard turns toward the sound
+        c.Rect(585, 175, 589, 410, new Color(0.05f, 0.04f, 0.04f, 1));
+        c.Poly(new[] { new Vector2(581, 178), new Vector2(593, 178), new Vector2(587, 152) }, new Color(0.5f, 0.5f, 0.55f, 1));
+        c.Glow(636, 318, 60, Warm, 0.8f);
+        c.Vignette(0.7f);
+        return c;
+    }
+
     public static Dictionary<string, string> GenerateAll(string folder)
     {
         Directory.CreateDirectory(folder);
@@ -348,6 +406,8 @@ public static class IllustrationGenerator
         }
         Save("ill_warning", Warning());
         Save("ill_wake_david", WakeDavid());
+        Save("ill_guard_cones", GuardCones());
+        Save("ill_lead_david", LeadDavid());
         Save("ill_city_market", CityNight(2));
         Save("ill_city_alley", CityNight(3));
         Save("ill_city_well", CityNight(4));

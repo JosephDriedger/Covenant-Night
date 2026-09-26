@@ -13,11 +13,7 @@ MonoBehaviour:
   m_Name: Story_Zone5
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
-  - heading: 'Beat 4: The Gate'
-    text: 'The Eastern Gate. Beyond it: the dark hills, and freedom for David.
-
-
-      The
-      gate commander is Saul''s man, and no stealth will carry you past him. There
-      is only one thing he will not dare to refuse - your father''s own seal.'
+  - heading: The Eastern Gate
+    text: The commander is Saul's man. No one sneaks past him. Bring David to the
+      gate, and show him the one thing he dares not refuse.
     sprite: {fileID: 21300000, guid: b29e42cf2e8ee8e48ba6f495e66f83f5, type: 3}
