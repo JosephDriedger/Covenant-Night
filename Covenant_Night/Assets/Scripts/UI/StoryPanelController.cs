@@ -3,88 +3,87 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// Displays a sequence of illustrated text panels between zones.
-// Call Show(lines) from ZoneManager before loading the next zone.
+// Displays a sequence of illustrated text panels (Unity UI canvas): zone intros, gate scene,
+// fail cutscene, epilogue. `yield return StoryPanelController.Instance.Show(beats)`.
+// Any key / click: first press completes the typewriter, the next advances.
 public class StoryPanelController : MonoBehaviour
 {
     public static StoryPanelController Instance { get; private set; }
 
     [Header("UI")]
     public CanvasGroup     panelGroup;
+    public TextMeshProUGUI headingText;
     public TextMeshProUGUI bodyText;
     public TextMeshProUGUI continuePrompt;
-    public Image           illustration;   // optional; swap sprite per panel
+    public Image           illustration;   // optional; sprite swapped per panel
 
     [Header("Timing")]
-    public float fadeTime   = 0.4f;
-    public float typeSpeed  = 0.03f;  // seconds per character
-
-    bool _waitingForInput;
-    bool _skipType;
+    public float fadeTime        = 0.4f;
+    public float charsPerSecond  = 55f;
+    public float inputGuardTime  = 0.2f;   // ignore presses right after a panel appears
 
     void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         panelGroup.alpha = 0f;
         panelGroup.gameObject.SetActive(false);
     }
 
-    // panels: array of (text, sprite) pairs. Sprite can be null.
+    void OnDestroy() { if (Instance == this) Instance = null; }
+
+    // beats: (heading, text, sprite) entries. Sprite can be null.
     public IEnumerator Show(StoryBeat[] beats)
     {
+        if (beats == null || beats.Length == 0) yield break;
+
         panelGroup.gameObject.SetActive(true);
         yield return Fade(1f);
 
         foreach (var beat in beats)
         {
-            if (illustration != null && beat.sprite != null)
+            if (illustration != null)
             {
-                illustration.sprite  = beat.sprite;
-                illustration.enabled = true;
+                illustration.enabled = beat.sprite != null;
+                if (beat.sprite != null) illustration.sprite = beat.sprite;
             }
-            else if (illustration != null)
-            {
-                illustration.enabled = false;
-            }
+            if (headingText != null) headingText.text = beat.heading ?? "";
 
-            yield return TypeText(beat.text);
-            yield return WaitForContinue();
+            yield return TypeAndWait(beat.text);
         }
 
         yield return Fade(0f);
         panelGroup.gameObject.SetActive(false);
     }
 
-    IEnumerator TypeText(string text)
+    IEnumerator TypeAndWait(string text)
     {
-        bodyText.text = "";
+        bodyText.text = text;
+        bodyText.maxVisibleCharacters = 0;
+        bodyText.ForceMeshUpdate();
+        int total = bodyText.textInfo.characterCount;
         continuePrompt.gameObject.SetActive(false);
-        _skipType = false;
 
-        foreach (char c in text)
+        float t = 0f;
+        float guard = inputGuardTime;
+        bool skipped = false;
+        while (!skipped && bodyText.maxVisibleCharacters < total)
         {
-            if (_skipType) { bodyText.text = text; break; }
-            bodyText.text += c;
-            yield return new WaitForSecondsRealtime(typeSpeed);
+            t += Time.unscaledDeltaTime;
+            guard -= Time.unscaledDeltaTime;
+            bodyText.maxVisibleCharacters = Mathf.Min(total, Mathf.FloorToInt(t * charsPerSecond));
+            if (guard <= 0f && InputReader.ConfirmPressedThisFrame()) skipped = true;
+            yield return null;
         }
-
+        bodyText.maxVisibleCharacters = total;
         continuePrompt.gameObject.SetActive(true);
-    }
 
-    IEnumerator WaitForContinue()
-    {
-        _waitingForInput = true;
-        while (_waitingForInput) yield return null;
-    }
-
-    void Update()
-    {
-        if (Input.anyKeyDown)
+        yield return null;   // never let the skip press also advance
+        while (true)
         {
-            if (_skipType)        { _skipType = false; return; }
-            if (bodyText != null && bodyText.text.Length > 0) _skipType = true;
-            _waitingForInput = false;
+            guard -= Time.unscaledDeltaTime;
+            if (guard <= 0f && InputReader.ConfirmPressedThisFrame()) break;
+            yield return null;
         }
     }
 
@@ -105,6 +104,7 @@ public class StoryPanelController : MonoBehaviour
 [System.Serializable]
 public class StoryBeat
 {
+    public string heading;
     [TextArea(3, 8)] public string text;
     public Sprite sprite;
 }

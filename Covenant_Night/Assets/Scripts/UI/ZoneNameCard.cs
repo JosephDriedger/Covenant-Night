@@ -9,29 +9,33 @@ public class ZoneNameCard : MonoBehaviour
 
     public CanvasGroup     cardGroup;
     public TextMeshProUGUI nameText;
+    public TextMeshProUGUI subtitleText;
 
     public float fadeIn   = 0.5f;
-    public float holdTime = 2.0f;
+    public float holdTime = 2.2f;
     public float fadeOut  = 0.8f;
 
     void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         if (cardGroup != null) cardGroup.alpha = 0f;
     }
 
-    public void Show(string zoneName)
+    void OnDestroy() { if (Instance == this) Instance = null; }
+
+    public void Show(string zoneName, string subtitle = null)
     {
         StopAllCoroutines();
-        StartCoroutine(PlayCard(zoneName));
+        StartCoroutine(PlayCard(zoneName, subtitle));
     }
 
-    IEnumerator PlayCard(string zoneName)
+    IEnumerator PlayCard(string zoneName, string subtitle)
     {
         nameText.text = zoneName;
+        if (subtitleText != null) subtitleText.text = subtitle ?? "";
         yield return Fade(0f, 1f, fadeIn);
-        yield return new WaitForSeconds(holdTime);
+        yield return new WaitForSecondsRealtime(holdTime);
         yield return Fade(1f, 0f, fadeOut);
     }
 
@@ -40,7 +44,7 @@ public class ZoneNameCard : MonoBehaviour
         float t = 0f;
         while (t < duration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             cardGroup.alpha = Mathf.Lerp(from, to, t / duration);
             yield return null;
         }
