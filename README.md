@@ -93,6 +93,14 @@ Gibeah is divided into five linearly connected zones, each with at least two rou
 | Harp Calm | H | D-pad up |
 | Pause menu (controls, settings, main menu, quit) | Esc | Start |
 
+## Difficulty
+
+Choose a night on the title screen. **Easy**, **Medium** and **Hard** are regular play: a capture restarts the current zone, and Easy gives slower, near-sighted guards with more stones and more time to hide, while Hard gives keener guards, fewer stones and less time. **Hardcore** is one life: any capture sends the whole run back to Zone 1, and the guards are faster, remember longer and check the hiding spots near where they lost you.
+
+The game also ramps up zone by zone in every mode. Each zone has its own guard sharpness (0.70 in the first zone, rising to 1.10 in the last) and the moonlight grows brighter toward dawn, so guards see farther and notice faster as the night wears on. Guard counts rise from four to seven.
+
+Every zone was checked to be beatable in every mode by stealth alone, with David following and the dog pens counted, and a scripted playthrough reached the gate in Easy, Medium, Hard and Hardcore.
+
 ## Building and Platforms
 
 Open `Covenant_Night` in Unity 6000.3.14f1. The scenes, prefabs, materials, audio and UI are produced by the editor builder in `Assets/Editor/Builder` (menu **Covenant Night > Build Everything**), so changes to layouts or art generators belong there; re-run it to regenerate the assets.

@@ -20,6 +20,7 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [x] Low-poly art pass: rigged humanoids with walk / run / crouch / throw / harp animation, textures, lit windows, trees, banners, fire particles, moon and stars
 - [x] Townsfolk that block the player, block guard line of sight and get in the guards' way
 - [x] Title screen and pause menu (resume, restart zone, controls and field notes, settings, main menu, quit); story panels rewritten short and illustrated, with escape tactics told in the story (controls appear only on the Controls page)
+- [x] Difficulty: Easy / Medium / Hard (a capture restarts the zone) and Hardcore (one life, faster and smarter guards); guard sharpness and moonlight rise zone by zone; every zone verified beatable in every mode
 - [x] Safe-area HUD and console performance defaults; Windows player built and verified through the ending
 
 ## To do
