@@ -54,7 +54,7 @@ public class FailStateHandler : MonoBehaviour
         {
             case FailReason.DavidCaptured:
                 title = "David Seized";
-                line  = "Saul's guards have laid hands on David. Jonathan pulls back into the dark —\nthe night begins again.";
+                line  = "Saul's guards have him.\nLeave David waiting in cover when you scout ahead.";
                 break;
             case FailReason.JonathanCaptured:
                 title = "Caught";
@@ -62,7 +62,7 @@ public class FailStateHandler : MonoBehaviour
                 break;
             default:
                 title = "The City Closes In";
-                line  = "The alarm rings through Gibeah and every exit is barred.\nThe night begins again.";
+                line  = "The alarm rings and every exit is barred.\nHide until it passes.";
                 break;
         }
 
@@ -77,11 +77,24 @@ public class FailStateHandler : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(reason == FailReason.JonathanCaptured ? 1.6f : holdTime);
 
-        // Jonathan captured: narrative cutscene before the reset
+        // Jonathan captured: narrative cutscene before the reset. The story panel draws above the fail panel; once it is
+        // fully opaque the fail panel is switched off, so the two never show together.
         if (reason == FailReason.JonathanCaptured && jonathanCapturedBeats != null && StoryPanelController.Instance != null)
-            yield return StoryPanelController.Instance.Show(jonathanCapturedBeats.beats);
+        {
+            var story = StoryPanelController.Instance;
+            var show = story.Show(jonathanCapturedBeats.beats);
+            while (show.MoveNext())
+            {
+                if (failPanel != null && failPanel.gameObject.activeSelf && story.panelGroup.alpha >= 0.99f)
+                {
+                    failPanel.alpha = 0f;
+                    failPanel.gameObject.SetActive(false);
+                }
+                yield return show.Current;
+            }
+        }
 
-        if (failPanel != null)
+        if (failPanel != null && failPanel.gameObject.activeSelf)
         {
             yield return Fade(failPanel, 1f, 0f, 0.3f);
             failPanel.gameObject.SetActive(false);
@@ -103,6 +116,7 @@ public class FailStateHandler : MonoBehaviour
         // Credits: wait, then any key restarts the whole game from the Persistent scene
         yield return new WaitForSecondsRealtime(creditsInputDelay);
         while (!InputReader.ConfirmPressedThisFrame()) yield return null;
+        MenuController.SkipTitleOnce = true;
         SceneManager.LoadScene("Persistent");     // Single mode: unloads every zone and rebuilds all managers
     }
 

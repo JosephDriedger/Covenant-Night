@@ -54,7 +54,13 @@ public class ZoneManager : MonoBehaviour
     void Start()
     {
         if (fadePanel != null) fadePanel.alpha = 1f;
-        StartCoroutine(TransitionToZone(0, restoreCheckpoint: false));
+        StartCoroutine(Boot());
+    }
+
+    IEnumerator Boot()
+    {
+        if (MenuController.Instance != null) yield return MenuController.Instance.RunTitle();
+        yield return TransitionToZone(0, restoreCheckpoint: false);
     }
 
     CheckpointData CheckpointFor(int index) =>

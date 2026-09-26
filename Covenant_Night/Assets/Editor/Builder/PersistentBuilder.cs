@@ -170,8 +170,8 @@ public static class PersistentBuilder
             s.playOnAwake = false; s.spatialBlend = 0f;
             return s;
         }
-        var drone    = Mk("TensionDrone", a.drone, mx.music, true, 0.05f);
-        var music    = Mk("MusicUnderscore", a.music, mx.music, true, 0.35f);
+        var drone    = Mk("TensionDrone", a.drone, mx.music, true, 0f);
+        var music    = Mk("MusicUnderscore", a.music, mx.music, true, 0.3f);
         var sting    = Mk("AlertSting", a.sting, mx.sfx, false, 0.9f);
         var epilogue = Mk("EpiloguePhrase", a.epilogue, mx.music, false, 0.8f);
         var wind     = Mk("NightWind", a.wind, mx.ambience, true, 0.45f); wind.playOnAwake = true;
@@ -188,6 +188,7 @@ public static class PersistentBuilder
         var cardCtl = BuildZoneCard();
         var fade = BuildFade();
         BuildCredits(fail);
+        BuildMenu();
         fail.jonathanCapturedBeats = story.jonathanCaptured;
 
         // ── zone manager ──
@@ -269,14 +270,11 @@ public static class PersistentBuilder
         Plate(new Vector2(0, 1), new Vector2(0, 1), new Vector2(28, -22), new Vector2(330, 62));
         Plate(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -22), new Vector2(330, 62));
         Plate(new Vector2(0, 0), new Vector2(0, 0), new Vector2(28, 42), new Vector2(500, 112));
-        Plate(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 6), new Vector2(1500, 40));
 
         hud.zoneText = MakeText(t, "ZoneText", "Zone 1 / 5", 34, Parchment, new Vector2(0, 1), new Vector2(0, 1), new Vector2(40, -30), new Vector2(600, 50), TextAlignmentOptions.TopLeft);
         hud.stoneCountText = MakeText(t, "StoneCount", "Stones: 3", 34, Parchment, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, -30), new Vector2(500, 50), TextAlignmentOptions.TopRight);
         hud.davidModeText = MakeText(t, "DavidMode", "David: Follow", 32, new Color(0.7f, 0.9f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 95), new Vector2(600, 46), TextAlignmentOptions.BottomLeft);
-        hud.harpText = MakeText(t, "HarpText", "Harp: ready [H]", 30, Gold, new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 50), new Vector2(600, 42), TextAlignmentOptions.BottomLeft);
-        hud.controlsHint = MakeText(t, "ControlsHint", "", 19, new Color(1, 1, 1, 0.6f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 10), new Vector2(1480, 32), TextAlignmentOptions.Bottom);
-        hud.controlsHint.textWrappingMode = TextWrappingModes.NoWrap;
+        hud.harpText = MakeText(t, "HarpText", "Harp: ready", 30, Gold, new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 50), new Vector2(600, 42), TextAlignmentOptions.BottomLeft);
 
         // alarm banner
         var alarm = MakeImage(t, "AlarmTimer", new Color(0.35f, 0.02f, 0.02f, 0.75f));
@@ -331,7 +329,7 @@ public static class PersistentBuilder
 
     static void BuildFail(FailStateHandler fail)
     {
-        var canvas = MakeCanvas("FailPanel", 65);
+        var canvas = MakeCanvas("FailPanel", 55);
         var group = Group(canvas, 0f);
         var t = canvas.transform;
         var bg = MakeImage(t, "Tint", new Color(0.12f, 0.01f, 0.01f, 0.88f));
@@ -364,6 +362,185 @@ public static class PersistentBuilder
         return group;
     }
 
+    // ── Menus (title screen + pause menu) ───────────────────────────────────
+
+    static readonly Color ButtonNormal = new Color(0.08f, 0.08f, 0.13f, 0.88f);
+
+    static Button MakeButton(Transform parent, string name, string label, Vector2 pos, Vector2 size, float fontSize = 36f)
+    {
+        var img = MakeImage(parent, name, Color.white);
+        img.raycastTarget = true;
+        var rt = img.rectTransform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = pos; rt.sizeDelta = size;
+
+        var b = img.gameObject.AddComponent<Button>();
+        b.targetGraphic = img;
+        b.transition = Selectable.Transition.ColorTint;
+        var c = b.colors;
+        c.normalColor = ButtonNormal;
+        c.highlightedColor = new Color(0.42f, 0.33f, 0.12f, 0.96f);
+        c.selectedColor = c.highlightedColor;
+        c.pressedColor = new Color(0.62f, 0.48f, 0.16f, 1f);
+        c.disabledColor = new Color(0.08f, 0.08f, 0.13f, 0.4f);
+        c.colorMultiplier = 1f;
+        c.fadeDuration = 0.06f;
+        b.colors = c;
+
+        MakeText(img.transform, "Label", label, fontSize, Parchment, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, size, TextAlignmentOptions.Center);
+        return b;
+    }
+
+    static Slider MakeSlider(Transform parent, string name, Vector2 pos, Vector2 size)
+    {
+        var root = new GameObject(name, typeof(RectTransform), typeof(Slider));
+        root.transform.SetParent(parent, false);
+        var rt = Rt(root);
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = pos; rt.sizeDelta = size;
+
+        var bg = MakeImage(root.transform, "Background", new Color(0.08f, 0.08f, 0.13f, 0.92f));
+        bg.raycastTarget = true;
+        bg.rectTransform.anchorMin = new Vector2(0, 0.3f); bg.rectTransform.anchorMax = new Vector2(1, 0.7f);
+        bg.rectTransform.offsetMin = bg.rectTransform.offsetMax = Vector2.zero;
+
+        var fillArea = new GameObject("Fill Area", typeof(RectTransform));
+        fillArea.transform.SetParent(root.transform, false);
+        var far = Rt(fillArea);
+        far.anchorMin = new Vector2(0, 0.3f); far.anchorMax = new Vector2(1, 0.7f);
+        far.offsetMin = new Vector2(8, 0); far.offsetMax = new Vector2(-8, 0);
+        var fill = MakeImage(fillArea.transform, "Fill", Gold);
+        fill.rectTransform.anchorMin = Vector2.zero; fill.rectTransform.anchorMax = Vector2.one;
+        fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
+
+        var handleArea = new GameObject("Handle Slide Area", typeof(RectTransform));
+        handleArea.transform.SetParent(root.transform, false);
+        var har = Rt(handleArea);
+        Stretch(har);
+        har.offsetMin = new Vector2(14, 0); har.offsetMax = new Vector2(-14, 0);
+        var handle = MakeImage(handleArea.transform, "Handle", Color.white);
+        handle.raycastTarget = true;
+        handle.rectTransform.anchorMin = new Vector2(0, 0); handle.rectTransform.anchorMax = new Vector2(0, 1);
+        handle.rectTransform.sizeDelta = new Vector2(28, 0);
+
+        var s = root.GetComponent<Slider>();
+        s.fillRect = fill.rectTransform;
+        s.handleRect = handle.rectTransform;
+        s.targetGraphic = handle;
+        s.direction = Slider.Direction.LeftToRight;
+        s.minValue = 0f; s.maxValue = 1f;
+        var c = s.colors;
+        c.normalColor = Parchment;
+        c.highlightedColor = new Color(1f, 0.86f, 0.5f, 1f);
+        c.selectedColor = c.highlightedColor;
+        c.pressedColor = new Color(0.8f, 0.65f, 0.3f, 1f);
+        c.fadeDuration = 0.06f;
+        s.colors = c;
+        return s;
+    }
+
+    static RectTransform MakePage(Transform parent, string name)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        var rt = Rt(go);
+        Stretch(rt);
+        return rt;
+    }
+
+    static TextMeshProUGUI MakeColumn(Transform parent, string name, string text, float size, Color color, float left, float top, float width, float height)
+    {
+        var t = MakeText(parent, name, text, size, color, new Vector2(0.5f, 0.5f), new Vector2(0, 1), new Vector2(left, top), new Vector2(width, height), TextAlignmentOptions.TopLeft);
+        t.lineSpacing = 12;
+        return t;
+    }
+
+    static void BuildMenu()
+    {
+        var canvas = MakeCanvas("Menu", 90);
+        canvas.AddComponent<GraphicRaycaster>();
+        var group = canvas.AddComponent<CanvasGroup>();
+        var ctl = new GameObject("MenuSystem").AddComponent<MenuController>();
+        ctl.canvasRoot = canvas;
+        ctl.group = group;
+        var t = canvas.transform;
+        var mid = new Vector2(0.5f, 0.5f);
+
+        // ── title ──
+        var title = MakePage(t, "TitlePage");
+        var art = MakeImage(title, "Illustration", Color.white);
+        art.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Story/ill_gate_approach.png");
+        art.preserveAspect = false;
+        art.color = art.sprite != null ? Color.white : new Color(0.02f, 0.02f, 0.045f, 1f);
+        Stretch(art.rectTransform);
+        var shade = MakeImage(title, "Shade", new Color(0.01f, 0.01f, 0.03f, 0.62f));
+        Stretch(shade.rectTransform);
+        MakeText(title, "Name", "COVENANT NIGHT", 140, Gold, mid, mid, new Vector2(0, 280), new Vector2(1700, 180), TextAlignmentOptions.Center, FontStyles.Bold);
+        MakeText(title, "Verse", "1 Samuel 19-20", 40, Parchment, mid, mid, new Vector2(0, 170), new Vector2(1200, 60), TextAlignmentOptions.Center);
+        var bSize = new Vector2(560, 72);
+        ctl.playBtn          = MakeButton(title, "Play",     "Play",     new Vector2(0, 30),   bSize);
+        ctl.titleControlsBtn = MakeButton(title, "Controls", "Controls", new Vector2(0, -58),  bSize);
+        ctl.titleSettingsBtn = MakeButton(title, "Settings", "Settings", new Vector2(0, -146), bSize);
+        ctl.titleQuitBtn     = MakeButton(title, "Quit",     "Quit",     new Vector2(0, -234), bSize);
+        ctl.titlePage = title.gameObject;
+
+        // ── pause ──
+        var pause = MakePage(t, "PausePage");
+        var pauseShade = MakeImage(pause, "Shade", new Color(0.01f, 0.01f, 0.03f, 0.78f));
+        Stretch(pauseShade.rectTransform);
+        MakeText(pause, "Heading", "Paused", 96, Gold, mid, mid, new Vector2(0, 350), new Vector2(1200, 130), TextAlignmentOptions.Center, FontStyles.Bold);
+        ctl.resumeBtn        = MakeButton(pause, "Resume",      "Resume",       new Vector2(0, 210),  bSize);
+        ctl.restartBtn       = MakeButton(pause, "RestartZone", "Restart Zone", new Vector2(0, 122),  bSize);
+        ctl.pauseControlsBtn = MakeButton(pause, "Controls",    "Controls",     new Vector2(0, 34),   bSize);
+        ctl.pauseSettingsBtn = MakeButton(pause, "Settings",    "Settings",     new Vector2(0, -54),  bSize);
+        ctl.mainMenuBtn      = MakeButton(pause, "MainMenu",    "Main Menu",    new Vector2(0, -142), bSize);
+        ctl.pauseQuitBtn     = MakeButton(pause, "Quit",        "Quit Game",    new Vector2(0, -230), bSize);
+        ctl.pausePage = pause.gameObject;
+
+        // ── controls + field notes ──
+        var controls = MakePage(t, "ControlsPage");
+        var cShade = MakeImage(controls, "Shade", new Color(0.02f, 0.02f, 0.045f, 0.96f));
+        Stretch(cShade.rectTransform);
+        MakeText(controls, "Heading", "Controls", 80, Gold, mid, mid, new Vector2(0, 450), new Vector2(1200, 110), TextAlignmentOptions.Center, FontStyles.Bold);
+        MakeColumn(controls, "KeyboardHeader", "Keyboard & Mouse", 30, Gold, -380, 375, 620, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "GamepadHeader", "Gamepad", 30, Gold, 250, 375, 620, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "Actions",
+            "Move\nLook\nSneak  (silent)\nSprint  (loud)\nShadow-step at a wall\nThrow a stone\nDavid: follow, wait, run\nHarp\nPause",
+            27, Parchment, -880, 325, 480, 420);
+        MakeColumn(controls, "Keyboard",
+            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft click\n1, 2, 3    (E swaps follow / wait)\nH\nEsc",
+            27, Parchment, -380, 325, 620, 420);
+        MakeColumn(controls, "Gamepad",
+            "Left stick\nRight stick\nHold B / Circle\nClick L3\nHold A / Cross\nX / Square\nD-pad Left, Right, Down    (Y / Triangle swaps)\nD-pad Up\nStart",
+            27, Parchment, 250, 325, 620, 420);
+        MakeColumn(controls, "NotesHeader", "Field notes", 32, Gold, -880, -85, 800, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "Notes",
+            "Guard cones: green sees nothing, amber is suspicious, red is chasing you.\n" +
+            "Sneak near guards and dogs. Sprinting and thrown stones can be heard from far off.\n" +
+            "Torchlight gives you away. Walls and shadows hide you; a shadow-step makes you nearly invisible.\n" +
+            "A thrown stone draws a guard from his post. The harp calms one who has only heard something.\n" +
+            "David follows you. Leave him waiting in cover, then run him to the next golden marker.",
+            27, Parchment, -880, -135, 1760, 300);
+        ctl.controlsBackBtn = MakeButton(controls, "Back", "Back", new Vector2(0, -455), new Vector2(400, 64), 32);
+        ctl.controlsPage = controls.gameObject;
+
+        // ── settings ──
+        var settings = MakePage(t, "SettingsPage");
+        var sShade = MakeImage(settings, "Shade", new Color(0.02f, 0.02f, 0.045f, 0.96f));
+        Stretch(sShade.rectTransform);
+        MakeText(settings, "Heading", "Settings", 80, Gold, mid, mid, new Vector2(0, 330), new Vector2(1200, 110), TextAlignmentOptions.Center, FontStyles.Bold);
+        ctl.volumeLabel = MakeText(settings, "VolumeLabel", "", 34, Parchment, mid, mid, new Vector2(-370, 120), new Vector2(480, 50), TextAlignmentOptions.Left);
+        ctl.volumeSlider = MakeSlider(settings, "VolumeSlider", new Vector2(190, 120), new Vector2(560, 40));
+        ctl.lookLabel = MakeText(settings, "LookLabel", "", 34, Parchment, mid, mid, new Vector2(-370, 30), new Vector2(480, 50), TextAlignmentOptions.Left);
+        ctl.lookSlider = MakeSlider(settings, "LookSlider", new Vector2(190, 30), new Vector2(560, 40));
+        ctl.invertBtn = MakeButton(settings, "InvertY", "", new Vector2(0, -70), new Vector2(640, 72));
+        ctl.fullscreenBtn = MakeButton(settings, "Fullscreen", "", new Vector2(0, -158), new Vector2(640, 72));
+        ctl.settingsBackBtn = MakeButton(settings, "Back", "Back", new Vector2(0, -280), new Vector2(400, 64), 32);
+        ctl.settingsPage = settings.gameObject;
+
+        canvas.SetActive(false);
+    }
+
     // ── Credits (win) ───────────────────────────────────────────────────────
 
     static void BuildCredits(FailStateHandler fail)
@@ -378,9 +555,8 @@ public static class PersistentBuilder
         MakeText(t, "Sub", "David is beyond the gate. The covenant holds.", 40, Parchment, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -290), new Vector2(1500, 60), TextAlignmentOptions.Center);
         MakeText(t, "Body",
             "A stealth game of loyalty, shadow, and sacrifice\nBased on 1 Samuel 19-20\n\n" +
-            "A one-person project: design, code, sound design and illustration\n" +
-            "All audio and art in this build is original and procedurally generated.\n" +
-            "See CREDITS.txt for the full attribution list.\n\n" +
+            "Design, code, sound and illustration by one person.\n" +
+            "See CREDITS.txt for attribution.\n\n" +
             "Thank you for playing.",
             32, new Color(0.85f, 0.83f, 0.78f), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -400), new Vector2(1500, 420), TextAlignmentOptions.Top);
         MakeText(t, "Prompt", "press any key to play again", 28, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(900, 40), TextAlignmentOptions.Center);

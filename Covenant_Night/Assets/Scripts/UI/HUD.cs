@@ -24,19 +24,12 @@ public class HUD : MonoBehaviour
     [Header("Zone")]
     public TextMeshProUGUI zoneText;
 
-    [Header("Controls hint")]
-    public TextMeshProUGUI controlsHint;
-
     [Header("Messages / Aim")]
     public TextMeshProUGUI messageText;
     public GameObject      reticle;
 
-    const string KeyboardHint = "WASD move  |  Shift sprint  |  C creep  |  hold Space beside a wall: shadow-step  |  LMB throw stone  |  1 Follow  2 Wait  3 Run  E toggle  |  H harp";
-    const string GamepadHint  = "L-stick move  |  R-stick look  |  L3 sprint  |  B / Circle creep  |  hold A / Cross beside a wall: shadow-step  |  X / Square throw  |  D-pad: Left Follow, Right Wait, Down Run, Up Harp  |  Y / Triangle toggle";
-
     float _messageTimer;
     bool  _harpUsed;
-    bool  _gamepad;
 
     void Awake()
     {
@@ -49,16 +42,12 @@ public class HUD : MonoBehaviour
     void Start()
     {
         ShowAlarmTimer(false);
-        RefreshHints();
         RefreshHarp();
         if (messageText != null) messageText.text = "";
     }
 
     void Update()
     {
-        bool gp = InputReader.Instance != null && InputReader.Instance.UsingGamepad;
-        if (gp != _gamepad) { _gamepad = gp; RefreshHints(); RefreshHarp(); }
-
         if (_messageTimer > 0f)
         {
             _messageTimer -= Time.unscaledDeltaTime;
@@ -97,17 +86,12 @@ public class HUD : MonoBehaviour
         RefreshHarp();
     }
 
-    void RefreshHints()
-    {
-        if (controlsHint != null) controlsHint.text = _gamepad ? GamepadHint : KeyboardHint;
-    }
-
     void RefreshHarp()
     {
         if (harpUsedIndicator != null) harpUsedIndicator.SetActive(_harpUsed);
         if (harpText != null)
         {
-            harpText.text = _harpUsed ? "Harp: used" : (_gamepad ? "Harp: ready [D-pad Up]" : "Harp: ready [H]");
+            harpText.text = _harpUsed ? "Harp: used" : "Harp: ready";
             harpText.color = _harpUsed ? new Color(0.6f, 0.6f, 0.6f) : new Color(1f, 0.9f, 0.55f);
         }
     }

@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 //
 // Controls (keyboard / gamepad):
 //   Move WASD / left stick      Look mouse / right stick
-//   Sprint  Left Shift          Crouch C / East button
+//   Sneak  Left Shift / East button    Sprint  Left Ctrl or Cmd / L3
 //   Wall press (Shadow Step) Space (hold) / South button
 //   Throw stone LMB / Enter / West button
 //   David: 1 Follow, 2 Wait, 3 Run (D-pad left / right / down), E toggles Follow/Wait
@@ -25,7 +25,7 @@ public class InputReader : MonoBehaviour
     public Vector2 Move            { get; private set; }
     public Vector2 LookDelta       { get; private set; }   // degrees this frame (x = yaw, y = pitch)
     public bool SprintHeld         { get; private set; }
-    public bool CrouchHeld         { get; private set; }
+    public bool CrouchHeld         { get; private set; }   // "Sneak"
     public bool WallPressHeld      { get; private set; }   // Jump action repurposed
     public bool ThrowPressed       { get; private set; }   // Attack action
     public bool InteractPressed    { get; private set; }
@@ -33,6 +33,7 @@ public class InputReader : MonoBehaviour
     public bool DavidWaitPressed   { get; private set; }   // Next
     public bool DavidRunPressed    { get; private set; }   // dedicated "DavidRun" action
     public bool HarpPressed        { get; private set; }   // dedicated "Harp" action
+    public bool PausePressed       { get; private set; }   // Esc / Start
     public bool UsingGamepad       { get; private set; }   // last device used (drives on-screen control hints)
 
     // ── Scripted input (automated playtests) ────────────────────────────────
@@ -98,6 +99,7 @@ public class InputReader : MonoBehaviour
             DavidRunPressed    = _sRun;
             HarpPressed        = _sHarp;
             InteractPressed    = false;
+            PausePressed       = false;
             _sThrow = _sFollow = _sWait = _sRun = _sHarp = false;
             return;
         }
@@ -113,6 +115,8 @@ public class InputReader : MonoBehaviour
         LookDelta = _look.activeControl?.device is Gamepad
             ? look * gamepadLookSpeed * Time.unscaledDeltaTime
             : look * mouseSensitivity;
+        LookDelta *= GameSettings.LookScale;
+        if (GameSettings.InvertY) LookDelta = new Vector2(LookDelta.x, -LookDelta.y);
 
         ThrowPressed       = _attack.WasPressedThisFrame();
         InteractPressed    = _interact.WasPressedThisFrame();
@@ -120,6 +124,8 @@ public class InputReader : MonoBehaviour
         DavidWaitPressed   = _next.WasPressedThisFrame();
         DavidRunPressed    = _run.WasPressedThisFrame();
         HarpPressed        = _harp.WasPressedThisFrame();
+        PausePressed       = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
+                             (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame);
     }
 
     void UpdateDeviceKind()
