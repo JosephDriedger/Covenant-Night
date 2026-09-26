@@ -78,17 +78,11 @@ public static class ZoneBuilders
 
         // ── guards ──
         const float g = 1.3f;   // they recognise Jonathan's face
+        // The first zone is the gentlest: four guards, and the zone strength below keeps their sight short.
         k.Guard(GuardType.Sentry,   V3(-4.5f, 0, 17.2f), 60f, gain: g);
         k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(-16, 19), V(8, 19), V(8, 24), V(-16, 24) }, gain: g);
         k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(-11, 29), V(-17, 29), V(-17, 45), V(-11, 45) }, gain: g);
-        k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(15, 17), V(15, 45) }, pingPong: true, gain: g, tweak: f =>
-        {
-            f.patrolSpeed = 1.8f;
-            f.GetComponent<GuardVision>().maxRange = 9f;
-            f.GetComponent<GuardVision>().coneAngle = 60f;
-        });
         k.Guard(GuardType.Commander, V3(0, 0, 0), 0, new[] { V(-12, 52), V(12, 52), V(12, 62), V(-12, 62) }, gain: 1f);
-        k.Guard(GuardType.Sentry,   V3(-10, 0, 66), 100f, gain: g);
 
         // ── townsfolk, greenery, banners ──
         k.NpcPair(0, V(10, 7), 3, V(11.6f, 7.7f));
@@ -104,7 +98,7 @@ public static class ZoneBuilders
         // ── zone plumbing ──
         k.Exit(0, 69.5f, 8f);
         k.Entry("The Palace District", "Zone 1", V(0, 3), 0f,
-            new[] { V(0, 11), V(15, 19), V(-16, 26), V(15, 42), V(-16, 44), V(-6, 58) });
+            new[] { V(0, 11), V(15, 19), V(-16, 26), V(15, 42), V(-16, 44), V(-6, 58) }, difficulty: 0.70f, ambient: 0.28f);
         k.Ambience(new[] { V3(-27, 3, 20), V3(27, 3, 50), V3(0, 3, 78) });
         k.BakeNavMesh();
         k.VerifyRoute("west passage", V(0, 3), V(0, 12), V(-14, 20), V(-14, 30), V(-14, 46), V(0, 55), V(0, 68));
@@ -181,7 +175,7 @@ public static class ZoneBuilders
         // ── zone plumbing ──
         k.Exit(0, 69.5f, 8f);
         k.Entry("The Market Quarter", "Zone 2", V(0, 3), 0f,
-            new[] { V(0, 12), V(-18.5f, 24), V(-6, 31), V(-18.5f, 47), V(-5, 50), V(0, 62) });
+            new[] { V(0, 12), V(-18.5f, 24), V(-6, 31), V(-18.5f, 47), V(-5, 50), V(0, 62) }, difficulty: 0.80f, ambient: 0.34f);
         k.Ambience(new[] { V3(-27, 3, 25), V3(27, 3, 45), V3(0, 3, 80) });
         k.BakeNavMesh();
         k.VerifyRoute("plaza", V(0, 3), V(0, 20), V(0, 35), V(0, 53), V(0, 68));
@@ -240,9 +234,12 @@ public static class ZoneBuilders
         foreach (var h in new[] { V(-3, 14.5f), V(17, 27.5f), V(-17, 45.5f), V(-7.5f, 58.5f) }) k.HidingSpot(h.x, h.y, 3f, 3f);
 
         // ── guards ──
-        k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(1, 19.5f), V(14, 19.5f), V(14, 35) }, pingPong: true, tweak: f => f.patrolSpeed = 1.9f);
-        k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(14, 37.5f), V(-14, 37.5f), V(-14, 48) }, pingPong: true, tweak: f => f.patrolSpeed = 1.9f);
-        k.Guard(GuardType.Commander, V3(0, 0, 0), 0, new[] { V(-14, 55.5f), V(0, 55.5f), V(0, 66) }, pingPong: true);
+        // The alley is narrow and the dog pens sit beside its route, so nobody patrols the route itself: the commander keeps
+        // to the west plaza, a slow patrol walks the west lane and two lookouts watch the open stretches.
+        k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(-16, 22), V(-16, 34) }, pingPong: true, tweak: f => { f.patrolSpeed = 1.6f; f.waypointPause = 3f; });
+        k.Guard(GuardType.Commander, V3(0, 0, 0), 0, new[] { V(-14, 62), V(-6, 62) }, pingPong: true, tweak: f => f.waypointPause = 3f);
+        k.Guard(GuardType.Sentry, V3(-9, 0, 26), 90f, tweak: f => { f.GetComponent<GuardVision>().maxRange = 12f; f.sentryArcDegrees = 90f; });
+        k.Guard(GuardType.Sentry, V3(9, 0, 44), 270f, tweak: f => { f.GetComponent<GuardVision>().maxRange = 12f; f.sentryArcDegrees = 90f; });
         // rooftop lookout over the shortcut
         k.Guard(GuardType.Sentry, V3(4, roof, 46), 90f, tweak: f =>
         {
@@ -259,7 +256,7 @@ public static class ZoneBuilders
         // ── zone plumbing ──
         k.Exit(0, 69.2f, 3f);
         k.Entry("Potter's Alley", "Zone 3", V(0, 3), 0f,
-            new[] { V(0, 15), V(7, 19.5f), V(14, 30), V(0, 37.5f), V(-14, 45), V(-8, 55.5f), V(0, 62) });
+            new[] { V(0, 15), V(7, 19.5f), V(14, 30), V(0, 37.5f), V(-14, 45), V(-8, 55.5f), V(0, 62) }, difficulty: 0.90f, ambient: 0.40f);
         k.Ambience(new[] { V3(-27, 3, 20), V3(27, 3, 35), V3(-27, 3, 55), V3(0, 3, 80) });
         k.BakeNavMesh();
         k.VerifyRoute("alley snake", V(0, 3), V(0, 15), V(7, 19.5f), V(14, 30), V(0, 37.5f), V(-14, 45), V(-8, 55.5f), V(0, 62), V(0, 68));
@@ -322,10 +319,11 @@ public static class ZoneBuilders
         k.Pot(-3, 16); k.Pot(-18, 52.6f); k.Pot(19, 30, 1, 1.2f); k.Pot(0, 49.5f); k.Pot(-14, 34, 2); k.Pot(6, 20);
 
         // ── guards: three rooftop sentries + a well patrol + a commander on the north strip ──
-        k.Guard(GuardType.Sentry, V3(-15, bh + 0.4f, 34), 90f, tweak: f => f.GetComponent<GuardVision>().maxRange = 17f);
-        k.Guard(GuardType.Sentry, V3(0, bh + 0.4f, 48), 180f, tweak: f => f.GetComponent<GuardVision>().maxRange = 17f);
-        k.Guard(GuardType.Sentry, V3(14, 4.5f, 56), 200f, tweak: f => f.GetComponent<GuardVision>().maxRange = 17f);
+        k.Guard(GuardType.Sentry, V3(-15, bh + 0.4f, 34), 90f, tweak: f => f.GetComponent<GuardVision>().maxRange = 14f);
+        k.Guard(GuardType.Sentry, V3(0, bh + 0.4f, 48), 180f, tweak: f => f.GetComponent<GuardVision>().maxRange = 14f);
+        k.Guard(GuardType.Sentry, V3(14, 4.5f, 56), 200f, tweak: f => f.GetComponent<GuardVision>().maxRange = 14f);
         k.Guard(GuardType.Patrol, V3(0, 0, 0), 0, new[] { V(-7, 26), V(7, 26), V(7, 41), V(-7, 41) });
+        k.Guard(GuardType.Patrol, V3(0, 0, 0), 0, new[] { V(3, 24), V(8, 46) }, pingPong: true, tweak: f => f.patrolSpeed = 1.8f);
         k.Guard(GuardType.Commander, V3(0, 0, 0), 0, new[] { V(-17.5f, 53), V(17.5f, 53) }, pingPong: true);
 
         // ── townsfolk, greenery, banners ──
@@ -343,7 +341,7 @@ public static class ZoneBuilders
         // ── zone plumbing ──
         k.Exit(0, 69.5f, 7f);
         k.Entry("Well Square", "Zone 4", V(0, 3), 0f,
-            new[] { V(0, 10), V(-15, 22), V(-15, 45), V(16, 26), V(16, 44), V(-12, 52.8f), V(0, 60) });
+            new[] { V(0, 10), V(-15, 22), V(-15, 45), V(16, 26), V(16, 44), V(-12, 52.8f), V(0, 60) }, difficulty: 1.00f, ambient: 0.46f);
         k.Ambience(new[] { V3(-27, 3, 25), V3(27, 3, 40), V3(0, 3, 80) });
         k.BakeNavMesh();
         k.VerifyRoute("west gallery", V(0, 3), V(0, 12), V(-15, 17), V(-15, 25), V(-15, 34), V(-15, 45), V(-15, 52.5f), V(0, 53), V(0, 68));
@@ -399,9 +397,12 @@ public static class ZoneBuilders
 
         // ── guards ──
         k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(-10, 23), V(10, 23), V(10, 44), V(-10, 44) });
-        k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(-19, 47), V(19, 47) }, pingPong: true);
-        k.Guard(GuardType.Commander, V3(0, 0, 0), 0, new[] { V(-8, 51.5f), V(8, 51.5f) }, pingPong: true);
+        k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(-19, 47), V(19, 47) }, pingPong: true, tweak: f => { f.patrolSpeed = 1.5f; f.waypointPause = 3f; });
+        k.Guard(GuardType.Commander, V3(0, 0, 0), 0, new[] { V(-8, 51.5f), V(8, 51.5f) }, pingPong: true, tweak: f => { f.patrolSpeed = 1.4f; f.waypointPause = 3f; });
         k.Guard(GuardType.Sentry, V3(-16, 0, 21.5f), 20f);
+        k.Guard(GuardType.Sentry, V3(9, 0, 30), 270f, tweak: f => { f.GetComponent<GuardVision>().maxRange = 13f; f.sentryArcDegrees = 90f; });
+        k.Guard(GuardType.Patrol, V3(0, 0, 0), 0, new[] { V(-16, 26), V(-16, 44) }, pingPong: true, tweak: f => f.patrolSpeed = 1.8f);
+        k.Guard(GuardType.Patrol, V3(0, 0, 0), 0, new[] { V(14, 24), V(14, 44) }, pingPong: true, tweak: f => f.patrolSpeed = 1.8f);
 
         // ── the gate ──
         var pal = k.M.palace;
@@ -481,7 +482,7 @@ public static class ZoneBuilders
 
         // ── zone plumbing ──
         k.Entry("The Eastern Gate", "Zone 5", V(0, 3), 0f,
-            new[] { V(0, 14), V(-14, 30), V(14, 30), V(0, 46), V(-9, 55), V(9, 55) });
+            new[] { V(0, 14), V(-14, 30), V(14, 30), V(0, 46), V(-9, 55), V(9, 55) }, difficulty: 1.10f, ambient: 0.52f);
         k.Ambience(new[] { V3(-27, 3, 25), V3(27, 3, 40), V3(-10, 3, 100), V3(10, 3, 100) });
         k.BakeNavMesh();
         k.VerifyRoute("avenue to gate", V(0, 3), V(0, 18), V(0, 30), V(0, 47), V(0, 56));
