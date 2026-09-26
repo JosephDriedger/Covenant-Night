@@ -1,80 +1,176 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
 // Controls David's NavMeshAgent, three follow modes, and the Harp ability.
 // Tag the David GameObject "David" so guards can identify him on detection.
+//
+// The agent is saved disabled on the prefab and switched on by Teleport(), which the ZoneManager calls
+// once a zone's NavMesh is loaded (an agent enabled before its NavMesh exists never registers).
 [RequireComponent(typeof(NavMeshAgent))]
 public class DavidCompanion : MonoBehaviour
 {
+    public static DavidCompanion Instance { get; private set; }
+
     public enum Mode { Follow, Wait, Run }
 
     [Header("Follow")]
     public Transform followTarget;          // Jonathan's Transform
-    public float     followStopDistance = 2f;
+    public float startFollowDistance = 3.0f;
+    public float stopFollowDistance  = 1.9f;
 
     [Header("Run")]
-    public Transform runWaypoint;           // next zone exit waypoint; set per zone
+    [Tooltip("Marked waypoints for this zone. Set by ZoneManager from the ZoneEntry. Run goes to the nearest one ahead of David (higher Z), so either route through a zone works.")]
+    public Transform[] runWaypoints;
+    [Tooltip("Legacy single waypoint (used only when runWaypoints is empty).")]
+    public Transform runWaypoint;
+    public float runNoiseRadius = 9f;
 
-    [Header("Speeds")]
-    public float followSpeed = 2.8f;
-    public float runSpeed    = 5f;
+    [Header("Speeds (slower than Jonathan)")]
+    public float followSpeed       = 2.8f;
+    public float crouchFollowSpeed = 1.7f;
+    public float runSpeed          = 5f;
 
-    [Header("Harp Ability")]
-    public float harpCalmRadius = 8f;
-    public float harpCooldown   = 60f;      // one use per zone enforced in ZoneManager
+    [Header("Crouch")]
+    public float standingHeight = 1.75f;
+    public float crouchHeight   = 1.05f;
 
-    NavMeshAgent _agent;
-    Mode         _mode = Mode.Follow;
-    float        _harpCooldownTimer;
-    bool         _harpUsedThisZone;
+    [Header("Harp Ability (once per zone)")]
+    public float harpCalmRadius = 10f;
+    public AudioSource harpSource;
+    public AudioClip   harpClip;
 
-    void Awake() => _agent = GetComponent<NavMeshAgent>();
+    public Mode CurrentMode   { get; private set; } = Mode.Follow;
+    public bool IsHidden      { get; private set; }
+    public bool IsCrouching   { get; private set; }
+    public bool HarpAvailable => !_harpUsedThisZone;
+    public bool IsReady       => _agent != null && _agent.enabled && _agent.isOnNavMesh;
 
-    void Start()
+    NavMeshAgent    _agent;
+    CapsuleCollider _capsule;
+    bool  _harpUsedThisZone;
+    bool  _following;
+    bool  _pausedApplied;
+    Transform _runTarget;
+    float _repathTimer;
+    float _noiseTimer;
+
+    void Awake()
     {
-        _agent.speed = followSpeed;
-        SetMode(Mode.Follow);
+        Instance = this;
+        _agent   = GetComponent<NavMeshAgent>();
+        _capsule = GetComponent<CapsuleCollider>();
     }
+
+    void OnDestroy() { if (Instance == this) Instance = null; }
 
     void Update()
     {
-        if (GameManager.Instance.IsPaused) return;
+        if (!IsReady) return;
 
-        switch (_mode)
+        bool paused = GameManager.Instance != null && GameManager.Instance.IsPaused;
+        if (paused != _pausedApplied)
+        {
+            _pausedApplied = paused;
+            _agent.isStopped = paused || CurrentMode == Mode.Wait;
+        }
+        if (paused) return;
+
+        UpdateCrouch();
+
+        switch (CurrentMode)
         {
             case Mode.Follow: UpdateFollow(); break;
-            case Mode.Wait:   break;           // agent stopped; do nothing
-            case Mode.Run:    UpdateRun();     break;
+            case Mode.Wait:   break;
+            case Mode.Run:    UpdateRun();    break;
         }
-
-        if (InputReader.Instance.HarpPressed) TryHarp();
     }
 
     // ── Mode Updates ────────────────────────────────────────────────────────
 
+    void UpdateCrouch()
+    {
+        bool want = PlayerController.Instance != null && PlayerController.Instance.IsCrouching && CurrentMode != Mode.Run;
+        if (want == IsCrouching) return;
+        IsCrouching = want;
+        if (_capsule != null)
+        {
+            _capsule.height = IsCrouching ? crouchHeight : standingHeight;
+            _capsule.center = Vector3.up * (_capsule.height * 0.5f);
+        }
+    }
+
     void UpdateFollow()
     {
+        _agent.speed = IsCrouching ? crouchFollowSpeed : followSpeed;
         if (followTarget == null) return;
+
         float dist = Vector3.Distance(transform.position, followTarget.position);
-        if (dist > followStopDistance)
+        if (!_following && dist > startFollowDistance) _following = true;
+        else if (_following && dist < stopFollowDistance) { _following = false; _agent.ResetPath(); }
+
+        if (!_following) return;
+        _repathTimer -= Time.deltaTime;
+        if (_repathTimer <= 0f)
+        {
+            _repathTimer = 0.2f;
             _agent.SetDestination(followTarget.position);
-        else
-            _agent.ResetPath();
+        }
     }
 
     void UpdateRun()
     {
-        if (runWaypoint == null) return;
-        if (_agent.remainingDistance < 0.5f)
-            SetMode(Mode.Follow); // reached waypoint; resume following
+        if (_runTarget == null) { SetMode(Mode.Follow); return; }
+
+        _noiseTimer -= Time.deltaTime;
+        if (_noiseTimer <= 0f)
+        {
+            _noiseTimer = 0.45f;
+            if (_agent.velocity.sqrMagnitude > 1f) AudioEventSystem.Emit(transform.position, runNoiseRadius);
+        }
+
+        if (!_agent.pathPending && _agent.remainingDistance < 0.8f)
+            SetMode(Mode.Wait);      // reached the marked waypoint: hold there until called
+    }
+
+    // Nearest marked waypoint that is ahead of David (zones progress toward +Z).
+    Transform PickRunWaypoint()
+    {
+        Transform best = null;
+        float bestD = float.MaxValue;
+        if (runWaypoints != null)
+            foreach (var w in runWaypoints)
+            {
+                if (w == null || w.position.z < transform.position.z + 3f) continue;
+                float d = (w.position - transform.position).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = w; }
+            }
+        return best != null ? best : runWaypoint;
     }
 
     // ── Public API ──────────────────────────────────────────────────────────
 
-    public void SetMode(Mode mode)
+    public void SetMode(Mode mode, bool announce = false)
     {
-        _mode = mode;
+        if (!IsReady)
+        {
+            // Not placed on a NavMesh yet (between zones): remember the mode; Teleport() applies the agent state.
+            CurrentMode = mode;
+            HUD.Instance?.UpdateDavidMode(mode.ToString());
+            return;
+        }
+
+        if (mode == Mode.Run)
+        {
+            _runTarget = PickRunWaypoint();
+        }
+        if (mode == Mode.Run && _runTarget == null)
+        {
+            if (announce) FloatingText.Spawn(transform.position + Vector3.up * 2.4f, "No waypoint ahead", new Color(1f, 0.8f, 0.4f));
+            return;
+        }
+
+        CurrentMode = mode;
+        _following = false;
         switch (mode)
         {
             case Mode.Follow:
@@ -86,49 +182,94 @@ public class DavidCompanion : MonoBehaviour
                 _agent.isStopped = true;
                 break;
             case Mode.Run:
-                if (runWaypoint == null) { SetMode(Mode.Follow); return; }
                 _agent.isStopped = false;
                 _agent.speed     = runSpeed;
-                _agent.SetDestination(runWaypoint.position);
+                _agent.SetDestination(_runTarget.position);
                 break;
         }
+
         HUD.Instance?.UpdateDavidMode(mode.ToString());
+        if (announce)
+        {
+            string msg = mode switch { Mode.Follow => "Follow", Mode.Wait => "Wait", _ => "Run!" };
+            FloatingText.Spawn(transform.position + Vector3.up * 2.4f, msg, new Color(0.7f, 0.9f, 1f));
+        }
+    }
+
+    public void SetRunWaypoints(Transform[] waypoints)
+    {
+        runWaypoints = waypoints;
+        _runTarget = null;
+    }
+
+    public void SetHidden(bool hidden) => IsHidden = hidden;
+
+    public void Teleport(Vector3 position, Quaternion rotation)
+    {
+        _agent.enabled = false;
+        transform.SetPositionAndRotation(position, rotation);
+        _agent.enabled = true;
+        _agent.Warp(position);
+        if (!_agent.isOnNavMesh)
+            Debug.LogWarning($"[DavidCompanion] David could not be placed on the NavMesh at {position}.", this);
+        _pausedApplied = false;
+    }
+
+    // Scripted sequences (gate finale) move David directly; the agent is switched off while they run.
+    public void SetCutsceneControl(bool on)
+    {
+        if (on)
+        {
+            _agent.enabled = false;
+        }
+        else
+        {
+            _agent.enabled = true;
+            _agent.Warp(transform.position);
+        }
     }
 
     // ── Harp Ability ─────────────────────────────────────────────────────────
 
-    void TryHarp()
+    public bool TryHarp()
     {
-        if (_harpUsedThisZone) return;
+        if (_harpUsedThisZone)
+        {
+            FloatingText.Spawn(transform.position + Vector3.up * 2.4f, "Harp already played", new Color(0.8f, 0.8f, 0.8f), 2.5f);
+            return false;
+        }
 
-        // Calm all Suspicious guards in radius that don't have LOS on David
-        var guards = FindObjectsByType<GuardFSM>(FindObjectsSortMode.None);
+        // Calm all Suspicious guards in hearing range that don't have direct sight of David
         bool calmedAny = false;
-        foreach (var g in guards)
+        foreach (var g in GuardFSM.All.ToArray())
         {
             if (g.State != GuardState.Suspicious) continue;
             if (Vector3.Distance(transform.position, g.transform.position) > harpCalmRadius) continue;
-
-            // Check guard does NOT have direct LOS on David
-            Vector3 dir = transform.position - g.transform.position;
-            if (!Physics.Raycast(g.transform.position + Vector3.up, dir.normalized,
-                    dir.magnitude, ~LayerMask.GetMask("Characters")))
-            {
-                g.Calm();
-                calmedAny = true;
-            }
+            if (g.Vision.CanSee(transform)) continue;
+            g.Calm();
+            calmedAny = true;
         }
 
-        if (calmedAny)
+        if (!calmedAny)
         {
-            _harpUsedThisZone = true;
-            HUD.Instance?.ShowHarpUsed();
+            FloatingText.Spawn(transform.position + Vector3.up * 2.4f, "No one to calm", new Color(0.8f, 0.8f, 0.8f), 2.5f);
+            return false;
         }
+
+        _harpUsedThisZone = true;
+        if (harpSource != null && harpClip != null) harpSource.PlayOneShot(harpClip);
+        GetComponent<ProceduralCharacterAnim>()?.PlayHarp();
+        FloatingText.Spawn(transform.position + Vector3.up * 2.4f, "♪ Harp", new Color(1f, 0.9f, 0.5f), 4f, 2.2f);
+        HUD.Instance?.ShowHarpUsed();
+        return true;
     }
 
     public void ResetForZone()
     {
         _harpUsedThisZone = false;
-        SetMode(Mode.Follow);
+        IsHidden = false;
+        _runTarget = null;
+        HUD.Instance?.ResetForZone();
+        if (IsReady) SetMode(Mode.Follow); else { CurrentMode = Mode.Follow; HUD.Instance?.UpdateDavidMode("Follow"); }
     }
 }
