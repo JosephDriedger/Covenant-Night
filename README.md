@@ -84,13 +84,14 @@ Gibeah is divided into five linearly connected zones, each with at least two rou
 | Action | Keyboard / mouse | Gamepad |
 |--------|------------------|---------|
 | Move / look | WASD / mouse | Left stick / right stick |
-| Sprint (loud) | Left Shift | L3 |
-| Creep (silent) | C (hold) | B / Circle |
+| Sneak (silent) | Left Shift (hold) | B / Circle (hold) |
+| Sprint (loud) | Left Ctrl or Cmd (hold) | L3 |
 | Shadow Step | Space (hold, beside a wall) | A / Cross (hold) |
 | Throw a stone | Left mouse | X / Square |
 | David: Follow / Wait / Run | 1 / 2 / 3 | D-pad left / right / down |
 | David: toggle Follow / Wait | E | Y / Triangle |
 | Harp Calm | H | D-pad up |
+| Pause menu (controls, settings, main menu, quit) | Esc | Start |
 
 ## Building and Platforms
 
@@ -135,7 +136,7 @@ A one-person summer project: design, code, level building, audio and art are all
 - All Jonathan abilities functional
 - David harp ability implemented
 - Story panels for all beats including epilogue
-- Spatial audio, AudioMixer snapshots, and tension drone
+- Spatial audio, AudioMixer snapshots, and a heartbeat tension layer
 - URP torch lighting and detection decals across all zones
 
 ---

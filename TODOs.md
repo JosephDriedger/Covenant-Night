@@ -5,7 +5,7 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 
 ## Done
 
-- [x] Player controller (walk / crouch / sprint, gravity, noise footprint), over-the-shoulder camera with wall collision
+- [x] Player controller (walk / sneak / sprint, gravity, noise footprint), over-the-shoulder camera with wall collision
 - [x] Input: keyboard + mouse and gamepad, device-aware on-screen hints
 - [x] Guard FSM with graded detection, torchlight and crouch modifiers, hearing, Commander behaviour
 - [x] Detection cones on the ground (green / amber / red), `?` / `!` state icons
@@ -15,16 +15,16 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [x] Additive zone loading, per-zone checkpoints, story panels between zones, zone name cards
 - [x] Five zone blockouts with baked NavMesh, two or more routes each, hiding spots, dog pens, rooftop and terrace routes
 - [x] Gate finale (signet-ring bluff, gate opens, farewell, epilogue) and credits
-- [x] Audio: AudioMixer (Music / Ambience / SFX; Calm / Suspicious / Alarmed snapshots), tension drone, alert sting, spatial torches
+- [x] Audio: AudioMixer (Music / Ambience / SFX; Calm / Suspicious / Alarmed snapshots), heartbeat tension layer, lyre underscore, alert sting, spatial torches
 - [x] Post-processing: Bloom + Vignette, alarm vignette pulse and desaturation
 - [x] Low-poly art pass: rigged humanoids with walk / run / crouch / throw / harp animation, textures, lit windows, trees, banners, fire particles, moon and stars
 - [x] Townsfolk that block the player, block guard line of sight and get in the guards' way
+- [x] Title screen and pause menu (resume, restart zone, controls and field notes, settings, main menu, quit); story panels rewritten short and illustrated, with escape tactics told in the story (controls appear only on the Controls page)
 - [x] Safe-area HUD and console performance defaults; Windows player built and verified through the ending
 
 ## To do
 
 - [ ] Playtest with real players and tune guard speeds, cones, patrol gaps and stone counts per zone
-- [ ] Title screen and pause menu
 - [ ] Replace generated audio with authored or licensed recordings and a real underscore
 - [ ] Replace primitive-built characters with rigged humanoids and Mixamo clips (the animator already exposes Speed / IsCrouching / IsAlerted)
 - [ ] Hand-painted story illustrations
