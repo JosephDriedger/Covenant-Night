@@ -1,21 +1,22 @@
 using UnityEngine;
 using UnityEngine.Audio;
 
-// Drives the tension drone, the underscore, the alert sting and the AudioMixer snapshots
+// Drives the tension layer, the underscore, the alert sting and the AudioMixer snapshots
 // (Calm / Suspicious / Alarmed) in response to guard states. Lives in the Persistent scene.
 //
-//   Drone: "a low sustained pad that rises in volume and pitch as guards approach Suspicious state" —
-//          volume/pitch follow the highest guard awareness near Jonathan, and peak while alarmed.
-//   Music: sparse underscore (no melody). The epilogue plays a single melodic phrase.
+//   Tension layer (the "drone" source): a quiet heartbeat and lyre tremolo that grows in volume and pitch (so it
+//          quickens) as guards approach Suspicious state — it follows the highest guard awareness near Jonathan
+//          and peaks while alarmed.
+//   Music: a slow lyre melody with soft frame drum. The epilogue plays a single melodic phrase.
 public class TensionAudioManager : MonoBehaviour
 {
     public static TensionAudioManager Instance { get; private set; }
 
     [Header("Tension Drone")]
     public AudioSource droneSource;
-    public float calmVolume  = 0.05f;
-    public float riseVolume  = 0.35f;   // any guard Suspicious
-    public float alarmVolume = 0.65f;
+    public float calmVolume  = 0.0f;
+    public float riseVolume  = 0.14f;   // any guard Suspicious
+    public float alarmVolume = 0.28f;
     public float alarmPitch  = 1.15f;
     public float risePitch   = 1.06f;
     public float lerpSpeed   = 2.5f;

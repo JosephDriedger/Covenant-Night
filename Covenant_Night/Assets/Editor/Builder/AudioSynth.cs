@@ -165,54 +165,111 @@ public static class AudioSynth
         return MakeLoop(b, 0.5f);
     }
 
-    public static float[] Drone()
+    // ── ancient-instrument helpers ──────────────────────────────────────────
+    // Own random generator and wrap-around writes: the loops stay seamless and the shared sequence used by
+    // the other clips is untouched.
+
+    // Kinnor (lyre): a plucked string.
+    static void Lyre(float[] buf, System.Random rng, float startSec, float freq, float dur, float amp, float damp = 0.9965f)
     {
-        // integer cycles per 8 s → seamless loop
-        float len = 8f;
-        var b = Buf(len);
-        float[] f = { 55f, 55.25f, 82.5f, 110f, 110.25f, 165f };
-        float[] a = { 0.5f, 0.4f, 0.3f, 0.25f, 0.2f, 0.08f };
-        for (int i = 0; i < b.Length; i++)
+        int n = Mathf.Max(2, Mathf.RoundToInt(SR / freq));
+        var d = new float[n];
+        float prev = 0f;
+        for (int j = 0; j < n; j++) { float x = (float)(rng.NextDouble() * 2.0 - 1.0); prev = 0.6f * prev + 0.4f * x; d[j] = prev; }
+        int len = (int)(dur * SR), s0 = (int)(startSec * SR), idx = 0;
+        for (int i = 0; i < len; i++)
+        {
+            float cur = d[idx], nxt = d[(idx + 1) % n];
+            d[idx] = damp * 0.5f * (cur + nxt);
+            buf[(s0 + i) % buf.Length] += cur * amp * (i < 40 ? i / 40f : 1f);
+            idx = (idx + 1) % n;
+        }
+    }
+
+    // Frame drum (tof): a soft skin thump with a little hand slap.
+    static void FrameDrum(float[] buf, System.Random rng, float startSec, float amp, float baseFreq = 92f)
+    {
+        int s0 = (int)(startSec * SR), len = (int)(0.7f * SR);
+        float phase = 0f, lp = 0f;
+        for (int i = 0; i < len; i++)
         {
             float t = i / (float)SR;
-            float lfo = 0.75f + 0.25f * Mathf.Sin(Tau * t / len);
-            float s = 0f;
-            for (int k = 0; k < f.Length; k++) s += Mathf.Sin(Tau * f[k] * t) * a[k];
-            b[i] = s * lfo;
+            phase += Tau * baseFreq * (1f + 0.5f * Mathf.Exp(-t * 30f)) / SR;
+            lp += 0.25f * ((float)(rng.NextDouble() * 2.0 - 1.0) - lp);
+            buf[(s0 + i) % buf.Length] += (Mathf.Sin(phase) * Mathf.Exp(-t * 9f) + lp * Mathf.Exp(-t * 45f) * 0.6f) * amp;
         }
+    }
+
+    // Reed flute (ney / halil): a breathy note that swells in and fades out.
+    static void ReedNote(float[] buf, System.Random rng, float startSec, float freq, float dur, float amp)
+    {
+        int s0 = (int)(startSec * SR), len = (int)(dur * SR);
+        float lp = 0f;
+        for (int i = 0; i < len; i++)
+        {
+            float t = i / (float)SR;
+            float env = Mathf.Clamp01(t / 0.35f) * Mathf.Clamp01((dur - t) / 0.9f);
+            float pm = 0.5f * Mathf.Sin(Tau * 5f * t) * Mathf.Clamp01(t / 0.6f);
+            float ph = Tau * freq * t + pm;
+            lp += 0.2f * ((float)(rng.NextDouble() * 2.0 - 1.0) - lp);
+            float s = Mathf.Sin(ph) + 0.35f * Mathf.Sin(2f * ph) + 0.18f * Mathf.Sin(3f * ph) + lp * 0.3f;
+            buf[(s0 + i) % buf.Length] += s * env * amp;
+        }
+    }
+
+    // Tension layer under the calm music: a quiet heartbeat on a frame drum with a tremolo on the lyre, built on a
+    // flat second (Eb against D). No sustained tone. The game raises its volume and pitch (so it also quickens)
+    // as guards grow suspicious.
+    public static float[] Drone()
+    {
+        float len = 8f;
+        var b = Buf(len);
+        var rng = new System.Random(19);
+        for (int k = 0; k < 10; k++)                                   // lub-dub every 0.8 s
+        {
+            FrameDrum(b, rng, k * 0.8f, 0.9f, 72f);
+            FrameDrum(b, rng, k * 0.8f + 0.22f, 0.55f, 64f);
+        }
+        float[] fs = { 293.66f, 293.66f, 311.13f, 293.66f, 293.66f, 220f, 311.13f, 293.66f };
+        for (int bar = 0; bar < 4; bar++)
+            for (int i = 0; i < 8; i++)
+                Lyre(b, rng, bar * 2f + i * 0.25f, fs[i], 0.5f, 0.28f + (i % 4 == 0 ? 0.12f : 0f), 0.994f);
         return b;
     }
 
-    // Sparse tense underscore: low string pad + sparse frame drum + occasional oud pluck. No melody.
+    // Calm underscore: a slow, contemplative kinnor melody in a Hijaz-like mode (D, Eb, F#, G, A, Bb, C) with a low
+    // root on the lyre, soft frame drum and two answering reed notes. 40 beats at 67 bpm.
     public static float[] Music()
     {
-        float len = 32f;
-        var b = Buf(len);
-        float[] roots = { 73.42f, 65.41f, 58.27f, 65.41f };       // D2, C2, Bb1, C2 — one per 8 s
-        for (int i = 0; i < b.Length; i++)
-        {
-            float t = i / (float)SR;
-            float vib = 1f + 0.004f * Mathf.Sin(Tau * 4.5f * t);
-            float pedal = 0f;
-            for (int h = 1; h <= 5; h++) pedal += Mathf.Sin(Tau * 73.42f * vib * h * t) / h;
-            b[i] += pedal * 0.22f;
+        const float beat = 0.9f;
+        var b = Buf(40 * beat);
+        var rng = new System.Random(73);
+        const float D3 = 146.83f, Eb3 = 155.56f, Fs3 = 185f, G3 = 196f, A3 = 220f, Bb3 = 233.08f, C4 = 261.63f, D4 = 293.66f;
 
-            int seg = Mathf.Min(3, (int)(t / 8f));
-            float local = (t % 8f) / 8f;
-            float w = Mathf.Sin(Mathf.PI * local); w *= w;
-            float f = roots[seg] * vib;
-            float chord = 0f;
-            for (int h = 1; h <= 6; h++) chord += Mathf.Sin(Tau * f * h * t) / h + 0.6f * Mathf.Sin(Tau * f * 1.5f * h * t) / h;
-            b[i] += chord * 0.18f * w;
+        void N(float pos, float f, float ring = 2.4f, float amp = 0.5f) => Lyre(b, rng, pos * beat, f, ring, amp);
+
+        // melody
+        N(0, A3, 3.4f); N(2, Bb3); N(3, A3); N(4, G3); N(5, Fs3); N(6, Eb3, 3.4f);
+        N(8, D3, 3.4f); N(10, Eb3); N(11, Fs3); N(12, G3); N(13, A3); N(14, Bb3, 3.4f);
+        N(16, C4); N(17, Bb3); N(18, A3, 3f); N(20, G3); N(21, Fs3); N(22, Eb3); N(23, Fs3);
+        N(24, G3); N(25, A3); N(26, Bb3); N(27, A3); N(28, Fs3, 3.4f); N(30, Eb3, 3f);
+        N(32, D4, 3f); N(34, C4); N(35, Bb3); N(36, A3, 3.4f); N(38, Eb3); N(39, D3, 3.4f);
+
+        // low root on the lyre
+        for (int k = 0; k < 5; k++) N(k * 8, D3, 3.6f, 0.35f);
+
+        // reed flute answers
+        ReedNote(b, rng, 16 * beat, D4, 3f * beat, 0.22f);
+        ReedNote(b, rng, 32 * beat, A3, 4f * beat, 0.22f);
+
+        // soft frame drum from the third bar on
+        for (int bar = 2; bar < 10; bar++)
+        {
+            FrameDrum(b, rng, bar * 4 * beat, 0.5f);
+            FrameDrum(b, rng, (bar * 4 + 2.5f) * beat, 0.25f);
         }
-        float[] hits = { 0f, 2f, 3.5f, 8f, 10f, 11.5f, 16f, 18f, 19.5f, 24f, 26f, 27.5f, 30.5f };
-        float[] acc  = { 1f, .6f, .8f, 1f, .5f, .7f, 1f, .6f, .8f, 1f, .5f, .8f, .5f };
-        for (int k = 0; k < hits.Length; k++) AddDrum(b, hits[k], acc[k] * 0.55f);
-        // occasional oud texture (drone-note plucks, not a tune)
-        Pluck(b, 5f,    146.83f, 2.6f, 0.5f);
-        Pluck(b, 14.5f, 110.00f, 2.6f, 0.5f);
-        Pluck(b, 21.5f, 174.61f, 2.6f, 0.4f);
-        Pluck(b, 29.2f, 130.81f, 2.6f, 0.45f);
+
+        Reverb(b, 0.11f, 0.3f, 0.3f);
         return b;
     }
 

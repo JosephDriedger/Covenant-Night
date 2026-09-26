@@ -21,8 +21,8 @@ public class AudioLib
         Write("wind_loop",          AudioSynth.Wind(),          0.7f);
         Write("crickets_loop",      AudioSynth.Crickets(),      0.5f);
         Write("torch_crackle_loop", AudioSynth.TorchCrackle(),  0.8f);
-        Write("tension_drone_loop", AudioSynth.Drone(),         0.8f);
-        Write("music_underscore",   AudioSynth.Music(),         0.8f);
+        Write("tension_drone_loop", AudioSynth.Drone(),         0.6f);
+        Write("music_underscore",   AudioSynth.Music(),         0.6f);
         Write("alert_sting",        AudioSynth.AlertSting(),    0.9f);
         Write("stone_clatter",      AudioSynth.StoneClatter(),  0.8f);
         Write("dog_bark",           AudioSynth.DogBark(),       0.85f);
