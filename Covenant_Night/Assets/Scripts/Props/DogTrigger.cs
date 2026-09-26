@@ -12,13 +12,14 @@ public class DogTrigger : MonoBehaviour
     public float cooldown = 4f;
 
     public AudioSource barkSource;
+    public AudioClip   barkClip;
 
     bool _onCooldown;
 
     void OnTriggerEnter(Collider other)
     {
         if (_onCooldown) return;
-        if (!other.CompareTag("Player") && !other.CompareTag("David")) return;
+        if (!other.CompareTag("Player") && !other.CompareTag(GameLayers.DavidTag)) return;
         StartCoroutine(Bark());
     }
 
@@ -26,7 +27,12 @@ public class DogTrigger : MonoBehaviour
     {
         _onCooldown = true;
         AudioEventSystem.Emit(transform.position, barkNoiseRadius);
-        barkSource?.Play();
+        if (barkSource != null)
+        {
+            if (barkClip != null) barkSource.PlayOneShot(barkClip);
+            else barkSource.Play();
+        }
+        FloatingText.Spawn(transform.position + Vector3.up * 2f, "Woof!", new Color(1f, 0.7f, 0.4f), 4f, 1.4f);
         yield return new WaitForSeconds(cooldown);
         _onCooldown = false;
     }
