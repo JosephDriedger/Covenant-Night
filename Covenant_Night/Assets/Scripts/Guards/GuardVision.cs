@@ -38,6 +38,8 @@ public class GuardVision : MonoBehaviour
     public Vector3 LastSeenPosition    { get; private set; }
     public float TimeSinceSeen         { get; private set; } = 999f;
     public bool  SeesTarget            { get; private set; }
+    public bool  SeesPlayer            { get; private set; }   // per target: a hidden target counts as seen only within hiddenNoticeRange
+    public bool  SeesDavid             { get; private set; }
 
     GuardFSM _fsm;
     float _accum;
@@ -61,13 +63,13 @@ public class GuardVision : MonoBehaviour
 
     void Tick(float dt)
     {
-        bool seen = false;
+        bool seen = false, seenPlayer = false, seenDavid = false;
 
         var pc = PlayerController.Instance;
         if (pc != null && Evaluate(pc.transform, pc.IsHidden, pc.IsWallPressed && pc.IsStationary,
                 pc.IsCrouching, pc.IsSprinting, out Vector3 pos, out float dist, out float range))
         {
-            seen = true;
+            seen = seenPlayer = true;
             LastSpottedTarget = pc.transform;
             LastSeenPosition  = pos;
             TimeSinceSeen     = 0f;
@@ -86,7 +88,7 @@ public class GuardVision : MonoBehaviour
         if (dv != null && Evaluate(dv.transform, dv.IsHidden, false, dv.IsCrouching, false,
                 out Vector3 dpos, out _, out _))
         {
-            seen = true;
+            seen = seenDavid = true;
             LastSpottedTarget = dv.transform;
             LastSeenPosition  = dpos;
             TimeSinceSeen     = 0f;
@@ -95,6 +97,8 @@ public class GuardVision : MonoBehaviour
         }
 
         SeesTarget = seen;
+        SeesPlayer = seenPlayer;
+        SeesDavid  = seenDavid;
         if (!seen)
         {
             TimeSinceSeen += dt;
@@ -166,7 +170,7 @@ public class GuardVision : MonoBehaviour
     {
         Awareness = 0f;
         TimeSinceSeen = 999f;
-        SeesTarget = false;
+        SeesTarget = SeesPlayer = SeesDavid = false;
     }
 
     void OnDrawGizmosSelected()

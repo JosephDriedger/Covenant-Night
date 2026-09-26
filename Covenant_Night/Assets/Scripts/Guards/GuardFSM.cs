@@ -65,6 +65,7 @@ public class GuardFSM : MonoBehaviour
     float   _sentryBaseAngle;
     float   _sentryT;
     float   _repathTimer;
+    bool    _scanning;          // alarmed guard searching at the last known position
     float   _commanderTimer;
     bool    _pausedApplied;
 
@@ -135,6 +136,7 @@ public class GuardFSM : MonoBehaviour
         _stateTimer = 0f;
         _arrived = false;
         _lookTimer = 0f;
+        _scanning = false;
         indicator?.SetState(next);
 
         if (AgentReady) _agent.updateRotation = true;
@@ -237,18 +239,40 @@ public class GuardFSM : MonoBehaviour
             Vector3 dest = _vision.TimeSinceSeen < 4f ? _vision.LastSeenPosition : _alarmPosition;
             _agent.SetDestination(dest);
         }
+
+        // Nothing in sight at the spot: search it instead of standing on top of it (a hidden target is never shoved into).
+        bool searching = !_vision.SeesTarget && !_agent.pathPending && _agent.remainingDistance <= 0.7f;
+        if (searching)
+        {
+            if (!_scanning)
+            {
+                _scanning = true;
+                _lookTimer = 0f;
+                _lookBaseYaw = transform.eulerAngles.y;
+                _agent.updateRotation = false;
+            }
+            _lookTimer += Time.deltaTime;
+            transform.rotation = Quaternion.Euler(0f, _lookBaseYaw + Mathf.Sin(_lookTimer * 2.2f) * 75f, 0f);
+        }
+        else if (_scanning)
+        {
+            _scanning = false;
+            _agent.updateRotation = true;
+        }
     }
 
+    // A hiding target is safe until a guard is close enough to actually see it (GuardVision.hiddenNoticeRange);
+    // a guard that finds someone in hiding catches them, so a spotted alarm and a capture never disagree.
     void CheckCapture()
     {
         var pc = PlayerController.Instance;
-        if (pc != null && !pc.IsHidden && Near(pc.transform.position))
+        if (pc != null && (!pc.IsHidden || _vision.SeesPlayer) && Near(pc.transform.position))
         {
             GameManager.Instance?.TriggerFail(FailReason.JonathanCaptured);
             return;
         }
         var dv = DavidCompanion.Instance;
-        if (dv != null && !dv.IsHidden && Near(dv.transform.position))
+        if (dv != null && (!dv.IsHidden || _vision.SeesDavid) && Near(dv.transform.position))
             GameManager.Instance?.TriggerFail(FailReason.DavidCaptured);
     }
 
