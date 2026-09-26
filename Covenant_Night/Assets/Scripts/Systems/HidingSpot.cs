@@ -1,32 +1,68 @@
 using UnityEngine;
 
 // Place on a trigger collider (alcove, shadow, hay pile, etc.).
-// While Jonathan is inside and the alarm is active, the hide timer pauses.
+// Jonathan / David inside are hidden: guards only find them at very close range.
+// While Jonathan is inside during an alarm the hide countdown is held and, after a few seconds,
+// the alarm stands down (AlarmSystem). Replaces the old Time.timeScale = 0 hack.
 public class HidingSpot : MonoBehaviour
 {
-    bool _jonathanInside;
+    [Tooltip("Optional glow that pulses while an alarm is active, pointing the player to safety.")]
+    public Light markerLight;
+    public float idleIntensity  = 0.4f;
+    public float alarmIntensity = 3.0f;
+
+    int _jonathanInside;
+    int _davidInside;
 
     void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
-        _jonathanInside = true;
-        // Pause the alarm countdown while inside
-        Time.timeScale = 0f;
+        if (other.CompareTag("Player"))
+        {
+            _jonathanInside++;
+            other.GetComponent<PlayerController>()?.SetHidden(true);
+            AlarmSystem.Instance?.SetPlayerHidden(true);
+        }
+        else if (other.CompareTag(GameLayers.DavidTag))
+        {
+            _davidInside++;
+            other.GetComponent<DavidCompanion>()?.SetHidden(true);
+        }
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
-        _jonathanInside = false;
-        Time.timeScale = 1f;
+        if (other.CompareTag("Player"))
+        {
+            _jonathanInside = Mathf.Max(0, _jonathanInside - 1);
+            if (_jonathanInside == 0)
+            {
+                other.GetComponent<PlayerController>()?.SetHidden(false);
+                AlarmSystem.Instance?.SetPlayerHidden(false);
+            }
+        }
+        else if (other.CompareTag(GameLayers.DavidTag))
+        {
+            _davidInside = Mathf.Max(0, _davidInside - 1);
+            if (_davidInside == 0) other.GetComponent<DavidCompanion>()?.SetHidden(false);
+        }
     }
 
-    // If the alarm clears while hiding, resume time
-    void OnEnable()  => AlarmSystem.OnAlarmCleared += OnAlarmCleared;
-    void OnDisable() => AlarmSystem.OnAlarmCleared -= OnAlarmCleared;
-
-    void OnAlarmCleared()
+    // Zone unloaded while someone was inside: don't leave them permanently hidden.
+    void OnDestroy()
     {
-        if (_jonathanInside) Time.timeScale = 1f;
+        if (_jonathanInside > 0)
+        {
+            PlayerController.Instance?.SetHidden(false);
+            AlarmSystem.Instance?.SetPlayerHidden(false);
+        }
+        if (_davidInside > 0) DavidCompanion.Instance?.SetHidden(false);
+    }
+
+    void Update()
+    {
+        if (markerLight == null) return;
+        bool alarm = AlarmSystem.Instance != null && AlarmSystem.Instance.IsAlarmed;
+        float target = alarm ? alarmIntensity * (0.6f + 0.4f * Mathf.Sin(Time.time * 6f)) : idleIntensity;
+        markerLight.intensity = Mathf.Lerp(markerLight.intensity, target, 8f * Time.deltaTime);
     }
 }

@@ -6,10 +6,25 @@ public class PatrolPath : MonoBehaviour
 {
     public Transform[] waypoints;
 
-    public Transform GetWaypoint(int index) =>
-        waypoints[index % waypoints.Length];
+    [Tooltip("Walk out to the last waypoint and back instead of looping (corridor patrols).")]
+    public bool pingPong;
 
-    public int Length => waypoints.Length;
+    public Transform GetWaypoint(int index) =>
+        waypoints[Mathf.Clamp(index, 0, waypoints.Length - 1)];
+
+    public int Length => waypoints == null ? 0 : waypoints.Length;
+
+    public int NearestIndex(Vector3 position)
+    {
+        int best = 0;
+        float bestD = float.MaxValue;
+        for (int i = 0; i < Length; i++)
+        {
+            float d = (waypoints[i].position - position).sqrMagnitude;
+            if (d < bestD) { bestD = d; best = i; }
+        }
+        return best;
+    }
 
     void OnDrawGizmos()
     {
@@ -19,6 +34,7 @@ public class PatrolPath : MonoBehaviour
         {
             if (waypoints[i] == null) continue;
             Gizmos.DrawSphere(waypoints[i].position, 0.15f);
+            if (pingPong && i == waypoints.Length - 1) continue;
             var next = waypoints[(i + 1) % waypoints.Length];
             if (next != null) Gizmos.DrawLine(waypoints[i].position, next.position);
         }

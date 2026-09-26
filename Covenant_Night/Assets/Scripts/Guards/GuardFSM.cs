@@ -1,4 +1,4 @@
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -6,30 +6,41 @@ public enum GuardType { Patrol, Sentry, Commander }
 
 public enum GuardState { Unaware, Suspicious, Alarmed }
 
-// Main guard brain. Requires NavMeshAgent, GuardVision, GuardHearing on the same GameObject.
+// Main guard brain: a single FSM class parameterised by guard type.
+//   Unaware    – follows routine (patrol loop / sentry sweep)
+//   Suspicious – investigates a sighting or sound, looks around, then returns to routine
+//   Alarmed    – confirmed sighting: the whole zone is alerted (AlarmSystem), guards converge and can capture
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(GuardVision))]
 [RequireComponent(typeof(GuardHearing))]
 public class GuardFSM : MonoBehaviour
 {
+    public static readonly List<GuardFSM> All = new List<GuardFSM>();
+
     [Header("Type")]
     public GuardType guardType;
 
     [Header("Patrol")]
     public PatrolPath patrolPath;
-    public float waypointTolerance = 0.4f;
+    public float waypointTolerance = 0.6f;
+    public float waypointPause     = 1.0f;
     public float patrolSpeed       = 2f;
 
     [Header("Sentry Rotation")]
-    public float sentryRotateSpeed = 25f;
-    public float sentryArcDegrees  = 120f;
+    public float sentryRotateSpeed = 25f;    // phase speed of the sweep (deg/s)
+    public float sentryArcDegrees  = 100f;   // total arc
 
     [Header("Suspicious")]
     public float investigateSpeed   = 3.5f;
-    public float investigateTimeout = 6f;   // seconds before returning to patrol
+    public float investigateTimeout = 12f;   // seconds before giving up and returning to routine
+    public float lookAroundTime     = 3f;    // time spent scanning at the investigation point
 
     [Header("Alarmed")]
-    public float alarmSpeed = 5f;
+    public float alarmSpeed     = 5.2f;
+    public float catchDistance  = 1.5f;
+
+    [Header("Commander")]
+    public float commanderCalmRadius = 10f;  // Commander calms nearby Suspicious Patrol guards
 
     [Header("Detection Indicator")]
     public DetectionIndicator indicator;
@@ -39,23 +50,73 @@ public class GuardFSM : MonoBehaviour
     GuardState   _state;
 
     int     _waypointIndex;
+    int     _dir = 1;
+    bool    _needDestination = true;
+    bool    _waiting;
+    float   _waitTimer;
+
     Vector3 _investigateTarget;
+    Vector3 _alarmPosition;
+    bool    _arrived;
+    float   _lookTimer;
+    float   _lookBaseYaw;
+
     float   _stateTimer;
     float   _sentryBaseAngle;
     float   _sentryT;
+    float   _repathTimer;
+    float   _commanderTimer;
+    bool    _pausedApplied;
+
+    public GuardState State     => _state;
+    public float StateTime      => _stateTimer;
+    public GuardVision Vision   => _vision;
+    public float Awareness      => _vision != null ? _vision.Awareness : 0f;
+
+    bool AgentReady => _agent != null && _agent.enabled && _agent.isOnNavMesh;
+
+    void OnEnable()  => All.Add(this);
+    void OnDisable() => All.Remove(this);
 
     void Awake()
     {
         _agent  = GetComponent<NavMeshAgent>();
         _vision = GetComponent<GuardVision>();
         _sentryBaseAngle = transform.eulerAngles.y;
+        _sentryT = Random.value * 360f;
     }
 
-    void Start() => SetState(GuardState.Unaware);
+    void Start()
+    {
+        if (guardType == GuardType.Sentry)
+        {
+            _agent.enabled = false;              // sentries never leave their post
+        }
+        else
+        {
+            // Agents are saved disabled so they don't try to register before the zone's NavMesh data is loaded.
+            _agent.enabled = true;
+            _agent.Warp(transform.position);
+            if (!_agent.isOnNavMesh)
+                Debug.LogWarning($"[GuardFSM] {name} is not on the NavMesh at {transform.position}.", this);
+            _agent.angularSpeed  = 220f;
+            _agent.acceleration  = 14f;
+            _agent.stoppingDistance = 0.1f;
+        }
+        SetState(GuardState.Unaware);
+    }
 
     void Update()
     {
-        if (GameManager.Instance.IsPaused) return;
+        bool paused = GameManager.Instance != null && GameManager.Instance.IsPaused;
+        if (paused != _pausedApplied)
+        {
+            _pausedApplied = paused;
+            if (AgentReady) _agent.isStopped = paused;
+        }
+        if (paused) return;
+
+        _stateTimer += Time.deltaTime;
 
         switch (_state)
         {
@@ -69,26 +130,37 @@ public class GuardFSM : MonoBehaviour
 
     void SetState(GuardState next)
     {
+        var prev = _state;
         _state = next;
         _stateTimer = 0f;
+        _arrived = false;
+        _lookTimer = 0f;
         indicator?.SetState(next);
+
+        if (AgentReady) _agent.updateRotation = true;
 
         switch (next)
         {
             case GuardState.Unaware:
-                _agent.speed = patrolSpeed;
-                _agent.isStopped = (guardType == GuardType.Sentry);
+                if (AgentReady) { _agent.speed = patrolSpeed; _agent.isStopped = false; }
+                _needDestination = true;
+                _waiting = false;
+                if (patrolPath != null && patrolPath.Length > 0 && prev != GuardState.Unaware)
+                    _waypointIndex = patrolPath.NearestIndex(transform.position);
                 break;
 
             case GuardState.Suspicious:
-                _agent.speed = investigateSpeed;
+                if (AgentReady)
+                {
+                    _agent.speed = investigateSpeed;
+                    _agent.isStopped = false;
+                    _agent.SetDestination(_investigateTarget);
+                }
                 break;
 
             case GuardState.Alarmed:
-                _agent.speed = alarmSpeed;
-                AlarmSystem.Instance?.Raise();
-                // Commander calms nearby patrol guards so they stay on posts
-                if (guardType == GuardType.Commander) CalmNearbyPatrolGuards();
+                if (AgentReady) { _agent.speed = alarmSpeed; _agent.isStopped = false; }
+                _repathTimer = 0f;
                 break;
         }
     }
@@ -100,8 +172,11 @@ public class GuardFSM : MonoBehaviour
         switch (guardType)
         {
             case GuardType.Patrol:
+                DoPatrol();
+                break;
             case GuardType.Commander:
                 DoPatrol();
+                DoCommanderCalming();
                 break;
             case GuardType.Sentry:
                 DoSentryRotate();
@@ -111,79 +186,179 @@ public class GuardFSM : MonoBehaviour
 
     void UpdateSuspicious()
     {
-        _stateTimer += Time.deltaTime;
+        if (_stateTimer >= investigateTimeout) { SetState(GuardState.Unaware); return; }
 
-        if (guardType != GuardType.Sentry)
+        if (guardType == GuardType.Sentry)
         {
-            _agent.SetDestination(_investigateTarget);
-
-            if (_agent.remainingDistance < 0.5f || _stateTimer >= investigateTimeout)
-                SetState(GuardState.Unaware);
+            FaceTowards(_investigateTarget, 70f);
+            if (_stateTimer >= lookAroundTime && Awareness < 0.2f) SetState(GuardState.Unaware);
+            return;
         }
-        else
-        {
-            // Sentry looks toward sound origin
-            Vector3 dir = (_investigateTarget - transform.position).normalized;
-            dir.y = 0f;
-            if (dir != Vector3.zero)
-                transform.rotation = Quaternion.RotateTowards(
-                    transform.rotation, Quaternion.LookRotation(dir), 60f * Time.deltaTime);
 
-            if (_stateTimer >= investigateTimeout)
+        if (!AgentReady) return;
+
+        if (!_arrived)
+        {
+            if (!_agent.pathPending && _agent.remainingDistance <= 0.7f)
             {
-                _stateTimer = 0f;
-                SetState(GuardState.Unaware);
+                _arrived = true;
+                _lookTimer = 0f;
+                _lookBaseYaw = transform.eulerAngles.y;
+                _agent.updateRotation = false;
+                _agent.ResetPath();
             }
+            return;
         }
+
+        // Scan the area at the investigation point
+        _lookTimer += Time.deltaTime;
+        transform.rotation = Quaternion.Euler(0f, _lookBaseYaw + Mathf.Sin(_lookTimer * 2.2f) * 75f, 0f);
+        if (_lookTimer >= lookAroundTime && Awareness < 0.2f)
+            SetState(GuardState.Unaware);
     }
 
     void UpdateAlarmed()
     {
-        if (_vision.LastSpottedTarget != null)
-            _agent.SetDestination(_vision.LastSpottedTarget.position);
+        // Captures: an alarmed guard that reaches Jonathan or David ends the attempt
+        if (guardType != GuardType.Sentry) CheckCapture();
+
+        if (guardType == GuardType.Sentry)
+        {
+            FaceTowards(_vision.TimeSinceSeen < 2f ? _vision.LastSeenPosition : _alarmPosition, 120f);
+            return;
+        }
+
+        if (!AgentReady) return;
+
+        _repathTimer -= Time.deltaTime;
+        if (_repathTimer <= 0f)
+        {
+            _repathTimer = 0.2f;
+            Vector3 dest = _vision.TimeSinceSeen < 4f ? _vision.LastSeenPosition : _alarmPosition;
+            _agent.SetDestination(dest);
+        }
+    }
+
+    void CheckCapture()
+    {
+        var pc = PlayerController.Instance;
+        if (pc != null && !pc.IsHidden && Near(pc.transform.position))
+        {
+            GameManager.Instance?.TriggerFail(FailReason.JonathanCaptured);
+            return;
+        }
+        var dv = DavidCompanion.Instance;
+        if (dv != null && !dv.IsHidden && Near(dv.transform.position))
+            GameManager.Instance?.TriggerFail(FailReason.DavidCaptured);
+    }
+
+    bool Near(Vector3 p)
+    {
+        Vector3 d = p - transform.position;
+        return Mathf.Abs(d.y) < 1.6f && new Vector2(d.x, d.z).magnitude <= catchDistance;
     }
 
     // ── Patrol / Sentry Helpers ─────────────────────────────────────────────
 
     void DoPatrol()
     {
-        if (patrolPath == null || patrolPath.Length == 0) return;
-        if (_agent.pathPending) return;
+        if (!AgentReady || patrolPath == null || patrolPath.Length == 0) return;
 
-        if (_agent.remainingDistance < waypointTolerance)
+        if (_needDestination)
         {
-            _waypointIndex = (_waypointIndex + 1) % patrolPath.Length;
             _agent.SetDestination(patrolPath.GetWaypoint(_waypointIndex).position);
+            _needDestination = false;
+            return;
         }
+
+        if (_waiting)
+        {
+            _waitTimer -= Time.deltaTime;
+            if (_waitTimer <= 0f)
+            {
+                _waiting = false;
+                AdvanceWaypoint();
+                _agent.SetDestination(patrolPath.GetWaypoint(_waypointIndex).position);
+            }
+            return;
+        }
+
+        if (!_agent.pathPending && _agent.remainingDistance <= waypointTolerance)
+        {
+            _waiting = true;
+            _waitTimer = waypointPause;
+        }
+    }
+
+    void AdvanceWaypoint()
+    {
+        if (patrolPath.pingPong && patrolPath.Length > 1)
+        {
+            if (_waypointIndex + _dir >= patrolPath.Length || _waypointIndex + _dir < 0) _dir = -_dir;
+            _waypointIndex += _dir;
+        }
+        else _waypointIndex = (_waypointIndex + 1) % patrolPath.Length;
     }
 
     void DoSentryRotate()
     {
         _sentryT += Time.deltaTime * sentryRotateSpeed;
         float angle = _sentryBaseAngle + Mathf.Sin(_sentryT * Mathf.Deg2Rad) * (sentryArcDegrees * 0.5f);
-        transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0f, angle, 0f), 60f * Time.deltaTime);
+    }
+
+    void FaceTowards(Vector3 worldPoint, float degreesPerSecond)
+    {
+        Vector3 dir = worldPoint - transform.position;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.01f) return;
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation, Quaternion.LookRotation(dir), degreesPerSecond * Time.deltaTime);
+    }
+
+    // Commanders close off the "harp exploit": Patrol guards near them that fall Suspicious are calmed
+    // (the Commander has already vouched for the area) as long as the Commander can see them.
+    void DoCommanderCalming()
+    {
+        _commanderTimer -= Time.deltaTime;
+        if (_commanderTimer > 0f) return;
+        _commanderTimer = 0.5f;
+
+        foreach (var g in All)
+        {
+            if (g == this || g.guardType != GuardType.Patrol) continue;
+            if (g.State != GuardState.Suspicious || g.StateTime < 1.5f) continue;
+            if (Vector3.Distance(transform.position, g.transform.position) > commanderCalmRadius) continue;
+            if (_vision.CanSee(g.transform) || HasClearSightTo(g.transform.position)) g.Calm();
+        }
+    }
+
+    bool HasClearSightTo(Vector3 point)
+    {
+        Vector3 eye = _vision.eyePoint != null ? _vision.eyePoint.position : transform.position + Vector3.up * 1.6f;
+        Vector3 d = point + Vector3.up * 1.2f - eye;
+        return !Physics.Raycast(eye, d.normalized, d.magnitude, GameLayers.SightBlockers, QueryTriggerInteraction.Ignore);
     }
 
     // ── External Callbacks ──────────────────────────────────────────────────
 
-    // Called by GuardVision when confirmed LOS on a target
-    public void OnTargetSpotted(Transform target)
+    // Called by GuardVision every check while a target is visible.
+    public void OnSighting(Transform target, Vector3 position, float awareness)
     {
-        bool isDavid = target.CompareTag("David");
-
         if (_state == GuardState.Alarmed) return;
 
-        if (isDavid)
+        // David: confirmed line of sight is an immediate alarm. Jonathan: alarm once awareness is full.
+        if (target.CompareTag(GameLayers.DavidTag) || awareness >= 1f)
         {
-            SetState(GuardState.Alarmed);
+            RaiseAlarm(position);
+            return;
         }
-        else
+
+        if (awareness >= _vision.suspicionThreshold)
         {
-            // Jonathan: if wall-pressed and close, still alarm; otherwise suspicious->alarm progression
-            if (_state == GuardState.Suspicious)
-                SetState(GuardState.Alarmed);
-            else
-                BecomeSuspicious(target.position);
+            _investigateTarget = position;
+            if (_state == GuardState.Unaware) SetState(GuardState.Suspicious);
+            else if (AgentReady && !_arrived) _agent.SetDestination(position);
         }
     }
 
@@ -191,41 +366,44 @@ public class GuardFSM : MonoBehaviour
     public void OnSoundHeard(Vector3 origin)
     {
         if (_state == GuardState.Alarmed) return;
-
-        // Commander investigates; Patrol/Sentry become suspicious
         _investigateTarget = origin;
-        if (_state != GuardState.Suspicious)
-            SetState(GuardState.Suspicious);
+        if (_state != GuardState.Suspicious) SetState(GuardState.Suspicious);
+        else
+        {
+            _stateTimer = 0f;         // fresh sound: keep investigating
+            _arrived = false;
+            if (AgentReady) { _agent.updateRotation = true; _agent.SetDestination(origin); }
+        }
     }
 
-    // Called by DavidCompanion.Harp() to calm this guard
+    // Called by DavidCompanion.TryHarp() and the Commander to calm this guard
     public void Calm()
     {
-        if (_state == GuardState.Alarmed) return;
-        if (_state == GuardState.Suspicious)
-        {
-            AlarmSystem.Instance?.Suppress();
-            SetState(GuardState.Unaware);
-        }
+        if (_state != GuardState.Suspicious) return;
+        _vision.ResetAwareness();
+        SetState(GuardState.Unaware);
     }
 
-    void BecomeSuspicious(Vector3 position)
+    void RaiseAlarm(Vector3 position)
     {
-        _investigateTarget = position;
+        _alarmPosition = position;
+        if (AlarmSystem.Instance != null) AlarmSystem.Instance.Raise(position);
+        else SetState(GuardState.Alarmed);
+    }
+
+    // Broadcast from AlarmSystem: reinforcements converge on the alarm position.
+    public void OnAlarmBroadcast(Vector3 position)
+    {
+        _alarmPosition = position;
+        if (_state != GuardState.Alarmed) SetState(GuardState.Alarmed);
+    }
+
+    // AlarmSystem.StandDown(): the player has vanished. Guards check the last known spot, then resume routine.
+    public void OnStandDown()
+    {
+        if (_state != GuardState.Alarmed) return;
+        _vision.ResetAwareness();
+        _investigateTarget = _alarmPosition;
         SetState(GuardState.Suspicious);
     }
-
-    void CalmNearbyPatrolGuards()
-    {
-        var guards = FindObjectsByType<GuardFSM>(FindObjectsSortMode.None);
-        foreach (var g in guards)
-        {
-            if (g == this) continue;
-            if (g.guardType != GuardType.Patrol) continue;
-            if (Vector3.Distance(transform.position, g.transform.position) < 15f)
-                g.Calm();
-        }
-    }
-
-    public GuardState State => _state;
 }
