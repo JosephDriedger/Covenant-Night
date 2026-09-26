@@ -18,15 +18,18 @@ public class MenuController : MonoBehaviour
     // Set before reloading the Persistent scene to go straight into play ("play again" after the credits).
     public static bool SkipTitleOnce;
 
-    enum Page { None, Title, Pause, Controls, Settings }
+    enum Page { None, Title, Difficulty, Pause, Controls, Settings }
 
     [Header("Root")]
     public GameObject canvasRoot;
     public CanvasGroup group;
-    public GameObject titlePage, pausePage, controlsPage, settingsPage;
+    public GameObject titlePage, difficultyPage, pausePage, controlsPage, settingsPage;
 
     [Header("Title")]
     public Button playBtn, titleControlsBtn, titleSettingsBtn, titleQuitBtn;
+
+    [Header("Difficulty")]
+    public Button easyBtn, mediumBtn, hardBtn, hardcoreBtn, difficultyBackBtn;
 
     [Header("Pause")]
     public Button resumeBtn, restartBtn, pauseControlsBtn, pauseSettingsBtn, mainMenuBtn, pauseQuitBtn;
@@ -51,7 +54,12 @@ public class MenuController : MonoBehaviour
         GameSettings.Apply();
         EnsureEventSystem();
 
-        playBtn.onClick.AddListener(() => _playClicked = true);
+        playBtn.onClick.AddListener(() => Show(Page.Difficulty));
+        easyBtn.onClick.AddListener(() => StartRun(DifficultyLevel.Easy));
+        mediumBtn.onClick.AddListener(() => StartRun(DifficultyLevel.Medium));
+        hardBtn.onClick.AddListener(() => StartRun(DifficultyLevel.Hard));
+        hardcoreBtn.onClick.AddListener(() => StartRun(DifficultyLevel.Hardcore));
+        difficultyBackBtn.onClick.AddListener(() => Show(Page.Title));
         titleControlsBtn.onClick.AddListener(() => OpenSub(Page.Controls, Page.Title));
         titleSettingsBtn.onClick.AddListener(() => OpenSub(Page.Settings, Page.Title));
         titleQuitBtn.onClick.AddListener(Quit);
@@ -133,6 +141,9 @@ public class MenuController : MonoBehaviour
                 bool transitioning = ZoneManager.Instance != null && ZoneManager.Instance.IsTransitioning;
                 if (pausePressed && gm != null && gm.CanUserPause && !transitioning) OpenPause();
                 break;
+            case Page.Difficulty:
+                if (back) Show(Page.Title);
+                break;
             case Page.Pause:
                 if (back) Resume();
                 break;
@@ -163,8 +174,16 @@ public class MenuController : MonoBehaviour
 
     // ── Pages ───────────────────────────────────────────────────────────────
 
+    void StartRun(DifficultyLevel level)
+    {
+        GameDifficulty.Level = level;
+        _playClicked = true;
+    }
+
     void OpenPause()
     {
+        // Hardcore has one life, so restarting means restarting the whole run.
+        restartBtn.GetComponentInChildren<TMP_Text>().text = GameDifficulty.Hardcore ? "Restart Run" : "Restart Zone";
         GameManager.Instance.SetUserPaused(true);
         Show(Page.Pause);
     }
@@ -184,6 +203,7 @@ public class MenuController : MonoBehaviour
     void HideAll()
     {
         titlePage.SetActive(false);
+        difficultyPage.SetActive(false);
         pausePage.SetActive(false);
         controlsPage.SetActive(false);
         settingsPage.SetActive(false);
@@ -198,6 +218,7 @@ public class MenuController : MonoBehaviour
 
         canvasRoot.SetActive(page != Page.None);
         titlePage.SetActive(page == Page.Title);
+        difficultyPage.SetActive(page == Page.Difficulty);
         pausePage.SetActive(page == Page.Pause);
         controlsPage.SetActive(page == Page.Controls);
         settingsPage.SetActive(page == Page.Settings);
@@ -222,6 +243,15 @@ public class MenuController : MonoBehaviour
         switch (_page)
         {
             case Page.Title:    first = playBtn; break;
+            case Page.Difficulty:
+                switch (GameDifficulty.Level)
+                {
+                    case DifficultyLevel.Easy:     first = easyBtn; break;
+                    case DifficultyLevel.Hard:     first = hardBtn; break;
+                    case DifficultyLevel.Hardcore: first = hardcoreBtn; break;
+                    default:                       first = mediumBtn; break;
+                }
+                break;
             case Page.Pause:    first = resumeBtn; break;
             case Page.Controls: first = controlsBackBtn; break;
             case Page.Settings: first = volumeSlider; break;
@@ -234,7 +264,8 @@ public class MenuController : MonoBehaviour
     void RestartZone()
     {
         Resume();
-        ZoneManager.Instance?.RestartCurrentZone();
+        if (GameDifficulty.Hardcore) ZoneManager.Instance?.RestartRun();
+        else ZoneManager.Instance?.RestartCurrentZone();
     }
 
     void MainMenu()

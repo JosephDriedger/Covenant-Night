@@ -267,7 +267,7 @@ public static class PersistentBuilder
             var pr = p.rectTransform;
             pr.anchorMin = pr.anchorMax = anchor; pr.pivot = pivot; pr.anchoredPosition = pos; pr.sizeDelta = size;
         }
-        Plate(new Vector2(0, 1), new Vector2(0, 1), new Vector2(28, -22), new Vector2(330, 62));
+        Plate(new Vector2(0, 1), new Vector2(0, 1), new Vector2(28, -22), new Vector2(470, 62));
         Plate(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -22), new Vector2(330, 62));
         Plate(new Vector2(0, 0), new Vector2(0, 0), new Vector2(28, 42), new Vector2(500, 112));
 
@@ -483,6 +483,24 @@ public static class PersistentBuilder
         ctl.titleSettingsBtn = MakeButton(title, "Settings", "Settings", new Vector2(0, -146), bSize);
         ctl.titleQuitBtn     = MakeButton(title, "Quit",     "Quit",     new Vector2(0, -234), bSize);
         ctl.titlePage = title.gameObject;
+
+        // ── difficulty ──
+        var diff = MakePage(t, "DifficultyPage");
+        var dArt = MakeImage(diff, "Illustration", art.color);
+        dArt.sprite = art.sprite;
+        Stretch(dArt.rectTransform);
+        var dShade = MakeImage(diff, "Shade", new Color(0.01f, 0.01f, 0.03f, 0.78f));
+        Stretch(dShade.rectTransform);
+        MakeText(diff, "Heading", "Choose Your Night", 96, Gold, mid, mid, new Vector2(0, 390), new Vector2(1500, 130), TextAlignmentOptions.Center, FontStyles.Bold);
+        MakeText(diff, "Note", "On Easy, Medium and Hard, a capture only restarts the current zone.", 34, Parchment, mid, mid, new Vector2(0, 300), new Vector2(1500, 50), TextAlignmentOptions.Center);
+        var dSize = new Vector2(1100, 104);
+        string Sub(string s) => "\n<size=62%><color=#C9C3B0>" + s + "</color></size>";
+        ctl.easyBtn     = MakeButton(diff, "Easy",     "Easy" + Sub("Slower, near-sighted guards. More stones and more time to hide."), new Vector2(0, 170), dSize);
+        ctl.mediumBtn   = MakeButton(diff, "Medium",   "Medium" + Sub("The intended experience."), new Vector2(0, 50), dSize);
+        ctl.hardBtn     = MakeButton(diff, "Hard",     "Hard" + Sub("Keener guards, less time to hide and fewer stones."), new Vector2(0, -70), dSize);
+        ctl.hardcoreBtn = MakeButton(diff, "Hardcore", "Hardcore" + Sub("One life. Any capture restarts the run. Faster guards that search hiding spots."), new Vector2(0, -190), dSize);
+        ctl.difficultyBackBtn = MakeButton(diff, "Back", "Back", new Vector2(0, -330), new Vector2(400, 64), 32);
+        ctl.difficultyPage = diff.gameObject;
 
         // ── pause ──
         var pause = MakePage(t, "PausePage");
