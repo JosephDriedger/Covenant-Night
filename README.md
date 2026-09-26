@@ -1,6 +1,6 @@
 # Covenant Night
 
-A third-person 3D stealth game of loyalty, shadow, and sacrifice — built in Unity for a 5-day hackathon.
+A third-person 3D stealth game of loyalty, shadow, and sacrifice — a one-person summer project built in Unity.
 
 **Scriptural Basis:** 1 Samuel 19–20
 
@@ -36,9 +36,15 @@ Jonathan navigates five hand-crafted city zones, each a self-contained 3D stealt
 | Commander | Patrols but breaks to investigate audio; triggers instant alarm on confirmed sighting |
 
 **Detection States**
-- **Unaware** (green decal) — guard follows routine
-- **Suspicious** (yellow) — investigating; break line-of-sight and use Shadow Step to reset
-- **Alarmed** (red) — confirmed sighting; zone exit locks, 30 seconds to reach a hiding spot or the zone resets
+- **Unaware** (green cone) — guard follows routine
+- **Suspicious** (amber) — investigating; break line-of-sight and use Shadow Step to reset
+- **Alarmed** (red) — confirmed sighting; every guard converges, the zone exit locks, and you have 30 seconds to reach a hiding spot or the zone resets
+
+Detection is graded: an awareness meter fills faster when a guard is close, when you are sprinting, or when you stand in torchlight, and drains when you break line of sight. David is different — a confirmed sighting of him is an immediate alarm.
+
+**Townsfolk**
+
+Merchants, shoppers and villagers fill every zone. They are solid (Jonathan cannot walk through them), guards have to path around them, and a crowd between you and a guard blocks its line of sight. They flinch at the alarm and turn toward noises.
 
 ---
 
@@ -60,37 +66,58 @@ Gibeah is divided into five linearly connected zones, each with at least two rou
 
 - **Engine:** Unity 3D (URP)
 - **Language:** C#
-- **Camera:** Cinemachine third-person rig
+- **Camera:** custom over-the-shoulder third-person rig with wall collision (no Cinemachine dependency)
 - **Movement:** Unity `CharacterController`
 - **Guard AI:** C# Finite State Machine (Patrol / Suspicious / Alarmed)
 - **Line-of-Sight:** `Physics.Raycast` from guard eye position, checked every 0.1s
 - **Companion AI:** `NavMeshAgent` with Follow / Wait / Run modes
 - **Scene Loading:** Additive scene loading per zone (`LoadSceneMode.Additive`)
 - **Audio:** `AudioMixer` with Music / Ambience / SFX submixes; spatial blend 1.0 on all in-world sources
-- **Detection Visualisation:** URP Decal Projector cone decals on the ground
+- **Detection Visualisation:** ground-projected cone mesh, clipped by walls and fading toward its far edge
+- **Look:** flat-shaded low-poly characters and buildings, tiling procedural textures, torch/fire particles, lit windows, moon and stars, URP Bloom + Vignette
+- **Input:** new Input System — keyboard and mouse or gamepad, with on-screen hints that follow the device in use
 
 ---
+
+## Controls
+
+| Action | Keyboard / mouse | Gamepad |
+|--------|------------------|---------|
+| Move / look | WASD / mouse | Left stick / right stick |
+| Sprint (loud) | Left Shift | L3 |
+| Creep (silent) | C (hold) | B / Circle |
+| Shadow Step | Space (hold, beside a wall) | A / Cross (hold) |
+| Throw a stone | Left mouse | X / Square |
+| David: Follow / Wait / Run | 1 / 2 / 3 | D-pad left / right / down |
+| David: toggle Follow / Wait | E | Y / Triangle |
+| Harp Calm | H | D-pad up |
+
+## Building and Platforms
+
+Open `Covenant_Night` in Unity 6000.3.14f1. The scenes, prefabs, materials, audio and UI are produced by the editor builder in `Assets/Editor/Builder` (menu **Covenant Night > Build Everything**), so changes to layouts or art generators belong there; re-run it to regenerate the assets.
+
+Windows, macOS and Linux builds are under **Covenant Night > Build ... Player**. The Windows player is built and verified end to end. Console notes and requirements are in [docs/PLATFORMS.md](docs/PLATFORMS.md).
+
+## Screenshots
+
+Renders of each zone are in [docs/screenshots](docs/screenshots).
 
 ## Project Structure
 
 ```
-Covenant_Night/Assets/Scenes/
-├── Persistent.unity          # Always-loaded manager scene
-├── Zone1_PalaceDistrict.unity
-├── Zone2_MarketQuarter.unity
-├── Zone3_PottersAlley.unity
-├── Zone4_WellSquare.unity
-└── Zone5_EasternGate.unity
+Covenant_Night/Assets/
+├── Scenes/         Persistent + Zone1–Zone5 (each zone has its own baked NavMesh)
+├── Scripts/        Player, Guards, Companion, Systems, UI, Props, Data
+├── Editor/Builder/ Generators for scenes, prefabs, audio, art and UI
+├── Prefabs/  Materials/  Audio/  Art/  ScriptableObjects/
+docs/               Game design document, platform notes, screenshots
 ```
 
 ---
 
-## Team
+## About
 
-2-person team — 5-day jam.
-
-- **Person 1 (Programmer):** Player controller, Cinemachine rig, Guard FSM, David NavMeshAgent, zone loading, checkpoint system, fail/win state flows, gate scripted sequence, detection decals
-- **Person 2 (Designer/Artist):** 3D environment blockout and dressing for all 5 zones, asset sourcing, Animator Controllers, URP torch lighting, story panel UI, audio integration, itch.io submission
+A one-person summer project: design, code, level building, audio and art are all done by a single developer. The full design lives in `docs/GameDesignDocument.docx`; the scope cuts listed there (no inventory, no branching dialogue, no full save/load) still apply.
 
 ---
 
@@ -124,4 +151,4 @@ Covenant_Night/Assets/Scenes/
 
 ## Credits
 
-See `CREDITS.txt` in the build root for full asset attribution. Assets sourced from Unity Asset Store, Quaternius, Mixamo, freesound.org, and OpenGameArt.org.
+See `CREDITS.txt` for the full attribution list. All characters, environment, audio and story illustrations in the current build are original, procedurally created assets and can be swapped for hand-made ones at any time.

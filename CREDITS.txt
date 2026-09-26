@@ -1,0 +1,21 @@
+COVENANT NIGHT — Credits
+
+Design, code, sound design and illustration: a one-person project.
+Scriptural basis: 1 Samuel 19-20. The epilogue quotes 1 Samuel 20:42.
+
+Asset sources
+-------------
+All characters, environment geometry, textures, particle effects, sound effects, music and story illustrations
+in this build are original and generated procedurally by the project's editor tools
+(Covenant_Night/Assets/Editor/Builder). No third-party art or audio is included.
+
+Engine and packages
+-------------------
+Unity 6 (Universal Render Pipeline), Input System, AI Navigation, TextMeshPro (Unity Technologies).
+Default UI font: Liberation Sans (SIL Open Font License), shipped with TextMeshPro.
+
+Placeholders that may be replaced later
+---------------------------------------
+Characters, audio and illustrations are stand-ins for hand-made assets. If third-party assets are added
+(for example Quaternius, Mixamo, freesound.org, OpenGameArt.org) list each one here in the format:
+    [Asset Name] by [Author] — [Source URL] — [License]
