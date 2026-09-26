@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4724455878f58b4791342be53e06ebc, type: 3}
+  m_Name: Story_JonathanCaptured
+  m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
+  beats:
+  - heading: Before the King
+    text: 'Saul''s guards drag Jonathan into the hall and throw him before the throne.
+
+
+      "Where
+      is the son of Jesse?" the king demands.'
+    sprite: {fileID: 21300000, guid: 25a3fe8e76d12934da1f6c93f6bd8e87, type: 3}
+  - heading: Before the King
+    text: 'Jonathan lifts his chin and says nothing. Not a word of the covenant.
+      Not a word of the gate.
+
+
+      In the uproar that follows, the night is given
+      a second chance...'
+    sprite: {fileID: 21300000, guid: 25a3fe8e76d12934da1f6c93f6bd8e87, type: 3}

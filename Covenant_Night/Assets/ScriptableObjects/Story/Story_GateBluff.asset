@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4724455878f58b4791342be53e06ebc, type: 3}
+  m_Name: Story_GateBluff
+  m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
+  beats:
+  - heading: The Bluff
+    text: '"By order of the king, no one leaves Gibeah tonight," the commander says,
+      blocking the way.
+
+
+      Jonathan steps into the torchlight and lifts his
+      hand. On his finger, his father''s signet ring catches the flame.'
+    sprite: {fileID: 21300000, guid: 5d9970ad33f1ff6499e6b31fb9a75ab3, type: 3}
+  - heading: The Bluff
+    text: '"I carry the king''s seal. Saul sends this man beyond the walls before
+      dawn - and does not wish it spoken of."
+
+
+      The commander studies the ring,
+      then the prince''s face. Slowly, he steps aside. The great gate groans open.'
+    sprite: {fileID: 21300000, guid: 5d9970ad33f1ff6499e6b31fb9a75ab3, type: 3}
