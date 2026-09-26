@@ -1,8 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
-// Procedural animation for the low-poly humanoids (Visual/Rig/Hips/{Skirt, LegL, LegR, Torso/{Head, ArmL, ArmR, Cloak}}):
-//   idle breathing, walk / run / sprint cycle, crouch-creep, wall-press flatten, guard patrol / suspicious /
+// Procedural animation for the low-poly humanoids (Visual/Rig/Hips/{Skirt, LegL/KneeL, LegR/KneeR, Torso/{Head, ArmL, ArmR, Cloak}}):
+//   idle breathing, walk / run / sprint cycle, sneak (knees bent, torso leaning forward), wall-press flatten, guard patrol / suspicious /
 //   alarmed poses (head scanning, spear levelled), and one-shots: PlayThrow, PlayHarp, PlayRaiseHand.
 // Stylised, exaggerated poses — not realistic. If an Animator with a controller is present it is also fed the
 // "Speed" / "IsCrouching" / "IsAlerted" parameters, so a Mixamo Humanoid rig can replace this later
@@ -19,7 +19,7 @@ public class ProceduralCharacterAnim : MonoBehaviour
     DavidCompanion   _david;
     GuardFSM         _guard;
 
-    Transform _hips, _torso, _head, _armL, _armR, _legL, _legR, _cloak, _spear;
+    Transform _hips, _torso, _head, _armL, _armR, _legL, _legR, _kneeL, _kneeR, _cloak, _spear;
     Vector3 _lastPos;
     float _speed, _phase, _t, _crouchT, _alertT, _alarmT, _wallT;
     float _seed;
@@ -54,6 +54,8 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _armR  = FindDeep(visual, "ArmR");
         _legL  = FindDeep(visual, "LegL");
         _legR  = FindDeep(visual, "LegR");
+        _kneeL = FindDeep(visual, "KneeL");     // absent on older prefabs: the legs then stay rigid
+        _kneeR = FindDeep(visual, "KneeR");
         _cloak = FindDeep(visual, "Cloak");
         _spear = FindDeep(visual, "Spear");
         _lastPos = transform.position;
@@ -103,24 +105,36 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _alarmT  = Mathf.MoveTowards(_alarmT, state == GuardState.Alarmed ? 1f : 0f, dt * 5f);
 
         float moving = Mathf.Clamp01(_speed / 0.7f);
-        float freq = 2.3f * (crouching ? 1.2f : 1f);
+        float freq = 2.3f * (crouching ? 1.5f : 1f);
         _phase += dt * _speed * freq;
         float s = Mathf.Sin(_phase), c = Mathf.Cos(_phase);
 
-        float legAmp = Mathf.Clamp(_speed * 9f, 0f, sprinting || _alarmT > 0.5f ? 52f : 40f) * Mathf.Lerp(1f, 0.55f, _crouchT);
-        float armAmp = legAmp * 0.85f;
-        float lean = Mathf.Clamp(_speed * 3.2f, 0f, 16f) + _crouchT * 34f - _wallT * 6f;
+        // Swing amplitude follows speed, but a sneak is slow: give it its own gain so the arms and legs still visibly swing.
+        float walkAmp   = Mathf.Clamp(_speed * 9f, 0f, sprinting || _alarmT > 0.5f ? 52f : 40f);
+        float sneakAmp  = Mathf.Clamp(_speed * 17f, 0f, 32f);
+        float legAmp = Mathf.Lerp(walkAmp, sneakAmp, _crouchT);
+        float armAmp = legAmp * 0.9f;
+        float lean = Mathf.Clamp(_speed * 3.2f, 0f, 16f) + _crouchT * 28f - _wallT * 6f;
         float bob = Mathf.Abs(s) * 0.05f * moving * (1f - _crouchT);
         float breathe = Mathf.Sin(_t * 2.2f + _seed);
 
         // ── hips / legs ──
-        float crouchDrop = 0.5f * _crouchT;
+        float crouchDrop = 0.37f * _crouchT;      // matches the thigh / knee fold below so the feet stay planted
         _hips.localPosition = new Vector3(0f, 0.98f - crouchDrop + bob, 0f);
         _hips.localRotation = Quaternion.Euler(0f, s * 5f * moving, s * 2f * moving);
 
-        float crouchFold = -60f * _crouchT;
+        float crouchFold = -55f * _crouchT;       // thighs forward
         _legL.localRotation = Quaternion.Euler(s * legAmp + crouchFold, 0f, 0f);
         _legR.localRotation = Quaternion.Euler(-s * legAmp + crouchFold, 0f, 0f);
+
+        // knees: folded back in a sneak, and lifting the swinging leg while walking
+        if (_kneeL != null && _kneeR != null)
+        {
+            float kneeFold = 105f * _crouchT;
+            float kneeStride = moving * Mathf.Lerp(38f, 22f, _crouchT);
+            _kneeL.localRotation = Quaternion.Euler(kneeFold + Mathf.Max(0f, -c) * kneeStride, 0f, 0f);
+            _kneeR.localRotation = Quaternion.Euler(kneeFold + Mathf.Max(0f, c) * kneeStride, 0f, 0f);
+        }
 
         // ── torso ──
         _torso.localRotation = Quaternion.Euler(lean, -s * 4f * moving, 0f);

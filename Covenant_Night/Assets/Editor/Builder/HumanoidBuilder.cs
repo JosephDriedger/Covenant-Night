@@ -3,7 +3,7 @@ using UnityEngine;
 public enum Role { Jonathan, David, GuardPatrol, GuardSentry, Commander, Civilian }
 
 // Builds a stylised low-poly humanoid on named pivots so ProceduralCharacterAnim can animate it:
-//   Visual/Rig/Hips/{Skirt, LegL, LegR, Torso/{Head, ArmL, ArmR, Cloak}}
+//   Visual/Rig/Hips/{Skirt, LegL/KneeL, LegR/KneeR, Torso/{Head, ArmL, ArmR, Cloak}}
 // Flat-shaded faceted meshes, chunky proportions, big readable silhouettes (not realistic).
 public static class HumanoidBuilder
 {
@@ -31,7 +31,8 @@ public static class HumanoidBuilder
     // shared meshes
     static Mesh Skirt()  => LowPoly.Cached("hum_skirt",  () => LowPoly.Frustum(8, 0.40f, 0.25f, 0.88f, -0.82f, true, true));
     static Mesh Hem()    => LowPoly.Cached("hum_hem",    () => LowPoly.Frustum(8, 0.418f, 0.405f, 0.10f, -0.82f, false, false));
-    static Mesh Leg()    => LowPoly.Cached("hum_leg",    () => LowPoly.Frustum(6, 0.07f, 0.09f, 0.95f, -0.95f));
+    static Mesh Thigh()  => LowPoly.Cached("hum_thigh",  () => LowPoly.Frustum(6, 0.075f, 0.09f, 0.5f, -0.5f));
+    static Mesh Shin()   => LowPoly.Cached("hum_shin",   () => LowPoly.Frustum(6, 0.06f, 0.075f, 0.45f, -0.45f));
     static Mesh Foot()   => LowPoly.Cached("hum_foot",   () => LowPoly.Box(new Vector3(0.14f, 0.07f, 0.28f), 1f, new Vector3(0, 0.035f, 0.05f)));
     static Mesh Chest()  => LowPoly.Cached("hum_chest",  () => LowPoly.Frustum(8, 0.21f, 0.27f, 0.52f, 0f, true, true, 1.12f, 0.85f));
     static Mesh Belt()   => LowPoly.Cached("hum_belt",   () => LowPoly.Frustum(8, 0.228f, 0.228f, 0.07f, 0.03f, false, false, 1.12f, 0.85f));
@@ -69,12 +70,14 @@ public static class HumanoidBuilder
         Part(hips, "Skirt", Skirt(), robe, Vector3.zero);
         Part(hips, "Hem", Hem(), trim, Vector3.zero);
 
-        // legs (pivot at the hip; feet peek out under the hem)
-        foreach (var side in new[] { ("LegL", -0.13f), ("LegR", 0.13f) })
+        // legs: hip pivot -> thigh, knee pivot -> shin + foot (feet peek out under the hem; the knee lets a sneak fold properly)
+        foreach (var side in new[] { ("LegL", "KneeL", -0.13f), ("LegR", "KneeR", 0.13f) })
         {
-            var leg = Pivot(hips, side.Item1, new Vector3(side.Item2, -0.05f, 0));
-            Part(leg, "Leg", Leg(), m.skin, Vector3.zero);
-            Part(leg, "Foot", Foot(), m.leather, new Vector3(0, -0.95f, 0));
+            var leg = Pivot(hips, side.Item1, new Vector3(side.Item3, -0.05f, 0));
+            Part(leg, "Thigh", Thigh(), m.skin, Vector3.zero);
+            var knee = Pivot(leg, side.Item2, new Vector3(0, -0.5f, 0));
+            Part(knee, "Shin", Shin(), m.skin, Vector3.zero);
+            Part(knee, "Foot", Foot(), m.leather, new Vector3(0, -0.45f, 0));
         }
 
         // torso
