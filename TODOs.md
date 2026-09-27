@@ -24,6 +24,7 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [x] Title screen and pause menu (resume, restart zone, controls and field notes, settings, main menu, quit); story panels rewritten short and illustrated, with escape tactics told in the story (controls appear only on the Controls page)
 - [x] Difficulty: Easy / Medium / Hard (a capture restarts the zone) and Hardcore (one life, faster and smarter guards); guard sharpness and moonlight rise zone by zone; every zone verified beatable in every mode
 - [x] New Game+: finishing the game once unlocks a Mixed-difficulty picker (Easy/Medium/Hard chosen per zone)
+- [x] Local personal-best time per zone, shown on the HUD and updated when a zone is beaten faster
 - [x] Safe-area HUD and console performance defaults; Windows player built and verified through the ending
 
 ## To do

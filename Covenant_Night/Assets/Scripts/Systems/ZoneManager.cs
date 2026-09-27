@@ -33,6 +33,7 @@ public class ZoneManager : MonoBehaviour
     string _loadedZoneScene;
     CheckpointData[] _runtimeCheckpoints;
     CheckpointData   _runtimeLegacy;
+    float _zoneStartTime;
 
     void Awake()
     {
@@ -72,12 +73,22 @@ public class ZoneManager : MonoBehaviour
     public void EnterNextZone()
     {
         if (IsTransitioning) return;
+        RecordZoneTime();
         if (CurrentZoneIndex + 1 >= zoneSceneNames.Length)
         {
             GameManager.Instance.TriggerWin();
             return;
         }
         StartCoroutine(TransitionToZone(CurrentZoneIndex + 1, restoreCheckpoint: false));
+    }
+
+    // Personal-best tracking: called when the player reaches the zone's exit (not on a restart/fail).
+    void RecordZoneTime()
+    {
+        if (CurrentZoneIndex < 0 || CurrentZoneIndex >= zoneSceneNames.Length) return;
+        float elapsed = Time.unscaledTime - _zoneStartTime;
+        if (ZoneTimes.SetIfBest(zoneSceneNames[CurrentZoneIndex], elapsed))
+            HUD.Instance?.ShowMessage($"New best time: {ZoneTimes.Format(elapsed)}");
     }
 
     // Called by FailStateHandler after the fail panels
@@ -144,6 +155,7 @@ public class ZoneManager : MonoBehaviour
     {
         CurrentZoneIndex = index;
         string sceneName = zoneSceneNames[index];
+        _zoneStartTime = Time.unscaledTime;
 
         yield return SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         _loadedZoneScene = sceneName;
@@ -197,6 +209,7 @@ public class ZoneManager : MonoBehaviour
         string title = CurrentEntry != null ? CurrentEntry.displayName : sceneName.Replace("_", " ");
         ZoneNameCard.Instance?.Show(title, CurrentEntry != null ? CurrentEntry.subtitle : null);
         HUD.Instance?.UpdateZone(index + 1, zoneSceneNames.Length);
+        HUD.Instance?.UpdateBestTime(ZoneTimes.Format(ZoneTimes.GetBest(sceneName)));
     }
 
     static ZoneEntry FindEntry(Scene scene)

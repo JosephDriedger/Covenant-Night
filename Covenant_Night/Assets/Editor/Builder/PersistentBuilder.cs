@@ -272,6 +272,7 @@ public static class PersistentBuilder
         Plate(new Vector2(0, 0), new Vector2(0, 0), new Vector2(28, 42), new Vector2(500, 112));
 
         hud.zoneText = MakeText(t, "ZoneText", "Zone 1 / 5", 34, Parchment, new Vector2(0, 1), new Vector2(0, 1), new Vector2(40, -30), new Vector2(600, 50), TextAlignmentOptions.TopLeft);
+        hud.bestTimeText = MakeText(t, "BestTime", "Best: --:--", 26, new Color(0.75f, 0.85f, 0.75f), new Vector2(0, 1), new Vector2(0, 1), new Vector2(40, -66), new Vector2(600, 36), TextAlignmentOptions.TopLeft);
         hud.stoneCountText = MakeText(t, "StoneCount", "Stones: 3", 34, Parchment, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, -30), new Vector2(500, 50), TextAlignmentOptions.TopRight);
         hud.decoyCountText = MakeText(t, "DecoyCount", "Decoys: 1", 30, new Color(0.85f, 0.8f, 0.65f), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, -66), new Vector2(500, 42), TextAlignmentOptions.TopRight);
         hud.davidModeText = MakeText(t, "DavidMode", "David: Follow", 32, new Color(0.7f, 0.9f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 95), new Vector2(600, 46), TextAlignmentOptions.BottomLeft);

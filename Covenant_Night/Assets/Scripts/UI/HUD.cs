@@ -26,6 +26,7 @@ public class HUD : MonoBehaviour
 
     [Header("Zone")]
     public TextMeshProUGUI zoneText;
+    public TextMeshProUGUI bestTimeText;
 
     [Header("Messages / Aim")]
     public TextMeshProUGUI messageText;
@@ -107,6 +108,11 @@ public class HUD : MonoBehaviour
     public void UpdateZone(int current, int total)
     {
         if (zoneText != null) zoneText.text = $"Zone {current} / {total}  ({GameDifficulty.Label})";
+    }
+
+    public void UpdateBestTime(string text)
+    {
+        if (bestTimeText != null) bestTimeText.text = $"Best: {text}";
     }
 
     public void ShowMessage(string message, float seconds = 2.5f)
