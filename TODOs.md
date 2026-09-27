@@ -12,6 +12,8 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [x] Alarm: reinforcements, exit lock, hide countdown (no `Time.timeScale`), stand-down when hidden, capture and fail flows
 - [x] David: Follow / Wait / Run to marked waypoints, crouch mirroring, harp calm (once per zone)
 - [x] Jonathan abilities: stone throw with arc solve, wall press (shadow step), pickups in clay pots
+- [x] Decoy: a droppable pouch that pulses noise for several seconds, holding a guard's attention on the spot
+- [x] David: Hush command (crouch + silence Run-mode noise for a few seconds), distinct from Harp Calm
 - [x] Additive zone loading, per-zone checkpoints, story panels between zones, zone name cards
 - [x] Five zone blockouts with baked NavMesh, two or more routes each, hiding spots, dog pens, rooftop and terrace routes
 - [x] Gate finale (signet-ring bluff, gate opens, farewell, epilogue) and credits

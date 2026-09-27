@@ -9,14 +9,16 @@ public class CheckpointData : ScriptableObject
     [HideInInspector] public Quaternion jonathanRotation = Quaternion.identity;
     [HideInInspector] public Vector3 davidPosition;
     [HideInInspector] public int stoneCount;
+    [HideInInspector] public int decoyCount;
     [HideInInspector] public bool hasData;
 
-    public void Save(Transform jonathan, Transform david, int stones)
+    public void Save(Transform jonathan, Transform david, int stones, int decoys)
     {
         jonathanPosition = jonathan.position;
         jonathanRotation = jonathan.rotation;
         davidPosition    = david.position;
         stoneCount       = stones;
+        decoyCount       = decoys;
         hasData          = true;
     }
 }

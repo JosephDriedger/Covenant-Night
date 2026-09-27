@@ -10,6 +10,9 @@ public class HUD : MonoBehaviour
     [Header("Stones")]
     public TextMeshProUGUI stoneCountText;
 
+    [Header("Decoys")]
+    public TextMeshProUGUI decoyCountText;
+
     [Header("David Mode")]
     public TextMeshProUGUI davidModeText;
 
@@ -62,6 +65,11 @@ public class HUD : MonoBehaviour
     public void UpdateStoneCount(int count)
     {
         if (stoneCountText != null) stoneCountText.text = $"Stones: {count}";
+    }
+
+    public void UpdateDecoyCount(int count)
+    {
+        if (decoyCountText != null) decoyCountText.text = $"Decoys: {count}";
     }
 
     public void UpdateDavidMode(string mode)

@@ -11,6 +11,7 @@ using UnityEngine.InputSystem;
 //   Throw stone LMB / Enter / West button
 //   David: 1 Follow, 2 Wait, 3 Run (D-pad left / right / down), E toggles Follow/Wait
 //   Harp H / D-pad up
+//   Decoy G / Right Shoulder     Hush David Q / Left Shoulder
 public class InputReader : MonoBehaviour
 {
     public static InputReader Instance { get; private set; }
@@ -33,6 +34,8 @@ public class InputReader : MonoBehaviour
     public bool DavidWaitPressed   { get; private set; }   // Next
     public bool DavidRunPressed    { get; private set; }   // dedicated "DavidRun" action
     public bool HarpPressed        { get; private set; }   // dedicated "Harp" action
+    public bool DecoyPressed       { get; private set; }   // dedicated "Decoy" action
+    public bool HushPressed        { get; private set; }   // dedicated "Hush" action
     public bool PausePressed       { get; private set; }   // Esc / Start
     public bool UsingGamepad       { get; private set; }   // last device used (drives on-screen control hints)
 
@@ -42,17 +45,19 @@ public class InputReader : MonoBehaviour
     public Vector2 scriptedMove;
     public bool scriptedSprint, scriptedCrouch, scriptedWallPress;
     public static bool ScriptedConfirm;
-    bool _sThrow, _sFollow, _sWait, _sRun, _sHarp;
+    bool _sThrow, _sFollow, _sWait, _sRun, _sHarp, _sDecoy, _sHush;
 
     public void InjectThrow()  => _sThrow  = true;
     public void InjectFollow() => _sFollow = true;
     public void InjectWait()   => _sWait   = true;
     public void InjectRun()    => _sRun    = true;
     public void InjectHarp()   => _sHarp   = true;
+    public void InjectDecoy()  => _sDecoy  = true;
+    public void InjectHush()   => _sHush   = true;
 
     InputActionMap _map;
     InputAction _move, _look, _sprint, _crouch, _attack, _interact, _jump, _previous, _next;
-    InputAction _harp, _run;
+    InputAction _harp, _run, _decoy, _hush;
 
     void Awake()
     {
@@ -79,9 +84,19 @@ public class InputReader : MonoBehaviour
         _run.AddBinding("<Keyboard>/3");
         _run.AddBinding("<Gamepad>/dpad/down");
 
+        _decoy = new InputAction("Decoy", InputActionType.Button);
+        _decoy.AddBinding("<Keyboard>/g");
+        _decoy.AddBinding("<Gamepad>/rightShoulder");
+
+        _hush = new InputAction("Hush", InputActionType.Button);
+        _hush.AddBinding("<Keyboard>/q");
+        _hush.AddBinding("<Gamepad>/leftShoulder");
+
         _map.Enable();
         _harp.Enable();
         _run.Enable();
+        _decoy.Enable();
+        _hush.Enable();
     }
 
     void Update()
@@ -98,9 +113,11 @@ public class InputReader : MonoBehaviour
             DavidWaitPressed   = _sWait;
             DavidRunPressed    = _sRun;
             HarpPressed        = _sHarp;
+            DecoyPressed       = _sDecoy;
+            HushPressed        = _sHush;
             InteractPressed    = false;
             PausePressed       = false;
-            _sThrow = _sFollow = _sWait = _sRun = _sHarp = false;
+            _sThrow = _sFollow = _sWait = _sRun = _sHarp = _sDecoy = _sHush = false;
             return;
         }
 
@@ -124,6 +141,8 @@ public class InputReader : MonoBehaviour
         DavidWaitPressed   = _next.WasPressedThisFrame();
         DavidRunPressed    = _run.WasPressedThisFrame();
         HarpPressed        = _harp.WasPressedThisFrame();
+        DecoyPressed       = _decoy.WasPressedThisFrame();
+        HushPressed        = _hush.WasPressedThisFrame();
         PausePressed       = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
                              (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame);
     }
@@ -168,5 +187,7 @@ public class InputReader : MonoBehaviour
         _map?.Disable();
         _harp?.Dispose();
         _run?.Dispose();
+        _decoy?.Dispose();
+        _hush?.Dispose();
     }
 }

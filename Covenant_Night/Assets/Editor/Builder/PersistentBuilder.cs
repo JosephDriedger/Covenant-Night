@@ -268,11 +268,12 @@ public static class PersistentBuilder
             pr.anchorMin = pr.anchorMax = anchor; pr.pivot = pivot; pr.anchoredPosition = pos; pr.sizeDelta = size;
         }
         Plate(new Vector2(0, 1), new Vector2(0, 1), new Vector2(28, -22), new Vector2(470, 62));
-        Plate(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -22), new Vector2(330, 62));
+        Plate(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-28, -22), new Vector2(330, 104));
         Plate(new Vector2(0, 0), new Vector2(0, 0), new Vector2(28, 42), new Vector2(500, 112));
 
         hud.zoneText = MakeText(t, "ZoneText", "Zone 1 / 5", 34, Parchment, new Vector2(0, 1), new Vector2(0, 1), new Vector2(40, -30), new Vector2(600, 50), TextAlignmentOptions.TopLeft);
         hud.stoneCountText = MakeText(t, "StoneCount", "Stones: 3", 34, Parchment, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, -30), new Vector2(500, 50), TextAlignmentOptions.TopRight);
+        hud.decoyCountText = MakeText(t, "DecoyCount", "Decoys: 1", 30, new Color(0.85f, 0.8f, 0.65f), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, -66), new Vector2(500, 42), TextAlignmentOptions.TopRight);
         hud.davidModeText = MakeText(t, "DavidMode", "David: Follow", 32, new Color(0.7f, 0.9f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 95), new Vector2(600, 46), TextAlignmentOptions.BottomLeft);
         hud.harpText = MakeText(t, "HarpText", "Harp: Ready", 30, Gold, new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 50), new Vector2(600, 42), TextAlignmentOptions.BottomLeft);
 
@@ -523,14 +524,14 @@ public static class PersistentBuilder
         MakeColumn(controls, "KeyboardHeader", "Keyboard & Mouse", 30, Gold, -380, 375, 620, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "GamepadHeader", "Gamepad", 30, Gold, 250, 375, 620, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "Actions",
-            "Move\nLook\nSneak (Silent)\nSprint (Loud)\nShadow-Step at a Wall\nThrow a Stone\nDavid: Follow, Wait, Run\nHarp\nPause",
-            27, Parchment, -880, 325, 480, 420);
+            "Move\nLook\nSneak (Silent)\nSprint (Loud)\nShadow-Step at a Wall\nThrow a Stone\nDrop a Decoy\nDavid: Follow, Wait, Run\nHush David\nHarp\nPause",
+            23, Parchment, -880, 325, 480, 420);
         MakeColumn(controls, "Keyboard",
-            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft Click\n1, 2, 3 (E Toggles Follow and Wait)\nH\nEsc",
-            27, Parchment, -380, 325, 620, 420);
+            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft Click\nG\n1, 2, 3 (E Toggles Follow and Wait)\nQ\nH\nEsc",
+            23, Parchment, -380, 325, 620, 420);
         MakeColumn(controls, "Gamepad",
-            "Left Stick\nRight Stick\nHold B / Circle\nClick L3\nHold A / Cross\nX / Square\nD-Pad Left, Right, Down (Y Toggles)\nD-Pad Up\nStart",
-            27, Parchment, 250, 325, 620, 420);
+            "Left Stick\nRight Stick\nHold B / Circle\nClick L3\nHold A / Cross\nX / Square\nRight Shoulder\nD-Pad Left, Right, Down (Y Toggles)\nLeft Shoulder\nD-Pad Up\nStart",
+            23, Parchment, 250, 325, 620, 420);
         MakeColumn(controls, "NotesHeader", "Field Notes", 32, Gold, -880, -85, 800, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "Notes",
             "Guard cones: green sees nothing, amber is suspicious, red is chasing you.\n" +

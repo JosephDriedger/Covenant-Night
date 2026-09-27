@@ -186,8 +186,12 @@ public class ZoneManager : MonoBehaviour
         davidCompanion.ResetForZone();
         HUD.Instance?.ResetForZone();
 
-        if (restoreCheckpoint && cp.hasData) abilities.SetStoneCount(cp.stoneCount);
-        else cp.Save(jonathan, david, abilities.StoneCount);
+        if (restoreCheckpoint && cp.hasData)
+        {
+            abilities.SetStoneCount(cp.stoneCount);
+            abilities.SetDecoyCount(cp.decoyCount);
+        }
+        else cp.Save(jonathan, david, abilities.StoneCount, abilities.DecoyCount);
 
         string title = CurrentEntry != null ? CurrentEntry.displayName : sceneName.Replace("_", " ");
         ZoneNameCard.Instance?.Show(title, CurrentEntry != null ? CurrentEntry.subtitle : null);

@@ -8,7 +8,7 @@ public class AudioLib
 {
     public const string Dir = "Assets/Audio/Generated";
 
-    public AudioClip wind, crickets, torchCrackle, drone, music, sting, clatter, bark, harp, creak, epilogue, pickup;
+    public AudioClip wind, crickets, torchCrackle, drone, music, sting, clatter, bark, harp, creak, epilogue, pickup, whistle;
     public AudioClip[] stepStone = new AudioClip[3];
     public AudioClip[] stepDirt  = new AudioClip[3];
     public AudioClip[] stepWood  = new AudioClip[3];
@@ -30,6 +30,7 @@ public class AudioLib
         Write("gate_creak",         AudioSynth.GateCreak(),     0.8f);
         Write("epilogue_phrase",    AudioSynth.EpiloguePhrase(),0.7f);
         Write("pickup",             AudioSynth.Pickup(),        0.7f);
+        Write("whistle_call",       AudioSynth.Whistle(),       0.8f);
         for (int i = 0; i < 3; i++)
         {
             Write($"step_stone_{i}", AudioSynth.Footstep("stone", i), 0.7f);
@@ -45,7 +46,7 @@ public class AudioLib
             wind = L("wind_loop"), crickets = L("crickets_loop"), torchCrackle = L("torch_crackle_loop"),
             drone = L("tension_drone_loop"), music = L("music_underscore"), sting = L("alert_sting"),
             clatter = L("stone_clatter"), bark = L("dog_bark"), harp = L("harp_calm"), creak = L("gate_creak"),
-            epilogue = L("epilogue_phrase"), pickup = L("pickup"),
+            epilogue = L("epilogue_phrase"), pickup = L("pickup"), whistle = L("whistle_call"),
         };
         for (int i = 0; i < 3; i++)
         {

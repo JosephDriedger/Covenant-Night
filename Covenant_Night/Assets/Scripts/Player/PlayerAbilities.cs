@@ -11,6 +11,10 @@ public class PlayerAbilities : MonoBehaviour
     public int        stonesPerZone  = 3;
     public Transform  aimMarker;          // optional landing-spot marker
 
+    [Header("Decoy")]
+    public GameObject decoyPrefab;
+    public int        decoysPerZone  = 1;
+
     [Header("Wall Press")]
     public float      wallDetectDist = 0.85f;
     public LayerMask  wallLayer;
@@ -20,13 +24,18 @@ public class PlayerAbilities : MonoBehaviour
     public DavidCompanion   david;
 
     public int StoneCount { get; private set; }
+    public int DecoyCount { get; private set; }
 
     bool   _wallPressed;
     Camera _cam;
 
     int StonesThisZone => Mathf.Max(1, stonesPerZone + GameDifficulty.Tuning.stoneDelta);
 
-    void Start() => SetStoneCount(StonesThisZone);
+    void Start()
+    {
+        SetStoneCount(StonesThisZone);
+        SetDecoyCount(decoysPerZone);
+    }
 
     void Update()
     {
@@ -37,6 +46,7 @@ public class PlayerAbilities : MonoBehaviour
         }
         HandleWallPress();
         HandleThrow();
+        HandleDecoy();
         HandleDavidCommands();
     }
 
@@ -98,6 +108,18 @@ public class PlayerAbilities : MonoBehaviour
 
         SetStoneCount(StoneCount - 1);
         GetComponent<ProceduralCharacterAnim>()?.PlayThrow();
+    }
+
+    // ── Decoy ───────────────────────────────────────────────────────────────
+
+    void HandleDecoy()
+    {
+        if (!InputReader.Instance.DecoyPressed) return;
+        if (DecoyCount <= 0 || decoyPrefab == null) return;
+
+        Vector3 origin = throwOrigin != null ? throwOrigin.position : transform.position + Vector3.up * 1.3f;
+        Instantiate(decoyPrefab, origin, Quaternion.identity);
+        SetDecoyCount(DecoyCount - 1);
     }
 
     // Low-arc ballistic solution to hit `target` from `origin` at a fixed launch speed.
@@ -168,6 +190,7 @@ public class PlayerAbilities : MonoBehaviour
             david.SetMode(david.CurrentMode == DavidCompanion.Mode.Follow
                 ? DavidCompanion.Mode.Wait : DavidCompanion.Mode.Follow, announce: true);
         if (input.HarpPressed) david.TryHarp();
+        if (input.HushPressed) david.TryHush();
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
@@ -179,9 +202,16 @@ public class PlayerAbilities : MonoBehaviour
         if (HUD.Instance != null) HUD.Instance.UpdateStoneCount(StoneCount);
     }
 
+    public void SetDecoyCount(int count)
+    {
+        DecoyCount = Mathf.Max(0, count);
+        if (HUD.Instance != null) HUD.Instance.UpdateDecoyCount(DecoyCount);
+    }
+
     public void ResetForZone()
     {
         SetStoneCount(StonesThisZone);
+        SetDecoyCount(decoysPerZone);
         _wallPressed = false;
         controller.SetWallPressed(false);
     }

@@ -21,10 +21,12 @@ Jonathan navigates five hand-crafted city zones, each a self-contained 3D stealt
 **Jonathan's Abilities**
 - **Crouch / Slow Move** — halves speed, drops noise to near zero, lets you slip behind low cover
 - **Distraction Throw** — toss a stone to pull guards away; 3 stones per zone (more in clay pots)
+- **Decoy** — drop a pouch that whistles every couple of seconds for 8 seconds, holding a guard's attention on the spot instead of a single clatter; 1 per zone
 - **Shadow Step** — press flat against a wall to become nearly invisible, even inside a guard's detection cone
 
 **David's Abilities**
 - **Follow / Wait / Run** — toggle David's NavMesh behaviour to coordinate movement through tight spots
+- **Hush** *(6 seconds)* — orders David to crouch and stay quiet, shrinking guards' effective sight range on him and silencing his footsteps while running
 - **Harp Calm** *(once per zone)* — de-escalates all nearby Suspicious guards who don't have direct sight of David
 
 **Guard Types**
@@ -88,8 +90,10 @@ Gibeah is divided into five linearly connected zones, each with at least two rou
 | Sprint (loud) | Left Ctrl or Cmd (hold) | L3 |
 | Shadow Step | Space (hold, beside a wall) | A / Cross (hold) |
 | Throw a stone | Left mouse | X / Square |
+| Drop a decoy | G | Right Shoulder |
 | David: Follow / Wait / Run | 1 / 2 / 3 | D-pad left / right / down |
 | David: toggle Follow / Wait | E | Y / Triangle |
+| Hush David | Q | Left Shoulder |
 | Harp Calm | H | D-pad up |
 | Pause menu (controls, settings, main menu, quit) | Esc | Start |
 

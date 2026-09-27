@@ -342,6 +342,22 @@ public static class AudioSynth
         return b;
     }
 
+    // A short two-note rising whistle, used by the decoy prop's noise pulses.
+    public static float[] Whistle()
+    {
+        var b = Buf(0.4f);
+        float phase = 0f;
+        for (int i = 0; i < b.Length; i++)
+        {
+            float t = i / (float)SR;
+            float f = Mathf.Lerp(900f, 1500f, Mathf.Clamp01(t / 0.22f)) + Mathf.Sin(Tau * 7f * t) * 12f;
+            phase += Tau * f / SR;
+            float env = Mathf.Min(1f, t / 0.02f) * Mathf.Exp(-Mathf.Max(0f, t - 0.22f) * 14f);
+            b[i] = Mathf.Sin(phase) * env;
+        }
+        return b;
+    }
+
     public static float[] DogBark()
     {
         var b = Buf(1.4f);

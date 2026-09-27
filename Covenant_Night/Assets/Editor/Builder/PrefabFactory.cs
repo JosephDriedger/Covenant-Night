@@ -9,7 +9,7 @@ using TMPro;
 public class Prefabs
 {
     public GameObject jonathan, david, guardPatrol, guardSentry, guardCommander, gateNpc;
-    public GameObject stone, clayPot, torch, hidingSpot, zoneExit, runWaypoint;
+    public GameObject stone, decoy, clayPot, torch, hidingSpot, zoneExit, runWaypoint;
     public GameObject[] npc = new GameObject[6];
 }
 
@@ -64,12 +64,13 @@ public static class PrefabFactory
     {
         var p = new Prefabs();
         p.stone       = BuildStone(m, a, mx);
+        p.decoy       = BuildDecoy(m, a, mx);
         p.torch       = BuildTorch(m, a, mx);
         p.clayPot     = BuildClayPot(m, a, mx);
         p.hidingSpot  = BuildHidingSpot(m);
         p.zoneExit    = BuildZoneExit(m);
         p.runWaypoint = BuildRunWaypoint(m);
-        p.jonathan    = BuildJonathan(m, a, mx, p.stone);
+        p.jonathan    = BuildJonathan(m, a, mx, p.stone, p.decoy);
         p.david       = BuildDavid(m, a, mx);
         p.guardPatrol    = BuildGuard(GuardType.Patrol,    "Guard_Patrol",    m);
         p.guardSentry    = BuildGuard(GuardType.Sentry,    "Guard_Sentry",    m);
@@ -95,6 +96,18 @@ public static class PrefabFactory
         stone.audioSource = AddSource(go, null, mx.sfx, false, false, 1f, 25f);
         stone.clatter = a.clatter;
         return Save(go, "Stone");
+    }
+
+    static GameObject BuildDecoy(Mats m, AudioLib a, MixerRefs mx)
+    {
+        var root = new GameObject("Decoy");
+        Prim(PrimitiveType.Sphere, "Pouch", root.transform, new Vector3(0, 0.09f, 0), new Vector3(0.22f, 0.16f, 0.22f), m.leather);
+        Prim(PrimitiveType.Cylinder, "Tie", root.transform, new Vector3(0, 0.19f, 0), new Vector3(0.05f, 0.03f, 0.05f), m.straw);
+
+        var decoy = root.AddComponent<Decoy>();
+        decoy.audioSource = AddSource(root, null, mx.sfx, false, false, 0.9f, 20f);
+        decoy.whistle = a.whistle;
+        return Save(root, "Decoy");
     }
 
     static GameObject BuildTorch(Mats m, AudioLib a, MixerRefs mx)
@@ -212,7 +225,7 @@ public static class PrefabFactory
 
     // ── characters ──────────────────────────────────────────────────────────
 
-    static GameObject BuildJonathan(Mats m, AudioLib a, MixerRefs mx, GameObject stonePrefab)
+    static GameObject BuildJonathan(Mats m, AudioLib a, MixerRefs mx, GameObject stonePrefab, GameObject decoyPrefab)
     {
         var root = new GameObject("Jonathan");
         root.tag = "Player";
@@ -251,6 +264,7 @@ public static class PrefabFactory
         var ab = root.AddComponent<PlayerAbilities>();
         ab.controller = pc;
         ab.stonePrefab = stonePrefab;
+        ab.decoyPrefab = decoyPrefab;
         ab.throwOrigin = origin.transform;
         ab.wallLayer = GameLayers.StaticSight;
 

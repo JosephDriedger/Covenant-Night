@@ -39,9 +39,14 @@ public class DavidCompanion : MonoBehaviour
     public AudioSource harpSource;
     public AudioClip   harpClip;
 
+    [Header("Hush Command")]
+    [Tooltip("Seconds David stays quiet and crouched after being told to hush.")]
+    public float hushDuration = 6f;
+
     public Mode CurrentMode   { get; private set; } = Mode.Follow;
     public bool IsHidden      { get; private set; }
     public bool IsCrouching   { get; private set; }
+    public bool IsHushed      { get; private set; }
     public bool HarpAvailable => !_harpUsedThisZone;
     public bool IsReady       => _agent != null && _agent.enabled && _agent.isOnNavMesh;
 
@@ -53,6 +58,7 @@ public class DavidCompanion : MonoBehaviour
     Transform _runTarget;
     float _repathTimer;
     float _noiseTimer;
+    float _hushTimer;
 
     void Awake()
     {
@@ -75,6 +81,12 @@ public class DavidCompanion : MonoBehaviour
         }
         if (paused) return;
 
+        if (IsHushed)
+        {
+            _hushTimer -= Time.deltaTime;
+            if (_hushTimer <= 0f) { IsHushed = false; RefreshHudMode(); }
+        }
+
         UpdateCrouch();
 
         switch (CurrentMode)
@@ -89,7 +101,8 @@ public class DavidCompanion : MonoBehaviour
 
     void UpdateCrouch()
     {
-        bool want = PlayerController.Instance != null && PlayerController.Instance.IsCrouching && CurrentMode != Mode.Run;
+        bool want = IsHushed ||
+            (PlayerController.Instance != null && PlayerController.Instance.IsCrouching && CurrentMode != Mode.Run);
         if (want == IsCrouching) return;
         IsCrouching = want;
         if (_capsule != null)
@@ -125,7 +138,7 @@ public class DavidCompanion : MonoBehaviour
         if (_noiseTimer <= 0f)
         {
             _noiseTimer = 0.45f;
-            if (_agent.velocity.sqrMagnitude > 1f) AudioEventSystem.Emit(transform.position, runNoiseRadius);
+            if (!IsHushed && _agent.velocity.sqrMagnitude > 1f) AudioEventSystem.Emit(transform.position, runNoiseRadius);
         }
 
         if (!_agent.pathPending && _agent.remainingDistance < 0.8f)
@@ -155,7 +168,7 @@ public class DavidCompanion : MonoBehaviour
         {
             // Not placed on a NavMesh yet (between zones): remember the mode; Teleport() applies the agent state.
             CurrentMode = mode;
-            HUD.Instance?.UpdateDavidMode(mode.ToString());
+            RefreshHudMode();
             return;
         }
 
@@ -188,7 +201,7 @@ public class DavidCompanion : MonoBehaviour
                 break;
         }
 
-        HUD.Instance?.UpdateDavidMode(mode.ToString());
+        RefreshHudMode();
         if (announce)
         {
             string msg = mode switch { Mode.Follow => "Follow", Mode.Wait => "Wait", _ => "Run!" };
@@ -203,6 +216,19 @@ public class DavidCompanion : MonoBehaviour
     }
 
     public void SetHidden(bool hidden) => IsHidden = hidden;
+
+    void RefreshHudMode() => HUD.Instance?.UpdateDavidMode(CurrentMode.ToString() + (IsHushed ? " (Hushed)" : ""));
+
+    // Proactively quiets David for a few seconds: forces a crouched pose (shrinking guards' effective sight
+    // range the same way Jonathan's crouch does) and suppresses his Run-mode footstep noise. Distinct from
+    // Harp Calm, which de-escalates guards who are already Suspicious rather than avoiding notice in the first place.
+    public void TryHush()
+    {
+        IsHushed = true;
+        _hushTimer = hushDuration;
+        RefreshHudMode();
+        FloatingText.Spawn(transform.position + Vector3.up * 2.4f, "Hush", new Color(0.75f, 0.85f, 0.95f), 2.5f);
+    }
 
     public void Teleport(Vector3 position, Quaternion rotation)
     {
@@ -268,8 +294,10 @@ public class DavidCompanion : MonoBehaviour
     {
         _harpUsedThisZone = false;
         IsHidden = false;
+        IsHushed = false;
+        _hushTimer = 0f;
         _runTarget = null;
         HUD.Instance?.ResetForZone();
-        if (IsReady) SetMode(Mode.Follow); else { CurrentMode = Mode.Follow; HUD.Instance?.UpdateDavidMode("Follow"); }
+        if (IsReady) SetMode(Mode.Follow); else { CurrentMode = Mode.Follow; RefreshHudMode(); }
     }
 }
