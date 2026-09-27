@@ -50,13 +50,13 @@ public static class CovenantNightBuilder
         var input = AssetDatabase.LoadAssetAtPath<InputActionAsset>("Assets/InputSystem_Actions.inputactions");
 
         Step("Building zone 1 – The Palace District");
-        ZoneBuilders.Zone1(new ZoneKit("Zone1_PalaceDistrict", mats, prefabs, audio, mixer));
+        ZoneBuilders.Zone1(new ZoneKit("Zone1_PalaceDistrict", mats, prefabs, audio, mixer), story);
         Step("Building zone 2 – The Market Quarter");
-        ZoneBuilders.Zone2(new ZoneKit("Zone2_MarketQuarter", mats, prefabs, audio, mixer));
+        ZoneBuilders.Zone2(new ZoneKit("Zone2_MarketQuarter", mats, prefabs, audio, mixer), story);
         Step("Building zone 3 – Potter's Alley");
-        ZoneBuilders.Zone3(new ZoneKit("Zone3_PottersAlley", mats, prefabs, audio, mixer));
+        ZoneBuilders.Zone3(new ZoneKit("Zone3_PottersAlley", mats, prefabs, audio, mixer), story);
         Step("Building zone 4 – Well Square");
-        ZoneBuilders.Zone4(new ZoneKit("Zone4_WellSquare", mats, prefabs, audio, mixer));
+        ZoneBuilders.Zone4(new ZoneKit("Zone4_WellSquare", mats, prefabs, audio, mixer), story);
         Step("Building zone 5 – The Eastern Gate");
         ZoneBuilders.Zone5(new ZoneKit("Zone5_EasternGate", mats, prefabs, audio, mixer), story);
 

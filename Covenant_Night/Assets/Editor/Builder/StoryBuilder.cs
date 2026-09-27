@@ -9,6 +9,9 @@ public class StoryAssets
     public StoryBeatData intro, zone2, zone3, zone4, zone5;
     public StoryBeatData gateBluff, farewell, epilogue, jonathanCaptured;
     public StoryBeatData[] ZoneEntryBeats => new[] { intro, zone2, zone3, zone4, zone5 };
+
+    // Optional lore scrolls, purely narrative, found off the critical path in a zone.
+    public StoryBeatData loreLedger, loreMarket, lorePotter, loreWell, loreSoldier;
 }
 
 public static class StoryBuilder
@@ -115,6 +118,27 @@ public static class StoryBuilder
             B("Before the King",
               "Saul's guards drag Jonathan before the throne. \"Where is the son of Jesse?\" the king demands.\n\n" +
               "Jonathan lifts his chin and says nothing.", throne));
+
+        // Lore scrolls: short, optional flavor notes found off the critical path, no gameplay effect.
+        s.loreLedger = Make("Story_LoreLedger",
+            B("A Steward's Ledger",
+              "\"...grain for the household, and a portion set aside for the son of Jesse, per the king's table, until further notice.\"\n\n" +
+              "The entry has been crossed out and rewritten twice.", null));
+        s.loreMarket = Make("Story_LoreMarket",
+            B("A Merchant's Complaint",
+              "\"Curfew again tonight. Guards at every corner asking after travelers. Bad for business, worse for sleep. " +
+              "I have half a mind to close the stall until the king finds whoever he's looking for.\"", null));
+        s.lorePotter = Make("Story_LorePotter",
+            B("A Potter's Prayer",
+              "\"Lord, keep the dogs quiet and the kiln hot. A man's pots are the only thing in Gibeah that hold still these days.\"", null));
+        s.loreWell = Make("Story_LoreWell",
+            B("Well Water Rights",
+              "\"By order of the king's household: water may be drawn from the square only between the second and fourth watch. " +
+              "Sentries are instructed to note who comes and goes.\"", null));
+        s.loreSoldier = Make("Story_LoreSoldier",
+            B("A Soldier's Letter",
+              "\"...tell mother I am well and the extra watches pay double. I do not know what we are watching for, only that the captain is short-tempered about it. " +
+              "I will be home for the barley harvest, God willing.\"", null));
 
         AssetDatabase.SaveAssets();
         return s;

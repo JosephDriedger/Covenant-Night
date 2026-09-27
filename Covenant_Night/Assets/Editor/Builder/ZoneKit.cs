@@ -416,6 +416,12 @@ public class ZoneKit
         go.GetComponent<StonePickup>().stoneCount = stones;
     }
 
+    public void Scroll(float x, float z, StoryBeatData lore, float y = 0f)
+    {
+        var go = Inst(P.loreScroll, propsRoot, new Vector3(x, y, z), UnityEngine.Random.Range(0f, 360f));
+        go.GetComponent<LoreScrollPickup>().lore = lore;
+    }
+
     public void HidingSpot(float x, float z, float w = 3f, float d = 3f)
     {
         var go = Inst(P.hidingSpot, triggersRoot, new Vector3(x, 0, z));

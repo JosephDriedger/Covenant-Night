@@ -9,7 +9,7 @@ using TMPro;
 public class Prefabs
 {
     public GameObject jonathan, david, guardPatrol, guardSentry, guardCommander, gateNpc;
-    public GameObject stone, decoy, clayPot, torch, hidingSpot, zoneExit, runWaypoint;
+    public GameObject stone, decoy, clayPot, loreScroll, torch, hidingSpot, zoneExit, runWaypoint;
     public GameObject[] npc = new GameObject[6];
 }
 
@@ -67,6 +67,7 @@ public static class PrefabFactory
         p.decoy       = BuildDecoy(m, a, mx);
         p.torch       = BuildTorch(m, a, mx);
         p.clayPot     = BuildClayPot(m, a, mx);
+        p.loreScroll  = BuildLoreScroll(m, a);
         p.hidingSpot  = BuildHidingSpot(m);
         p.zoneExit    = BuildZoneExit(m);
         p.runWaypoint = BuildRunWaypoint(m);
@@ -158,6 +159,26 @@ public static class PrefabFactory
         pick.pickupClip = a.pickup;
         pick.audioSource = null;
         return Save(root, "ClayPot");
+    }
+
+    static GameObject BuildLoreScroll(Mats m, AudioLib a)
+    {
+        var root = new GameObject("LoreScroll");
+        var vis = new GameObject("Visual");
+        vis.transform.SetParent(root.transform, false);
+        Prim(PrimitiveType.Cylinder, "Scroll", vis.transform, new Vector3(0, 0.14f, 0), new Vector3(0.09f, 0.16f, 0.09f), m.straw, false, new Vector3(0, 0, 90));
+        Prim(PrimitiveType.Cylinder, "Tie", vis.transform, new Vector3(0, 0.14f, 0), new Vector3(0.1f, 0.02f, 0.1f), m.leather, false, new Vector3(0, 0, 90));
+
+        var col = root.AddComponent<SphereCollider>();
+        col.isTrigger = true;
+        col.radius = 0.7f;
+        col.center = new Vector3(0, 0.2f, 0);
+
+        var pick = root.AddComponent<LoreScrollPickup>();
+        pick.bobTarget = vis.transform;
+        pick.pickupClip = a.pickup;
+        pick.audioSource = null;
+        return Save(root, "LoreScroll");
     }
 
     static GameObject BuildHidingSpot(Mats m)

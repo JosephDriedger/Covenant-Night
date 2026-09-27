@@ -27,7 +27,7 @@ public static class ZoneBuilders
     // Dense guards who recognise Jonathan's face (awareness gain x1.3). Three routes: the open west passage
     // (fast, patrolled), the narrow east alley, and the dark servant corridor with hiding nooks (slow, safe).
     // ═══════════════════════════════════════════════════════════════════════
-    public static void Zone1(ZoneKit k)
+    public static void Zone1(ZoneKit k, StoryAssets story)
     {
         Common(k, Floor);
         var hall = new R(-9, 27, 9, 47);
@@ -75,6 +75,7 @@ public static class ZoneBuilders
         k.HidingSpot(18.75f, 37.75f, 3.2f, 3.4f);
 
         k.Pot(18, 4); k.Pot(-21, 30, 2); k.Pot(18.7f, 25.75f); k.Pot(14, 40); k.Pot(-20, 66); k.Pot(11, 33);
+        k.Scroll(18.6f, 4.6f, story.loreLedger); k.Scroll(-20.4f, 66.6f, story.loreSoldier);
 
         // ── guards ──
         const float g = 1.3f;   // they recognise Jonathan's face
@@ -111,7 +112,7 @@ public static class ZoneBuilders
     // ZONE 2 — THE MARKET QUARTER
     // Open plaza with sparse cover (stalls, carts, torch shadow gaps) vs. a west lane lit by fire pits.
     // ═══════════════════════════════════════════════════════════════════════
-    public static void Zone2(ZoneKit k)
+    public static void Zone2(ZoneKit k, StoryAssets story)
     {
         Common(k, Floor);
         var walk = new List<R>
@@ -150,6 +151,7 @@ public static class ZoneBuilders
         k.HidingSpot(3.5f, 3, 2.6f, 2.6f);
 
         k.Pot(-16.5f, 21); k.Pot(-20.5f, 48, 2); k.Pot(12, 44); k.Pot(3.5f, 3); k.Pot(-7.5f, 68); k.Pot(-3, 31);
+        k.Scroll(-16.9f, 21.6f, story.loreMarket);
 
         // ── guards ──
         k.Guard(GuardType.Patrol,   V3(0, 0, 0), 0, new[] { V(-11, 20), V(12, 20), V(12, 52), V(-11, 52) });
@@ -187,7 +189,7 @@ public static class ZoneBuilders
     // ZONE 3 — POTTER'S ALLEY
     // A snake of 3 m alleys, dog pens that bark if you stray, and an exposed rooftop shortcut watched by a sentry.
     // ═══════════════════════════════════════════════════════════════════════
-    public static void Zone3(ZoneKit k)
+    public static void Zone3(ZoneKit k, StoryAssets story)
     {
         Common(k, Floor);
         var pen1 = new R(5, 21, 9, 25);
@@ -228,6 +230,7 @@ public static class ZoneBuilders
         k.Pot(-5, 2); k.Pot(19.5f, 30, 1, roof);          // roof pot rewards the risky route
         k.Pot(20, 20, 1, roof);
         k.Pot(-14, 50); k.Pot(13.9f, 32);
+        k.Scroll(-5.4f, 2.4f, story.lorePotter);
         foreach (var c in new[] { V(1.0f, 16), V(15.15f, 24), V(-13f, 50) })
             k.LowCover(c.x, c.y, 0.7f, 0.7f, 1.0f, k.M.clay, "Kiln");     // kilns: clutter tucked against the alley walls
 
@@ -268,7 +271,7 @@ public static class ZoneBuilders
     // ZONE 4 — WELL SQUARE
     // Rooftop sentries with long sight lines. Roofed houses (interiors) or the raised terrace behind its parapet.
     // ═══════════════════════════════════════════════════════════════════════
-    public static void Zone4(ZoneKit k)
+    public static void Zone4(ZoneKit k, StoryAssets story)
     {
         Common(k, Floor);
         var walk = new List<R>
@@ -317,6 +320,7 @@ public static class ZoneBuilders
         k.Alcove(9, 49.5f, 'E');
 
         k.Pot(-3, 16); k.Pot(-18, 52.6f); k.Pot(19, 30, 1, 1.2f); k.Pot(0, 49.5f); k.Pot(-14, 34, 2); k.Pot(6, 20);
+        k.Scroll(0.6f, 34.6f, story.loreWell);
 
         // ── guards: three rooftop sentries + a well patrol + a commander on the north strip ──
         k.Guard(GuardType.Sentry, V3(-15, bh + 0.4f, 34), 90f, tweak: f => f.GetComponent<GuardVision>().maxRange = 14f);

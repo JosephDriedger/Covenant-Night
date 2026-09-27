@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 // Manages Jonathan's active abilities: stone throw, wall press (Shadow Step), and David commands.
@@ -191,6 +192,23 @@ public class PlayerAbilities : MonoBehaviour
                 ? DavidCompanion.Mode.Wait : DavidCompanion.Mode.Follow, announce: true);
         if (input.HarpPressed) david.TryHarp();
         if (input.HushPressed) david.TryHush();
+    }
+
+    // ── Lore ────────────────────────────────────────────────────────────────
+
+    // Purely narrative pickup: pauses gameplay and shows the note via the existing story panel,
+    // the same UI used for zone intros and the ending, rather than a bespoke reader.
+    public void CollectLore(StoryBeatData lore)
+    {
+        if (lore == null || lore.beats == null || lore.beats.Length == 0 || StoryPanelController.Instance == null) return;
+        StartCoroutine(ShowLore(lore));
+    }
+
+    IEnumerator ShowLore(StoryBeatData lore)
+    {
+        GameManager.Instance?.Pause();
+        yield return StoryPanelController.Instance.Show(lore.beats);
+        GameManager.Instance?.ResumePlay();
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
