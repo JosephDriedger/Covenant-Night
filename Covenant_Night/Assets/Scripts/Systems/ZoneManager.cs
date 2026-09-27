@@ -153,6 +153,7 @@ public class ZoneManager : MonoBehaviour
 
         Scene scene = SceneManager.GetSceneByName(sceneName);
         CurrentEntry = FindEntry(scene);
+        GameDifficulty.ZoneIndex = index;
         GameDifficulty.ZoneScale = CurrentEntry != null ? CurrentEntry.difficulty : 1f;
         Torch.AmbientVisibility = CurrentEntry != null ? CurrentEntry.ambientVisibility : 0.35f;
 

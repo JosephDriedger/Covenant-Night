@@ -501,7 +501,28 @@ public static class PersistentBuilder
         ctl.hardBtn     = MakeButton(diff, "Hard",     "Hard" + Sub("Keener guards, less time to hide and fewer stones."), new Vector2(0, -70), dSize);
         ctl.hardcoreBtn = MakeButton(diff, "Hardcore", "Hardcore" + Sub("One life. Any capture restarts the run. Faster guards that search hiding spots."), new Vector2(0, -190), dSize);
         ctl.difficultyBackBtn = MakeButton(diff, "Back", "Back", new Vector2(0, -330), new Vector2(400, 64), 32);
+        ctl.mixedBtn = MakeButton(diff, "Mixed", "New Game+: Mixed Difficulty", new Vector2(0, -410), new Vector2(700, 56), 26);
         ctl.difficultyPage = diff.gameObject;
+
+        // ── mixed difficulty (New Game+): pick Easy/Medium/Hard separately for each zone ──
+        var mixedPage = MakePage(t, "MixedPage");
+        var mixedArt = MakeImage(mixedPage, "Illustration", art.color);
+        mixedArt.sprite = art.sprite;
+        Stretch(mixedArt.rectTransform);
+        var mixedShade = MakeImage(mixedPage, "Shade", new Color(0.01f, 0.01f, 0.03f, 0.82f));
+        Stretch(mixedShade.rectTransform);
+        MakeText(mixedPage, "Heading", "Choose Each Zone's Night", 76, Gold, mid, mid, new Vector2(0, 430), new Vector2(1600, 110), TextAlignmentOptions.Center, FontStyles.Bold);
+        MakeText(mixedPage, "Note", "Hardcore is not available per zone; a capture restarts the current zone.", 30, Parchment, mid, mid, new Vector2(0, 350), new Vector2(1500, 46), TextAlignmentOptions.Center);
+        string[] zoneNames = { "Zone 1 — Palace District", "Zone 2 — Market Quarter", "Zone 3 — Potter's Alley", "Zone 4 — Well Square", "Zone 5 — Eastern Gate" };
+        for (int i = 0; i < 5; i++)
+        {
+            float rowY = 260 - i * 90;
+            MakeText(mixedPage, $"ZoneLabel{i}", zoneNames[i], 32, Parchment, mid, new Vector2(0, 0.5f), new Vector2(-560, rowY), new Vector2(560, 60), TextAlignmentOptions.Left);
+            ctl.zoneLevelBtns[i] = MakeButton(mixedPage, $"ZoneLevel{i}", "Medium", new Vector2(220, rowY), new Vector2(360, 64), 30);
+        }
+        ctl.mixedStartBtn = MakeButton(mixedPage, "Begin", "Begin", new Vector2(-160, -260), new Vector2(400, 72));
+        ctl.mixedBackBtn = MakeButton(mixedPage, "Back", "Back", new Vector2(260, -260), new Vector2(400, 72));
+        ctl.mixedPage = mixedPage.gameObject;
 
         // ── pause ──
         var pause = MakePage(t, "PausePage");

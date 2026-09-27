@@ -18,7 +18,7 @@ public class MenuController : MonoBehaviour
     // Set before reloading the Persistent scene to go straight into play ("play again" after the credits).
     public static bool SkipTitleOnce;
 
-    enum Page { None, Title, Difficulty, Pause, Controls, Settings }
+    enum Page { None, Title, Difficulty, Mixed, Pause, Controls, Settings }
 
     [Header("Root")]
     public GameObject canvasRoot;
@@ -30,6 +30,12 @@ public class MenuController : MonoBehaviour
 
     [Header("Difficulty")]
     public Button easyBtn, mediumBtn, hardBtn, hardcoreBtn, difficultyBackBtn;
+
+    [Header("Mixed Difficulty (New Game+)")]
+    public Button mixedBtn;                    // on the Difficulty page; shown only once New Game+ is unlocked
+    public GameObject mixedPage;
+    public Button[] zoneLevelBtns = new Button[5];
+    public Button mixedStartBtn, mixedBackBtn;
 
     [Header("Pause")]
     public Button resumeBtn, restartBtn, pauseControlsBtn, pauseSettingsBtn, mainMenuBtn, pauseQuitBtn;
@@ -63,6 +69,17 @@ public class MenuController : MonoBehaviour
         titleControlsBtn.onClick.AddListener(() => OpenSub(Page.Controls, Page.Title));
         titleSettingsBtn.onClick.AddListener(() => OpenSub(Page.Settings, Page.Title));
         titleQuitBtn.onClick.AddListener(Quit);
+
+        mixedBtn.onClick.AddListener(() => Show(Page.Mixed));
+        mixedBtn.gameObject.SetActive(GameDifficulty.NewGamePlusUnlocked);
+        for (int i = 0; i < zoneLevelBtns.Length; i++)
+        {
+            int idx = i;
+            zoneLevelBtns[i].onClick.AddListener(() => CycleZoneLevel(idx));
+        }
+        mixedStartBtn.onClick.AddListener(StartMixedRun);
+        mixedBackBtn.onClick.AddListener(() => Show(Page.Difficulty));
+        RefreshMixedLabels();
 
         resumeBtn.onClick.AddListener(Resume);
         pauseControlsBtn.onClick.AddListener(() => OpenSub(Page.Controls, Page.Pause));
@@ -144,6 +161,9 @@ public class MenuController : MonoBehaviour
             case Page.Difficulty:
                 if (back) Show(Page.Title);
                 break;
+            case Page.Mixed:
+                if (back) Show(Page.Difficulty);
+                break;
             case Page.Pause:
                 if (back) Resume();
                 break;
@@ -176,7 +196,31 @@ public class MenuController : MonoBehaviour
 
     void StartRun(DifficultyLevel level)
     {
+        GameDifficulty.MixedModeActive = false;
         GameDifficulty.Level = level;
+        _playClicked = true;
+    }
+
+    void CycleZoneLevel(int index)
+    {
+        GameDifficulty.ZoneLevels[index] = GameDifficulty.ZoneLevels[index] switch
+        {
+            DifficultyLevel.Easy   => DifficultyLevel.Medium,
+            DifficultyLevel.Medium => DifficultyLevel.Hard,
+            _                      => DifficultyLevel.Easy,
+        };
+        RefreshMixedLabels();
+    }
+
+    void RefreshMixedLabels()
+    {
+        for (int i = 0; i < zoneLevelBtns.Length; i++)
+            zoneLevelBtns[i].GetComponentInChildren<TMP_Text>().text = GameDifficulty.ZoneLevels[i].ToString();
+    }
+
+    void StartMixedRun()
+    {
+        GameDifficulty.MixedModeActive = true;
         _playClicked = true;
     }
 
@@ -204,6 +248,7 @@ public class MenuController : MonoBehaviour
     {
         titlePage.SetActive(false);
         difficultyPage.SetActive(false);
+        mixedPage.SetActive(false);
         pausePage.SetActive(false);
         controlsPage.SetActive(false);
         settingsPage.SetActive(false);
@@ -219,6 +264,7 @@ public class MenuController : MonoBehaviour
         canvasRoot.SetActive(page != Page.None);
         titlePage.SetActive(page == Page.Title);
         difficultyPage.SetActive(page == Page.Difficulty);
+        mixedPage.SetActive(page == Page.Mixed);
         pausePage.SetActive(page == Page.Pause);
         controlsPage.SetActive(page == Page.Controls);
         settingsPage.SetActive(page == Page.Settings);
@@ -252,6 +298,7 @@ public class MenuController : MonoBehaviour
                     default:                       first = mediumBtn; break;
                 }
                 break;
+            case Page.Mixed:    first = zoneLevelBtns[0]; break;
             case Page.Pause:    first = resumeBtn; break;
             case Page.Controls: first = controlsBackBtn; break;
             case Page.Settings: first = volumeSlider; break;

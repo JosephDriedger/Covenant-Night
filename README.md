@@ -103,6 +103,8 @@ Choose a night on the title screen. **Easy**, **Medium** and **Hard** are regula
 
 The game also ramps up zone by zone in every mode. Each zone has its own guard sharpness (0.70 in the first zone, rising to 1.10 in the last) and the moonlight grows brighter toward dawn, so guards see farther and notice faster as the night wears on. Guard counts rise from four to seven.
 
+**New Game+.** Finishing the game once (on any difficulty) unlocks **Mixed** on the difficulty screen: instead of one difficulty for the whole run, choose Easy, Medium or Hard separately for each of the five zones. Hardcore stays a whole-run, one-life mode and isn't offered per zone.
+
 Every zone was checked to be beatable in every mode by stealth alone, with David following and the dog pens counted, and a scripted playthrough reached the gate in Easy, Medium, Hard and Hardcore.
 
 ## Building and Platforms

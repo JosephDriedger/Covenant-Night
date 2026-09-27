@@ -25,6 +25,7 @@ public struct DifficultyTuning
 public static class GameDifficulty
 {
     const string Key = "cn.difficulty";
+    const string NgPlusKey = "cn.ngplus.unlocked";
 
     static DifficultyLevel? _cached;
     static DifficultyLevel? _session;   // set by automated tests so they never touch saved preferences
@@ -47,9 +48,26 @@ public static class GameDifficulty
 
     public static void SetForSession(DifficultyLevel level) => _session = level;
 
-    public static bool Hardcore => Level == DifficultyLevel.Hardcore;
+    public static bool Hardcore => !MixedModeActive && Level == DifficultyLevel.Hardcore;
 
-    public static string Label => Level == DifficultyLevel.Hardcore ? "Hardcore" : Level.ToString();
+    public static string Label => MixedModeActive ? "Mixed" : (Level == DifficultyLevel.Hardcore ? "Hardcore" : Level.ToString());
+
+    // New Game+: unlocked once the game has been finished (any difficulty); lets the player choose a
+    // difficulty per zone instead of one for the whole run. Persisted like the difficulty choice itself.
+    public static bool NewGamePlusUnlocked => PlayerPrefs.GetInt(NgPlusKey, 0) == 1;
+
+    public static void UnlockNewGamePlus()
+    {
+        if (NewGamePlusUnlocked) return;
+        PlayerPrefs.SetInt(NgPlusKey, 1);
+        PlayerPrefs.Save();
+    }
+
+    // Session-only: set by MenuController when the player starts a Mixed run, and by ZoneManager as the
+    // current zone changes. Hardcore is excluded from the per-zone picker, so it stays a whole-run mode.
+    public static bool MixedModeActive;
+    public static readonly DifficultyLevel[] ZoneLevels = new DifficultyLevel[5];
+    public static int ZoneIndex;
 
     // How sharp the current zone's guards are (set by ZoneManager from the zone's entry; 1 = baseline).
     // The zones ramp up from the first to the last, and this stacks with the chosen difficulty.
@@ -72,7 +90,8 @@ public static class GameDifficulty
 
     static DifficultyTuning ModeTuning()
     {
-        switch (Level)
+        var level = MixedModeActive && ZoneIndex >= 0 && ZoneIndex < ZoneLevels.Length ? ZoneLevels[ZoneIndex] : Level;
+        switch (level)
         {
             case DifficultyLevel.Easy:
                 return new DifficultyTuning

@@ -46,6 +46,7 @@ public class GameManager : MonoBehaviour
         if (HasEnded) return;
         HasEnded = true;
         _flowPaused = true;
+        GameDifficulty.UnlockNewGamePlus();
         OnWinState?.Invoke();
     }
 
