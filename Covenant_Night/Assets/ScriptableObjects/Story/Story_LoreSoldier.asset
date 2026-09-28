@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4724455878f58b4791342be53e06ebc, type: 3}
+  m_Name: Story_LoreSoldier
+  m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
+  beats:
+  - heading: A Soldier's Letter
+    text: '"...tell mother I am well and the extra watches pay double. I do not know
+      what we are watching for, only that the captain is short-tempered about it.
+      I will be home for the barley harvest, God willing."'
+    sprite: {fileID: 0}

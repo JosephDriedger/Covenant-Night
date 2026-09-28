@@ -160,6 +160,15 @@ public class PlayerController : MonoBehaviour
 
     public void SetHidden(bool hidden) => IsHidden = hidden;
 
+    // Cutscenes: force the crouch pose while normal input handling is paused (HandleCrouch is skipped then).
+    public void SetCutsceneCrouch(bool crouching)
+    {
+        _isCrouching = crouching;
+        _cc.height = _isCrouching ? crouchHeight : standingHeight;
+        _cc.center = Vector3.up * (_cc.height * 0.5f);
+        if (cameraTarget != null) cameraTarget.localPosition = Vector3.up * (_cc.height * 0.85f);
+    }
+
     public void Teleport(Vector3 position, Quaternion rotation)
     {
         _cc.enabled = false;

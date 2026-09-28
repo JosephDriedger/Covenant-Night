@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum Role { Jonathan, David, GuardPatrol, GuardSentry, Commander, Civilian }
+public enum Role { Jonathan, David, GuardPatrol, GuardSentry, Commander, Civilian, Saul }
 
 // Builds a stylised low-poly humanoid on named pivots so ProceduralCharacterAnim can animate it:
 //   Visual/Rig/Hips/{Skirt, LegL/KneeL, LegR/KneeR, Torso/{Head, ArmL, ArmR, Cloak}}
@@ -50,19 +50,20 @@ public static class HumanoidBuilder
     public static void Build(Transform visual, Role role, Mats m, int variant = 0)
     {
         bool jon = role == Role.Jonathan, dav = role == Role.David;
-        bool guard = role == Role.GuardPatrol || role == Role.GuardSentry || role == Role.Commander;
+        bool saul = role == Role.Saul;
+        bool guard = role == Role.GuardPatrol || role == Role.GuardSentry || role == Role.Commander || saul;
         bool cmd = role == Role.Commander;
         bool civ = role == Role.Civilian;
         int v = Mathf.Abs(variant);
         Material[] civRobes = { m.civA, m.civB, m.civC, m.civD, m.civE, m.civF };
         bool elder = civ && v % 6 == 5;
 
-        Material robe = civ ? civRobes[v % 6] : jon ? m.jonRobe : dav ? m.davRobe : cmd ? m.cmdBody : role == Role.GuardSentry ? m.guardSentry : m.guardBody;
+        Material robe = civ ? civRobes[v % 6] : jon ? m.jonRobe : dav ? m.davRobe : saul ? m.clothRed : cmd ? m.cmdBody : role == Role.GuardSentry ? m.guardSentry : m.guardBody;
         Material trim = civ ? (v % 2 == 0 ? m.leather : civRobes[(v + 3) % 6]) : jon ? m.jonSash : dav ? m.davScarf : m.gold;
-        Material hair = civ ? (elder ? m.hairGrey : v % 2 == 0 ? m.hairBlack : m.hairBrown) : jon ? m.hairBlack : dav ? m.hairBrown : m.hairBlack;
+        Material hair = civ ? (elder ? m.hairGrey : v % 2 == 0 ? m.hairBlack : m.hairBrown) : jon ? m.hairBlack : dav ? m.hairBrown : saul ? m.hairGrey : m.hairBlack;
 
         var rig = Pivot(visual, "Rig", Vector3.zero);
-        rig.localScale = Vector3.one * (cmd ? 1.07f : dav ? 0.98f : civ ? 0.92f + (v % 3) * 0.04f : 1f);
+        rig.localScale = Vector3.one * (cmd || saul ? 1.07f : dav ? 0.98f : civ ? 0.92f + (v % 3) * 0.04f : 1f);
 
         var hips = Pivot(rig, "Hips", new Vector3(0, 0.98f, 0));
 
@@ -86,7 +87,7 @@ public static class HumanoidBuilder
         Part(torso, "Belt", Belt(), guard ? m.leather : trim, Vector3.zero);
         if (jon) Part(torso, "Sash", Blob(), m.jonSash, new Vector3(0.1f, 0.3f, 0.02f), new Vector3(0, 0, 25), new Vector3(0.06f, 0.36f, 0.28f));
         if (cmd) Part(torso, "Breastplate", Cube1(), m.gold, new Vector3(0, 0.33f, 0.16f), Vector3.zero, new Vector3(0.36f, 0.34f, 0.06f));
-        if (guard && !cmd) Part(torso, "Pauldrons", Cube1(), m.helmet, new Vector3(0, 0.5f, 0), Vector3.zero, new Vector3(0.66f, 0.07f, 0.34f));
+        if (guard && !cmd && !saul) Part(torso, "Pauldrons", Cube1(), m.helmet, new Vector3(0, 0.5f, 0), Vector3.zero, new Vector3(0.66f, 0.07f, 0.34f));
         if (cmd) Part(torso, "Pauldrons", Cube1(), m.gold, new Vector3(0, 0.51f, 0), Vector3.zero, new Vector3(0.72f, 0.09f, 0.36f));
 
         // head
@@ -142,6 +143,13 @@ public static class HumanoidBuilder
                     Part(torso, "Bundle", Ball(), m.civE, new Vector3(0, 0.3f, -0.3f), Vector3.zero, new Vector3(0.22f, 0.26f, 0.2f));
                     break;
             }
+        }
+        else if (saul)
+        {
+            Part(head, "Hair", Ball(), hair, new Vector3(0, 0.185f, -0.02f), Vector3.zero, new Vector3(0.15f, 0.12f, 0.16f));
+            Part(head, "Crown", Ring(), m.gold, new Vector3(0, 0.215f, 0), Vector3.zero, new Vector3(1.15f, 1.15f, 1.15f));
+            Part(head, "CrownPoint", Blob(), m.gold, new Vector3(0, 0.26f, 0), Vector3.zero, Vector3.one * 0.025f);
+            Part(head, "Beard", Blob(), hair, new Vector3(0, 0.03f, 0.1f), Vector3.zero, new Vector3(0.085f, 0.07f, 0.05f));
         }
         else
         {

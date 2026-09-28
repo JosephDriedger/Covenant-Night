@@ -137,31 +137,30 @@ public class ZoneManager : MonoBehaviour
 
         yield return LoadZone(index, restoreCheckpoint);
 
+        // The intro cutscene repositions the characters into its own set before anything is revealed,
+        // so the player's first view of the zone is the cutscene rather than a jump-cut from the spawn.
+        bool playIntro = index == 0 && !restoreCheckpoint && !skipBeats && IntroCutscene.Instance != null;
+        if (playIntro) IntroCutscene.Instance.PrepareBeforeReveal();
+
         yield return Fade(0f);
 
         // Cutscene for the upcoming zone, played live over the now-loaded scene (not on a checkpoint restart).
-        if (!restoreCheckpoint && !skipBeats) yield return PlayZoneEntryCinematic(index);
+        if (playIntro) yield return IntroCutscene.Instance.Play(CurrentEntry.jonathanSpawn, CurrentEntry.davidSpawn);
+        else if (!restoreCheckpoint && !skipBeats) yield return PlayZoneEntryCinematic(index);
 
         IsTransitioning = false;
         GameManager.Instance.ResumePlay();
     }
 
-    // Zone 0: the full intro cutscene (camera + character performance), if one is present in the scene.
-    // Zones 1-4: a lightweight camera shot and gesture over the live scene, framed off the zone's own
-    // entry spawn so no per-zone marks are needed, with the existing caption text layered on top.
+    // A lightweight camera shot and gesture over the live scene, framed off the zone's own entry spawn
+    // so no per-zone marks are needed, with the existing caption text layered on top. Zone 0 falls back
+    // to this (plain text, no cutscene) only if no IntroCutscene is present in the scene.
     IEnumerator PlayZoneEntryCinematic(int index)
     {
         if (zoneEntryBeats == null || index >= zoneEntryBeats.Length || zoneEntryBeats[index] == null) yield break;
         var story = StoryPanelController.Instance;
 
-        if (index == 0)
-        {
-            if (IntroCutscene.Instance != null) { yield return IntroCutscene.Instance.Play(); yield break; }
-            if (story != null) yield return story.Show(zoneEntryBeats[0].beats);
-            yield break;
-        }
-
-        if (CurrentEntry == null || CurrentEntry.jonathanSpawn == null)
+        if (index == 0 || CurrentEntry == null || CurrentEntry.jonathanSpawn == null)
         {
             if (story != null) yield return story.Show(zoneEntryBeats[index].beats);
             yield break;

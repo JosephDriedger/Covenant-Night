@@ -8,8 +8,8 @@ using TMPro;
 // gate NPCs, stone, clay pot, torch, hiding spot, zone exit, run-waypoint marker.
 public class Prefabs
 {
-    public GameObject jonathan, david, guardPatrol, guardSentry, guardCommander, gateNpc;
-    public GameObject stone, decoy, clayPot, loreScroll, torch, hidingSpot, zoneExit, runWaypoint;
+    public GameObject jonathan, david, guardPatrol, guardSentry, guardCommander, gateNpc, saul;
+    public GameObject stone, decoy, clayPot, loreScroll, torch, hidingSpot, zoneExit, runWaypoint, thrownSpear;
     public GameObject[] npc = new GameObject[6];
 }
 
@@ -77,6 +77,8 @@ public static class PrefabFactory
         p.guardSentry    = BuildGuard(GuardType.Sentry,    "Guard_Sentry",    m);
         p.guardCommander = BuildGuard(GuardType.Commander, "Guard_Commander", m);
         p.gateNpc        = BuildGateNpc(m);
+        p.saul           = BuildSaul(m);
+        p.thrownSpear    = BuildThrownSpear(m);
         for (int i = 0; i < p.npc.Length; i++) p.npc[i] = BuildNpc(i, m);
         AssetDatabase.SaveAssets();
         return p;
@@ -502,5 +504,26 @@ public static class PrefabFactory
         vis.transform.SetParent(root.transform, false);
         HumanoidBuilder.Build(vis.transform, Role.Commander, m);
         return Save(root, "GateNPC");
+    }
+
+    // King Saul, for the intro cutscene only (no AI; positioned and animated by IntroCutscene).
+    static GameObject BuildSaul(Mats m)
+    {
+        var root = new GameObject("Saul");
+        var vis = new GameObject("Visual");
+        vis.transform.SetParent(root.transform, false);
+        HumanoidBuilder.Build(vis.transform, Role.Saul, m);
+        var anim = root.AddComponent<ProceduralCharacterAnim>();
+        anim.visual = vis.transform;
+        return Save(root, "Saul");
+    }
+
+    // A standalone spear prop, tweened (not physics-driven) from Saul's hand to where it lands.
+    static GameObject BuildThrownSpear(Mats m)
+    {
+        var root = new GameObject("ThrownSpear");
+        Prim(PrimitiveType.Cylinder, "Shaft", root.transform, new Vector3(0, 0, 0.45f), new Vector3(0.035f, 0.5f, 0.035f), m.spearWood, false, new Vector3(90, 0, 0));
+        Prim(PrimitiveType.Sphere, "Tip", root.transform, new Vector3(0, 0, 0.95f), Vector3.one * 0.07f, m.metal);
+        return Save(root, "ThrownSpear");
     }
 }

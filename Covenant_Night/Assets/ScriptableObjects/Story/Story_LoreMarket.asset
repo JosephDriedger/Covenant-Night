@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4724455878f58b4791342be53e06ebc, type: 3}
+  m_Name: Story_LoreMarket
+  m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
+  beats:
+  - heading: A Merchant's Complaint
+    text: '"Curfew again tonight. Guards at every corner asking after travelers.
+      Bad for business, worse for sleep. I have half a mind to close the stall until
+      the king finds whoever he''s looking for."'
+    sprite: {fileID: 0}

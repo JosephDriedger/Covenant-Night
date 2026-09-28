@@ -23,6 +23,7 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [x] Townsfolk that block the player, block guard line of sight and get in the guards' way
 - [x] Title screen and pause menu (resume, restart zone, controls and field notes, settings, main menu, quit); story panels rewritten short and illustrated, with escape tactics told in the story (controls appear only on the Controls page)
 - [x] Cinematic intro, zone-transition and ending cutscenes: live camera shots and character performance (ProceduralCharacterAnim gestures) over the 3D scene, captions overlaid, in place of the old static illustration panels
+- [x] Intro cutscene opens with Saul hurling his spear at David in the throne room (new Saul character + thrown-spear prop), then Jonathan actually walks David out, hushed and crouched, to the zone's real starting point
 - [x] Difficulty: Easy / Medium / Hard (a capture restarts the zone) and Hardcore (one life, faster and smarter guards); guard sharpness and moonlight rise zone by zone; every zone verified beatable in every mode
 - [x] New Game+: finishing the game once unlocks a Mixed-difficulty picker (Easy/Medium/Hard chosen per zone)
 - [x] Local personal-best time per zone, shown on the HUD and updated when a zone is beaten faster

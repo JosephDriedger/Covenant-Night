@@ -77,7 +77,7 @@ Gibeah is divided into five linearly connected zones, each with at least two rou
 - **Audio:** `AudioMixer` with Music / Ambience / SFX submixes; spatial blend 1.0 on all in-world sources
 - **Detection Visualisation:** ground-projected cone mesh, clipped by walls and fading toward its far edge
 - **Look:** flat-shaded low-poly characters and buildings, tiling procedural textures, torch/fire particles, lit windows, moon and stars, URP Bloom + Vignette
-- **Cinematics:** the intro, each zone transition, and the ending play as staged scenes over the live 3D world — a cutscene camera shot (`ThirdPersonCamera.SetShot`) and character performance (procedural gestures) with the story text as an overlaid caption, instead of a static illustration
+- **Cinematics:** the intro, each zone transition, and the ending play as staged scenes over the live 3D world — a cutscene camera shot (`ThirdPersonCamera.SetShot`) and character performance (procedural gestures) with the story text as an overlaid caption, instead of a static illustration. The intro opens in Saul's throne room (King Saul hurls his spear at David while David plays the harp; David dodges), then Jonathan and David slip out together — hushed, crouched, and actually walking, not just a camera cut — to the zone's real starting point
 - **Input:** new Input System — keyboard and mouse or gamepad, with on-screen hints that follow the device in use
 
 ---

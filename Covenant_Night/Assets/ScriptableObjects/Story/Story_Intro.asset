@@ -13,21 +13,28 @@ MonoBehaviour:
   m_Name: Story_Intro
   m_EditorClassIdentifier: Assembly-CSharp::StoryBeatData
   beats:
+  - heading: An Evil Spirit
+    text: 'Saul broods on his throne while David plays the harp to soothe him. Without
+      warning the king seizes his spear and hurls it at David.
+
+
+      David dodges,
+      and the point buries itself in the wall where he stood.'
+    sprite: {fileID: 21300000, guid: 53565fcdf7fdd1441bbeb4a3b4262649, type: 3}
   - heading: The Warning
-    text: 'Before midnight, a servant wakes Jonathan. "The king''s men are gathering,"
-      he whispers. "They mean to take David at dawn."
+    text: 'Jonathan has seen enough. His father will not miss a second time, and
+      by dawn the king''s men will be watching every door.
 
 
       Jonathan has sworn
       a covenant with David, and he intends to keep it.'
     sprite: {fileID: 21300000, guid: 53565fcdf7fdd1441bbeb4a3b4262649, type: 3}
   - heading: The Plan
-    text: 'Jonathan hurries to David''s room and wakes him. "We leave by the eastern
-      gate," he says, "before the sun is up."
+    text: '"We leave by the eastern gate," Jonathan says, "before the sun is up."
 
 
-      David takes up his harp and
-      follows.'
+      David
+      sets down the harp and follows.'
     sprite: {fileID: 21300000, guid: 8e06c2766017d8847976c9f7d18aae72, type: 3}
   - heading: Slipping Past the Guards
     text: 'Jonathan has trained beside these men and knows how they watch. The glow

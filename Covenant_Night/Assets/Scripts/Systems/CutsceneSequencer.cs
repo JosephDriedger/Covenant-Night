@@ -26,4 +26,20 @@ public static class CutsceneSequencer
         if (isPlayer) pc.Teleport(who.position, mark.rotation);
         else who.rotation = mark.rotation;
     }
+
+    // A quick fade on a shared CanvasGroup (e.g. ZoneManager.Instance.fadePanel), used to mask an instant
+    // reposition between two cutscene locations that are too far apart to walk on screen.
+    public static IEnumerator Fade(CanvasGroup panel, float target, float duration)
+    {
+        if (panel == null) yield break;
+        float start = panel.alpha;
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            panel.alpha = Mathf.Lerp(start, target, t / duration);
+            yield return null;
+        }
+        panel.alpha = target;
+    }
 }

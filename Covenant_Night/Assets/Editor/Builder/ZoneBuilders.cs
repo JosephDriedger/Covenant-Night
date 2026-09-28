@@ -101,7 +101,7 @@ public static class ZoneBuilders
         k.Entry("The Palace District", "Zone 1", V(0, 3), 0f,
             new[] { V(0, 11), V(15, 19), V(-16, 26), V(15, 42), V(-16, 44), V(-6, 58) }, difficulty: 0.70f, ambient: 0.28f);
 
-        // ── intro cutscene: live camera work and performance in place of the old text-and-picture opening ──
+        // ── intro cutscene: Saul's throne room, set well apart from the playable district ──
         var introRoot = new GameObject("IntroCutscene");
         introRoot.transform.SetParent(k.root, false);
         var intro = introRoot.AddComponent<IntroCutscene>();
@@ -112,13 +112,39 @@ public static class ZoneBuilders
             mt.SetPositionAndRotation(pos, Quaternion.Euler(0, yaw, 0));
             return mt;
         }
+        Transform FindNamed(Transform t, string n)
+        {
+            foreach (var c in t.GetComponentsInChildren<Transform>(true)) if (c.name == n) return c;
+            return null;
+        }
+
+        var throneFloor = new R(50, 0, 66, 18);
+        k.Ground(throneFloor, k.M.palace);
+        float th = 4.5f;
+        k.Block(new R(49, -1, 50, 19), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallW");
+        k.Block(new R(66, -1, 67, 19), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallE");
+        k.Block(new R(49, 18, 67, 19), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallN");
+        k.PlaceTorch(52, 16, true); k.PlaceTorch(64, 16, true);
+        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneSeat", k.envRoot, V3(58, 0.4f, 14.3f), new Vector3(1.6f, 0.8f, 1.4f), k.M.limestone);
+        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneBack", k.envRoot, V3(58, 1.4f, 15f), new Vector3(1.6f, 1.6f, 0.2f), k.M.limestone);
+
+        var saulGo = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(k.P.saul, k.scene);
+        saulGo.name = "Saul";
+        saulGo.transform.SetParent(k.guardsRoot, false);
+        saulGo.transform.SetPositionAndRotation(V3(58, 0.05f, 14), Quaternion.Euler(0, 180, 0));
+
         intro.beats = story.intro;
-        intro.togetherMark  = IMark("TogetherMark", V3(0.9f, 0.05f, 3f));
-        intro.shotWake      = IMark("ShotWake", V3(1.3f, 1.55f, 1.4f));
-        intro.shotTogether  = IMark("ShotTogether", V3(2.6f, 1.75f, 2.2f));
-        intro.shotAhead     = IMark("ShotAhead", V3(0f, 2.1f, 0.2f));
-        intro.lookAtJonathan = IMark("LookAtJonathan", V3(0f, 1.6f, 3f));
-        intro.lookAtAhead    = IMark("LookAtAhead", V3(0f, 1.5f, 15f));
+        intro.saul = saulGo.transform;
+        intro.saulSpearVisual = FindNamed(saulGo.transform, "Spear");
+        intro.thrownSpearPrefab = k.P.thrownSpear;
+        intro.saulMark        = IMark("SaulMark", V3(58, 0.05f, 14), 180f);
+        intro.davidHarpMark   = IMark("DavidHarpMark", V3(58, 0.05f, 8f));
+        intro.jonathanWatchMark = IMark("JonathanWatchMark", V3(58, 0.05f, 2f));
+        intro.spearTargetMark = IMark("SpearTargetMark", V3(51.2f, 1.6f, 7f));
+        intro.doorwayMark     = IMark("DoorwayMark", V3(58, 0.05f, 1f));
+        intro.shotThrone      = IMark("ShotThrone", V3(63f, 2.2f, 9f));
+        intro.shotSneak       = IMark("ShotSneak", V3(60f, 1.9f, 2f));
+        intro.approachMark    = IMark("ApproachMark", V3(0f, 0.05f, 1.5f));
 
         k.Ambience(new[] { V3(-27, 3, 20), V3(27, 3, 50), V3(0, 3, 78) });
         k.BakeNavMesh();
