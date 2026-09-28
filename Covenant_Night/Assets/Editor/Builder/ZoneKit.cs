@@ -71,6 +71,7 @@ public class ZoneKit
         go.layer = layer;
         var mesh = LowPoly.Box(size, tile);
         mesh.name = name;
+        Unwrapping.GenerateSecondaryUVSet(mesh);   // lightmap UVs, for the baked GI pass in Save()
         go.AddComponent<MeshFilter>().sharedMesh = mesh;
         go.AddComponent<MeshRenderer>().sharedMaterial = mat;
         if (collider) go.AddComponent<BoxCollider>().size = size;
@@ -765,6 +766,35 @@ public class ZoneKit
 
     public void Save()
     {
+        BakeLighting();
         EditorSceneManager.SaveScene(scene, $"Assets/Scenes/{sceneName}.unity");
+    }
+
+    // Baked GI for the static geometry (buildings, ground, ramps — already marked static, with lightmap
+    // UVs generated in Cube()). Lights stay Realtime, so torch flicker/animation is unaffected; this only
+    // adds an indirect bounce pass. Deliberately modest settings so batch-mode CPU baking stays fast, and
+    // a failed bake is logged rather than allowed to fail the whole build.
+    static void BakeLighting()
+    {
+        var settings = new LightingSettings
+        {
+            lightmapper = LightingSettings.Lightmapper.ProgressiveCPU,
+            directSampleCount = 4,
+            indirectSampleCount = 32,
+            maxBounces = 1,
+            lightmapMaxSize = 256,
+            lightmapResolution = 4f,
+            ao = false,
+        };
+        Lightmapping.lightingSettings = settings;
+        try
+        {
+            if (!Lightmapping.Bake())
+                Debug.LogWarning("[Builder] Lightmap bake did not complete.");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("[Builder] Lightmap bake failed: " + e.Message);
+        }
     }
 }

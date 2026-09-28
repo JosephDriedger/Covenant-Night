@@ -332,6 +332,8 @@ public class GuardFSM : MonoBehaviour
         var pc = PlayerController.Instance;
         if (pc != null && (!pc.IsHidden || _vision.SeesPlayer) && Near(pc.transform.position))
         {
+            // In the gate zone, before the bluff has started, this is the alternate ending instead of a fail.
+            if (GateFinalSequence.Instance != null && GateFinalSequence.Instance.TryDetainJonathan()) return;
             GameManager.Instance?.TriggerFail(FailReason.JonathanCaptured);
             return;
         }

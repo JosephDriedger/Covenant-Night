@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
 
     public static event Action<FailReason> OnFailState;
     public static event Action OnWinState;
+    public static event Action OnAlternateEnding;   // Jonathan detained at the gate, but David gets away
 
     // Gameplay is paused during story panels, transitions, cutscenes and end states, and while the pause menu is open.
     public bool IsPaused => _flowPaused || UserPaused;
@@ -48,6 +49,17 @@ public class GameManager : MonoBehaviour
         _flowPaused = true;
         GameDifficulty.UnlockNewGamePlus();
         OnWinState?.Invoke();
+    }
+
+    // The bittersweet alternate ending: Jonathan is caught at the very last moment, but David is already
+    // clear. Still a completed run (unlocks New Game+), just not the clean escape.
+    public void TriggerAlternateEnding()
+    {
+        if (HasEnded) return;
+        HasEnded = true;
+        _flowPaused = true;
+        GameDifficulty.UnlockNewGamePlus();
+        OnAlternateEnding?.Invoke();
     }
 
     public void Pause() => _flowPaused = true;

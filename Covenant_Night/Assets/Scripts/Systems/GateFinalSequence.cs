@@ -11,10 +11,16 @@ using UnityEngine;
 //   5. epilogue over a still of the empty gate (1 Samuel 20:42), then the win state / credits
 public class GateFinalSequence : MonoBehaviour
 {
+    public static GateFinalSequence Instance { get; private set; }
+
     [Header("Story Panels")]
     public StoryBeatData gateBluffBeats;
     public StoryBeatData farewellBeats;
     public StoryBeatData epilogueBeats;
+
+    [Header("Alternate Ending: Jonathan Detained")]
+    public StoryBeatData detainedBeats;
+    public StoryBeatData aloneEpilogueBeats;
 
     [Header("Scene References")]
     public Transform jonathanMark;
@@ -40,7 +46,28 @@ public class GateFinalSequence : MonoBehaviour
     BoxCollider _box;
     float _messageCooldown;
 
-    void Awake() => _box = GetComponent<BoxCollider>();
+    void Awake()
+    {
+        _box = GetComponent<BoxCollider>();
+        Instance = this;
+    }
+
+    void OnDestroy() { if (Instance == this) Instance = null; }
+
+    // Called by GuardFSM instead of a normal fail when Jonathan is caught in this zone before the bluff
+    // has started. Returns false (letting the normal fail proceed) once the bluff sequence is underway,
+    // so a capture mid-cutscene still behaves the way it always has.
+    public bool TryDetainJonathan()
+    {
+        if (_triggered || (GameManager.Instance != null && GameManager.Instance.HasEnded)) return false;
+        // Only makes narrative sense once David has actually reached the gate approach; otherwise this is
+        // a normal capture, however Jonathan lost track of him.
+        var david = DavidCompanion.Instance;
+        if (david == null || david.transform.position.z < 48f) return false;
+        _triggered = true;
+        StartCoroutine(PlayAlternateEnding());
+        return true;
+    }
 
     // Position tests (not trigger events): see ZoneExit for why.
     bool Inside(Transform t)
@@ -136,5 +163,35 @@ public class GateFinalSequence : MonoBehaviour
         if (epilogueBeats != null && story != null) yield return story.Show(epilogueBeats.beats, overlayMode: true);
 
         GameManager.Instance.TriggerWin();
+    }
+
+    // Jonathan is seized before he can bluff his way through, but David — already close to the gate — slips
+    // through alone in the confusion. Reuses the same shots and exit path as the normal ending.
+    IEnumerator PlayAlternateEnding()
+    {
+        var pc = PlayerController.Instance;
+        var david = DavidCompanion.Instance;
+        var cam = ThirdPersonCamera.Instance;
+        var story = StoryPanelController.Instance;
+
+        GameManager.Instance.Pause();
+        david.SetCutsceneControl(true);
+
+        cam?.SetShot(shotBluff, lookAtGate);
+        pc.GetComponent<ProceduralCharacterAnim>()?.PlayFlinch();
+        if (detainedBeats != null && story != null) yield return story.Show(detainedBeats.beats, overlayMode: true);
+
+        cam?.SetShot(shotFarewell, david.transform);
+        if (davidMark != null) david.transform.SetPositionAndRotation(davidMark.position, davidMark.rotation);
+        if (davidExitPath != null)
+            foreach (var p in davidExitPath)
+                yield return CutsceneSequencer.MoveTo(david.transform, p, 2.2f, isPlayer: false);
+
+        david.gameObject.SetActive(false);
+        cam?.SetShot(shotEmptyGate, lookAtGate);
+        yield return new WaitForSecondsRealtime(1.6f);
+        if (aloneEpilogueBeats != null && story != null) yield return story.Show(aloneEpilogueBeats.beats, overlayMode: true);
+
+        GameManager.Instance.TriggerAlternateEnding();
     }
 }

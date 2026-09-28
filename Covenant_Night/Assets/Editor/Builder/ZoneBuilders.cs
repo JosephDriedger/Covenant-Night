@@ -365,6 +365,14 @@ public static class ZoneBuilders
         k.PlaceTorch(-3, 53); k.PlaceTorch(3, 53);
         k.Alcove(9, 49.5f, 'E');
 
+        // Rooftop route: a third way past the square, up onto the eastern building roofs (already solid
+        // and walkable from CarveBuildings, the same height the existing rooftop sentry watches from) —
+        // exposed to the open sky, no cover but the chimneys, and back down before the exit.
+        k.Ramp(V3(18.5f, 0f, 18f), V3(21f, 4.5f, 18f), 3f, k.M.sandB, "RoofRampUp4");
+        k.Ramp(V3(21f, 4.5f, 50f), V3(18.5f, 0f, 50f), 3f, k.M.sandB, "RoofRampDown4");
+        foreach (var c in new[] { V(20.5f, 26), V(20.5f, 34), V(20.5f, 42) })
+            k.Block(new R(c.x - 0.8f, c.y - 0.8f, c.x + 0.8f, c.y + 0.8f), 1.6f, k.M.roofTile, GameLayers.Walls, 4.5f, "Chimney");
+
         k.Pot(-3, 16); k.Pot(-18, 52.6f); k.Pot(19, 30, 1, 1.2f); k.Pot(0, 49.5f); k.Pot(-14, 34, 2); k.Pot(6, 20);
         k.Scroll(0.6f, 34.6f, story.loreWell);
 
@@ -397,6 +405,7 @@ public static class ZoneBuilders
         k.VerifyRoute("west gallery", V(0, 3), V(0, 12), V(-15, 17), V(-15, 25), V(-15, 34), V(-15, 45), V(-15, 52.5f), V(0, 53), V(0, 68));
         k.VerifyRoute3D("east terrace", V3(0, 0.1f, 12), V3(16, 0.1f, 16.5f), V3(16, 1.3f, 25), V3(16, 1.3f, 45), V3(16, 0.1f, 51.2f), V3(0, 0.1f, 53), V3(0, 0.1f, 68));
         k.VerifyRoute("open square", V(0, 3), V(0, 12), V(0, 24), V(6, 34), V(9, 50), V(0, 53), V(0, 68));
+        k.VerifyRoute3D("rooftop route", V3(18.5f, 0.1f, 18f), V3(20.5f, 4.6f, 18f), V3(20.5f, 4.6f, 34f), V3(20.5f, 4.6f, 50f), V3(18.5f, 0.1f, 50f));
         k.Save();
     }
 
@@ -516,6 +525,8 @@ public static class ZoneBuilders
         seq.gateBluffBeats = story.gateBluff;
         seq.farewellBeats = story.farewell;
         seq.epilogueBeats = story.epilogue;
+        seq.detainedBeats = story.jonathanDetained;
+        seq.aloneEpilogueBeats = story.aloneEpilogue;
         seq.sfxSource = PrefabFactory.AddSource(finale, null, k.MX.sfx, false, false, 1f, 60f);
         seq.gateCreak = k.A.creak;
         // the commander steps aside toward the tower

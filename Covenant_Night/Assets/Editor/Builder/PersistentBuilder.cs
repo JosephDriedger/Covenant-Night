@@ -600,7 +600,7 @@ public static class PersistentBuilder
         Stretch(bg.rectTransform);
 
         MakeText(t, "Title", "COVENANT NIGHT", 120, Gold, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -110), new Vector2(1700, 160), TextAlignmentOptions.Center, FontStyles.Bold);
-        MakeText(t, "Sub", "David is beyond the gate. The covenant holds.", 40, Parchment, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -290), new Vector2(1500, 60), TextAlignmentOptions.Center);
+        fail.creditsSubText = MakeText(t, "Sub", "David is beyond the gate. The covenant holds.", 40, Parchment, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -290), new Vector2(1500, 60), TextAlignmentOptions.Center);
         MakeText(t, "Body",
             "A stealth game of loyalty, shadow, and sacrifice\nBased on 1 Samuel 19 and 20\n\n" +
             "Design, code, sound and illustration by one person.\n" +

@@ -8,6 +8,7 @@ public class StoryAssets
 {
     public StoryBeatData intro, zone2, zone3, zone4, zone5;
     public StoryBeatData gateBluff, farewell, epilogue, jonathanCaptured;
+    public StoryBeatData jonathanDetained, aloneEpilogue;
     public StoryBeatData[] ZoneEntryBeats => new[] { intro, zone2, zone3, zone4, zone5 };
 
     // Optional lore scrolls, purely narrative, found off the critical path in a zone.
@@ -121,6 +122,16 @@ public static class StoryBuilder
             B("Before the King",
               "Saul's guards drag Jonathan before the throne. \"Where is the son of Jesse?\" the king demands.\n\n" +
               "Jonathan lifts his chin and says nothing.", throne));
+
+        // Alternate ending: Jonathan is caught at the very gate, but David is already clear of it.
+        s.jonathanDetained = Make("Story_JonathanDetained",
+            B("Taken at the Gate",
+              "A shout goes up behind them. Hands seize Jonathan before he can raise his father's ring.\n\n" +
+              "\"Where is the son of Jesse?\" the commander demands. Jonathan says nothing — and in the confusion, no one is watching the gate.", throne));
+        s.aloneEpilogue = Make("Story_AloneEpilogue",
+            B("Epilogue",
+              "David passes through the gate alone and into the dark hills. He does not look back; he cannot afford to.\n\n" +
+              "\"The Lord is witness between you and me forever.\" 1 Samuel 20:42", empty));
 
         // Lore scrolls: short, optional flavor notes found off the critical path, no gameplay effect.
         s.loreLedger = Make("Story_LoreLedger",

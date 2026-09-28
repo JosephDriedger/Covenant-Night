@@ -21,6 +21,9 @@ public class FailStateHandler : MonoBehaviour
 
     [Header("Win / Credits UI")]
     public CanvasGroup winPanel;
+    public TextMeshProUGUI creditsSubText;
+    public string winSubText = "David is beyond the gate. The covenant holds.";
+    public string alternateSubText = "Jonathan is taken, but David is free. The covenant holds, even at its cost.";
 
     [Header("Cutscene beats")]
     public StoryBeatData jonathanCapturedBeats;   // played after the fail panel when Jonathan is caught
@@ -34,16 +37,19 @@ public class FailStateHandler : MonoBehaviour
     {
         GameManager.OnFailState += HandleFail;
         GameManager.OnWinState  += HandleWin;
+        GameManager.OnAlternateEnding += HandleAlternateEnding;
     }
 
     void OnDisable()
     {
         GameManager.OnFailState -= HandleFail;
         GameManager.OnWinState  -= HandleWin;
+        GameManager.OnAlternateEnding -= HandleAlternateEnding;
     }
 
     void HandleFail(FailReason reason) => StartCoroutine(ShowFailSequence(reason));
-    void HandleWin()                   => StartCoroutine(ShowWinSequence());
+    void HandleWin()                   => StartCoroutine(ShowWinSequence(winSubText));
+    void HandleAlternateEnding()       => StartCoroutine(ShowWinSequence(alternateSubText));
 
     IEnumerator ShowFailSequence(FailReason reason)
     {
@@ -106,9 +112,11 @@ public class FailStateHandler : MonoBehaviour
         else ZoneManager.Instance?.RestartCurrentZone();
     }
 
-    IEnumerator ShowWinSequence()
+    IEnumerator ShowWinSequence(string subText)
     {
         yield return new WaitForSecondsRealtime(showDelay);
+
+        if (creditsSubText != null && subText != null) creditsSubText.text = subText;
 
         if (winPanel != null)
         {
