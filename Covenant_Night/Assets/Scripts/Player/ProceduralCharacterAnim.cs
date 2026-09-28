@@ -26,8 +26,9 @@ public class ProceduralCharacterAnim : MonoBehaviour
 
     // one-shot animations
     float _throwT = -1f, _harpT = -1f, _raiseT = -1f, _gestT = -1f, _flinchT = -1f;
+    float _lookAroundT = -1f, _waveT = -1f;
     float _lookYaw;
-    float _harpLen, _raiseLen;
+    float _harpLen, _raiseLen, _lookAroundLen, _waveLen;
 
     static readonly int SpeedHash   = Animator.StringToHash("Speed");
     static readonly int CrouchHash  = Animator.StringToHash("IsCrouching");
@@ -69,6 +70,8 @@ public class ProceduralCharacterAnim : MonoBehaviour
     public void PlayFlinch()              { _flinchT = 0f; }    // duck and throw the arms up
     public void PlayHarp(float seconds = 2.2f)      { _harpT = 0f; _harpLen = seconds; }
     public void PlayRaiseHand(float seconds = 3f)   { _raiseT = 0f; _raiseLen = seconds; }
+    public void PlayLookAround(float seconds = 3f)  { _lookAroundT = 0f; _lookAroundLen = seconds; }   // cutscene: slow head sweep
+    public void PlayFarewellWave(float seconds = 2f) { _waveT = 0f; _waveLen = seconds; }              // cutscene: raised arm waving
 
     // ── update ──────────────────────────────────────────────────────────────
 
@@ -235,6 +238,21 @@ public class ProceduralCharacterAnim : MonoBehaviour
             }
         }
 
+        // one-shot: farewell wave (raised left arm, waving side to side)
+        if (_waveT >= 0f)
+        {
+            _waveT += dt;
+            float k = _waveT / _waveLen;
+            if (k >= 1f) _waveT = -1f;
+            else
+            {
+                float env = Mathf.Clamp01(Mathf.Min(k * 5f, (1f - k) * 4f));
+                float wave = Mathf.Sin(_t * 8f) * 18f;
+                armLx = Mathf.Lerp(armLx, -140f, env);
+                armLz = Mathf.Lerp(armLz, -20f + wave, env);
+            }
+        }
+
         _armL.localRotation = Quaternion.Euler(armLx, 0f, armLz);
         _armR.localRotation = Quaternion.Euler(armRx, 0f, armRz);
 
@@ -249,6 +267,20 @@ public class ProceduralCharacterAnim : MonoBehaviour
         else pitch = -lean * 0.5f + breathe * 1.2f;        // keep looking ahead while the torso leans
         _lookYaw = Mathf.Lerp(_lookYaw, lookYaw, 1f - Mathf.Exp(-6f * dt));
         yaw += _wallT * 35f + _lookYaw;
+
+        // one-shot: slow cutscene head sweep (looking around a scene)
+        if (_lookAroundT >= 0f)
+        {
+            _lookAroundT += dt;
+            float k = _lookAroundT / _lookAroundLen;
+            if (k >= 1f) _lookAroundT = -1f;
+            else
+            {
+                float env = Mathf.Clamp01(Mathf.Min(k * 4f, (1f - k) * 3f));
+                yaw += Mathf.Sin(_t * 2f + _seed) * 40f * env;
+            }
+        }
+
         _head.localRotation = Quaternion.Euler(pitch, yaw, Mathf.Sin(_t * 1.3f + _seed) * 1.5f);
 
         // ── cloak trails behind ──

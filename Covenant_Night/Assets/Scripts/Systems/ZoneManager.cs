@@ -135,20 +135,54 @@ public class ZoneManager : MonoBehaviour
             CurrentEntry = null;
         }
 
-        // Story panels for the upcoming zone (not on a checkpoint restart)
-        if (!restoreCheckpoint && !skipBeats &&
-            zoneEntryBeats != null && index < zoneEntryBeats.Length &&
-            zoneEntryBeats[index] != null && StoryPanelController.Instance != null)
-        {
-            yield return StoryPanelController.Instance.Show(zoneEntryBeats[index].beats);
-        }
-
         yield return LoadZone(index, restoreCheckpoint);
 
         yield return Fade(0f);
 
+        // Cutscene for the upcoming zone, played live over the now-loaded scene (not on a checkpoint restart).
+        if (!restoreCheckpoint && !skipBeats) yield return PlayZoneEntryCinematic(index);
+
         IsTransitioning = false;
         GameManager.Instance.ResumePlay();
+    }
+
+    // Zone 0: the full intro cutscene (camera + character performance), if one is present in the scene.
+    // Zones 1-4: a lightweight camera shot and gesture over the live scene, framed off the zone's own
+    // entry spawn so no per-zone marks are needed, with the existing caption text layered on top.
+    IEnumerator PlayZoneEntryCinematic(int index)
+    {
+        if (zoneEntryBeats == null || index >= zoneEntryBeats.Length || zoneEntryBeats[index] == null) yield break;
+        var story = StoryPanelController.Instance;
+
+        if (index == 0)
+        {
+            if (IntroCutscene.Instance != null) { yield return IntroCutscene.Instance.Play(); yield break; }
+            if (story != null) yield return story.Show(zoneEntryBeats[0].beats);
+            yield break;
+        }
+
+        if (CurrentEntry == null || CurrentEntry.jonathanSpawn == null)
+        {
+            if (story != null) yield return story.Show(zoneEntryBeats[index].beats);
+            yield break;
+        }
+
+        var cam = ThirdPersonCamera.Instance;
+        Transform spawn = CurrentEntry.jonathanSpawn;
+        var shot = new GameObject("ZoneEntryShot").transform;
+        shot.SetPositionAndRotation(spawn.position + spawn.rotation * new Vector3(2.2f, 1.7f, -2.6f), Quaternion.identity);
+        var look = new GameObject("ZoneEntryLook").transform;
+        look.position = spawn.position + spawn.rotation * new Vector3(0f, 1.4f, -0.9f);
+
+        cam?.SetShot(shot, look);
+        jonathan.GetComponent<ProceduralCharacterAnim>()?.PlayLookAround(2.6f);
+        davidCompanion.GetComponent<ProceduralCharacterAnim>()?.PlayGesture();
+
+        if (story != null) yield return story.Show(zoneEntryBeats[index].beats, overlayMode: true);
+
+        cam?.ClearShot();
+        Destroy(shot.gameObject);
+        Destroy(look.gameObject);
     }
 
     IEnumerator LoadZone(int index, bool restoreCheckpoint)

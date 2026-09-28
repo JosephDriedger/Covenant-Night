@@ -98,11 +98,11 @@ public class GateFinalSequence : MonoBehaviour
 
         // 1. Walk to marks
         cam?.SetShot(shotBluff, lookAtGate);
-        yield return MoveTo(pc.transform, jonathanMark, 2.2f, isPlayer: true);
-        yield return MoveTo(david.transform, davidMark, 1.6f, isPlayer: false);
+        yield return CutsceneSequencer.MoveTo(pc.transform, jonathanMark, 2.2f, isPlayer: true);
+        yield return CutsceneSequencer.MoveTo(david.transform, davidMark, 1.6f, isPlayer: false);
 
         // 2. The bluff
-        if (gateBluffBeats != null && story != null) yield return story.Show(gateBluffBeats.beats);
+        if (gateBluffBeats != null && story != null) yield return story.Show(gateBluffBeats.beats, overlayMode: true);
 
         // 3. Gate opens
         pc.GetComponent<ProceduralCharacterAnim>()?.PlayRaiseHand(3.6f);
@@ -121,39 +121,20 @@ public class GateFinalSequence : MonoBehaviour
 
         // 4. David walks through the gate into the hills; Jonathan watches
         cam?.SetShot(shotFarewell, david.transform);
+        pc.GetComponent<ProceduralCharacterAnim>()?.PlayFarewellWave(2.5f);
         if (davidExitPath != null)
             foreach (var p in davidExitPath)
-                yield return MoveTo(david.transform, p, 1.9f, isPlayer: false);
+                yield return CutsceneSequencer.MoveTo(david.transform, p, 1.9f, isPlayer: false);
 
-        if (farewellBeats != null && story != null) yield return story.Show(farewellBeats.beats);
+        if (farewellBeats != null && story != null) yield return story.Show(farewellBeats.beats, overlayMode: true);
 
-        // 5. Epilogue over the empty gate
+        // 5. Epilogue over the empty gate: a longer, held shot instead of an illustration cut
         david.gameObject.SetActive(false);
         cam?.SetShot(shotEmptyGate, lookAtGate);
         TensionAudioManager.Instance?.PlayEpilogue();
-        yield return new WaitForSecondsRealtime(1.2f);
-        if (epilogueBeats != null && story != null) yield return story.Show(epilogueBeats.beats);
+        yield return new WaitForSecondsRealtime(2.4f);
+        if (epilogueBeats != null && story != null) yield return story.Show(epilogueBeats.beats, overlayMode: true);
 
         GameManager.Instance.TriggerWin();
-    }
-
-    // Smoothly move a character to a mark at walking speed, facing the direction of travel (then the mark's facing).
-    IEnumerator MoveTo(Transform who, Transform mark, float speed, bool isPlayer)
-    {
-        if (mark == null) yield break;
-        var pc = PlayerController.Instance;
-        while (true)
-        {
-            Vector3 to = mark.position - who.position; to.y = 0f;
-            if (to.magnitude < 0.08f) break;
-            Vector3 next = who.position + to.normalized * Mathf.Min(to.magnitude, speed * Time.unscaledDeltaTime);
-            Quaternion rot = Quaternion.LookRotation(to.normalized);
-            if (isPlayer) pc.Teleport(next, Quaternion.Slerp(who.rotation, rot, 0.25f));
-            else who.SetPositionAndRotation(next, Quaternion.Slerp(who.rotation, rot, 0.25f));
-            yield return null;
-        }
-        // Settle facing the mark's forward direction
-        if (isPlayer) pc.Teleport(who.position, mark.rotation);
-        else who.rotation = mark.rotation;
     }
 }

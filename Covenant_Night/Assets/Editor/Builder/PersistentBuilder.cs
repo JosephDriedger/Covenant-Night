@@ -314,12 +314,19 @@ public static class PersistentBuilder
         ir.anchorMin = ir.anchorMax = new Vector2(0.5f, 1); ir.pivot = new Vector2(0.5f, 1);
         ir.anchoredPosition = new Vector2(0, -28); ir.sizeDelta = new Vector2(1024, 576);
 
+        // Caption backing so heading/body stay legible in overlay mode (no opaque Background behind them).
+        var captionPlate = MakeImage(t, "CaptionPlate", new Color(0.01f, 0.01f, 0.02f, 0.55f));
+        var cpr = captionPlate.rectTransform;
+        cpr.anchorMin = cpr.anchorMax = new Vector2(0.5f, 1); cpr.pivot = new Vector2(0.5f, 1);
+        cpr.anchoredPosition = new Vector2(0, -604); cpr.sizeDelta = new Vector2(1500, 370);
+
         var heading = MakeText(t, "Heading", "", 32, Gold, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -618), new Vector2(1400, 46), TextAlignmentOptions.Center, FontStyles.Bold);
         var body = MakeText(t, "Body", "", 31, Parchment, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -672), new Vector2(1420, 300), TextAlignmentOptions.Top);
         body.lineSpacing = 6;
         var prompt = MakeText(t, "ContinuePrompt", "Press Any Key or Button", 24, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(600, 36), TextAlignmentOptions.Center);
 
         ctl.panelGroup = group;
+        ctl.background = bg;
         ctl.headingText = heading;
         ctl.bodyText = body;
         ctl.continuePrompt = prompt;

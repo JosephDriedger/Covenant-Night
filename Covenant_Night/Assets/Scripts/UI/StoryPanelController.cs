@@ -12,6 +12,7 @@ public class StoryPanelController : MonoBehaviour
 
     [Header("UI")]
     public CanvasGroup     panelGroup;
+    public Image           background;     // opaque backdrop; hidden in overlay mode so a live camera shot shows through
     public TextMeshProUGUI headingText;
     public TextMeshProUGUI bodyText;
     public TextMeshProUGUI continuePrompt;
@@ -33,10 +34,13 @@ public class StoryPanelController : MonoBehaviour
     void OnDestroy() { if (Instance == this) Instance = null; }
 
     // beats: (heading, text, sprite) entries. Sprite can be null.
-    public IEnumerator Show(StoryBeat[] beats)
+    // overlayMode: hides the opaque backdrop and illustration so the caption plays over a live camera shot
+    // instead of a static picture (used by the intro, zone transitions and the ending cutscenes).
+    public IEnumerator Show(StoryBeat[] beats, bool overlayMode = false)
     {
         if (beats == null || beats.Length == 0) yield break;
 
+        if (background != null) background.gameObject.SetActive(!overlayMode);
         panelGroup.gameObject.SetActive(true);
         yield return Fade(1f);
 
@@ -44,8 +48,9 @@ public class StoryPanelController : MonoBehaviour
         {
             if (illustration != null)
             {
-                illustration.enabled = beat.sprite != null;
-                if (beat.sprite != null) illustration.sprite = beat.sprite;
+                bool showSprite = !overlayMode && beat.sprite != null;
+                illustration.enabled = showSprite;
+                if (showSprite) illustration.sprite = beat.sprite;
             }
             if (headingText != null) headingText.text = beat.heading ?? "";
 
@@ -54,6 +59,7 @@ public class StoryPanelController : MonoBehaviour
 
         yield return Fade(0f);
         panelGroup.gameObject.SetActive(false);
+        if (background != null) background.gameObject.SetActive(true);
     }
 
     IEnumerator TypeAndWait(string text)

@@ -100,6 +100,26 @@ public static class ZoneBuilders
         k.Exit(0, 69.5f, 8f);
         k.Entry("The Palace District", "Zone 1", V(0, 3), 0f,
             new[] { V(0, 11), V(15, 19), V(-16, 26), V(15, 42), V(-16, 44), V(-6, 58) }, difficulty: 0.70f, ambient: 0.28f);
+
+        // ── intro cutscene: live camera work and performance in place of the old text-and-picture opening ──
+        var introRoot = new GameObject("IntroCutscene");
+        introRoot.transform.SetParent(k.root, false);
+        var intro = introRoot.AddComponent<IntroCutscene>();
+        Transform IMark(string mname, Vector3 pos, float yaw = 0f)
+        {
+            var mt = new GameObject(mname).transform;
+            mt.SetParent(introRoot.transform, false);
+            mt.SetPositionAndRotation(pos, Quaternion.Euler(0, yaw, 0));
+            return mt;
+        }
+        intro.beats = story.intro;
+        intro.togetherMark  = IMark("TogetherMark", V3(0.9f, 0.05f, 3f));
+        intro.shotWake      = IMark("ShotWake", V3(1.3f, 1.55f, 1.4f));
+        intro.shotTogether  = IMark("ShotTogether", V3(2.6f, 1.75f, 2.2f));
+        intro.shotAhead     = IMark("ShotAhead", V3(0f, 2.1f, 0.2f));
+        intro.lookAtJonathan = IMark("LookAtJonathan", V3(0f, 1.6f, 3f));
+        intro.lookAtAhead    = IMark("LookAtAhead", V3(0f, 1.5f, 15f));
+
         k.Ambience(new[] { V3(-27, 3, 20), V3(27, 3, 50), V3(0, 3, 78) });
         k.BakeNavMesh();
         k.VerifyRoute("west passage", V(0, 3), V(0, 12), V(-14, 20), V(-14, 30), V(-14, 46), V(0, 55), V(0, 68));
