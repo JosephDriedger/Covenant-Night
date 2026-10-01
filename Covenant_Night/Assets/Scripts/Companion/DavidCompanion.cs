@@ -29,6 +29,8 @@ public class DavidCompanion : MonoBehaviour
     public float followSpeed       = 2.8f;
     public float crouchFollowSpeed = 1.7f;
     public float runSpeed          = 5f;
+    [Tooltip("Follow speed while Jonathan is sprinting, so David runs when he runs.")]
+    public float sprintFollowSpeed = 6.6f;
 
     [Header("Crouch")]
     public float standingHeight = 1.75f;
@@ -47,6 +49,7 @@ public class DavidCompanion : MonoBehaviour
     public bool IsHidden      { get; private set; }
     public bool IsCrouching   { get; private set; }
     public bool IsHushed      { get; private set; }
+    public bool IsSprinting   { get; private set; }
     public bool HarpAvailable => !_harpUsedThisZone;
     public bool IsReady       => _agent != null && _agent.enabled && _agent.isOnNavMesh;
 
@@ -121,7 +124,9 @@ public class DavidCompanion : MonoBehaviour
 
     void UpdateFollow()
     {
-        _agent.speed = IsCrouching ? crouchFollowSpeed : followSpeed;
+        IsSprinting = !IsCrouching && _following && PlayerController.Instance != null && PlayerController.Instance.IsSprinting;
+        _agent.speed = IsCrouching ? crouchFollowSpeed : IsSprinting ? sprintFollowSpeed : followSpeed;
+        if (IsSprinting) EmitRunNoise();
         if (followTarget == null) return;
 
         float dist = Vector3.Distance(transform.position, followTarget.position);
@@ -141,15 +146,18 @@ public class DavidCompanion : MonoBehaviour
     {
         if (_runTarget == null) { SetMode(Mode.Follow); return; }
 
-        _noiseTimer -= Time.deltaTime;
-        if (_noiseTimer <= 0f)
-        {
-            _noiseTimer = 0.45f;
-            if (!IsHushed && _agent.velocity.sqrMagnitude > 1f) AudioEventSystem.Emit(transform.position, runNoiseRadius);
-        }
+        EmitRunNoise();
 
         if (!_agent.pathPending && _agent.remainingDistance < 0.8f)
             SetMode(Mode.Wait);      // reached the marked waypoint: hold there until called
+    }
+
+    void EmitRunNoise()
+    {
+        _noiseTimer -= Time.deltaTime;
+        if (_noiseTimer > 0f) return;
+        _noiseTimer = 0.45f;
+        if (!IsHushed && _agent.velocity.sqrMagnitude > 1f) AudioEventSystem.Emit(transform.position, runNoiseRadius);
     }
 
     // Nearest marked waypoint that is ahead of David (zones progress toward +Z).
@@ -191,6 +199,7 @@ public class DavidCompanion : MonoBehaviour
 
         CurrentMode = mode;
         _following = false;
+        IsSprinting = false;
         switch (mode)
         {
             case Mode.Follow:

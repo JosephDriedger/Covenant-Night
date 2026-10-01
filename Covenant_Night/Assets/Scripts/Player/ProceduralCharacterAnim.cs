@@ -103,7 +103,7 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _speed = Mathf.Lerp(_speed, inst, 1f - Mathf.Exp(-12f * dt));
 
         bool crouching = (_player != null && _player.IsCrouching) || (_david != null && _david.IsCrouching);
-        bool sprinting = _player != null && _player.IsSprinting;
+        bool sprinting = (_player != null && _player.IsSprinting) || (_david != null && _david.IsSprinting);
         bool wallPress = _player != null && _player.IsWallPressed;
         var state = _guard != null ? _guard.State : GuardState.Unaware;
         bool alerted = _guard != null && state != GuardState.Unaware;

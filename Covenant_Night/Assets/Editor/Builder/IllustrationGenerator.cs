@@ -12,7 +12,15 @@ public static class IllustrationGenerator
 
     class Canvas
     {
-        public Color[] px = new Color[W * H];   // index = y*W + x, y measured from the TOP (flipped on save)
+        public readonly int W, H;               // shadow the story-panel defaults so branding art can use other sizes
+        public Color[] px;                      // index = y*W + x, y measured from the TOP (flipped on save)
+
+        public Canvas(int w = IllustrationGenerator.W, int h = IllustrationGenerator.H)
+        {
+            W = w; H = h;
+            px = new Color[w * h];
+        }
+
         public Color At(int x, int y) => px[y * W + x];
 
         public void Gradient(Color top, Color bottom)
@@ -390,6 +398,48 @@ public static class IllustrationGenerator
         c.Glow(636, 318, 60, Warm, 0.8f);
         c.Vignette(0.7f);
         return c;
+    }
+
+    // Emblem used for the app icon (square) and the splash logo (wide): a full moon over the city gate, torch-lit,
+    // with Jonathan and David as small silhouettes standing in the opening.
+    static Canvas Emblem(int w, int h, int seed)
+    {
+        var c = new Canvas(w, h);
+        c.Gradient(Night1, Night2);
+        c.Stars(w * h / 1400, seed, h * 6 / 10);
+        float u = h / 512f;
+        c.Moon(w * 0.5f, h * 0.30f, 74 * u);
+
+        c.Hills((int)(h * 0.70f), 14 * u, seed + 1, new Color(0.05f, 0.07f, 0.15f, 1f));
+        var stone = new Color(0.10f, 0.11f, 0.16f);
+        int cx = w / 2, halfW = (int)(70 * u), baseY = (int)(h * 0.93f);
+        int archTop = (int)(h * 0.55f);
+        c.GateWall(cx - (int)(190 * u), cx + (int)(190 * u), (int)(h * 0.50f), baseY, cx, halfW, archTop, stone, new Color(0.95f, 0.55f, 0.18f));
+        c.Glow(cx, baseY - 70 * u, 150 * u, Warm, 0.55f);
+        c.Rect(cx - (int)(190 * u), (int)(h * 0.50f) - (int)(8 * u), cx + (int)(190 * u), (int)(h * 0.50f), stone);
+
+        c.Torch(cx - 105 * u, h * 0.60f, 1.1f * u);
+        c.Torch(cx + 105 * u, h * 0.60f, 1.1f * u);
+
+        var dark = new Color(0.02f, 0.02f, 0.05f, 1f);
+        c.Figure(cx - 22 * u, baseY, 112 * u, dark);
+        c.Figure(cx + 24 * u, baseY, 92 * u, dark);
+        c.Vignette(0.75f);
+        return c;
+    }
+
+    // Writes the game icon (square) and splash logo (wide) PNGs.
+    public static void GenerateBranding(string folder)
+    {
+        Directory.CreateDirectory(folder);
+        void Save(string name, Canvas c)
+        {
+            var tex = c.ToTexture();
+            File.WriteAllBytes($"{folder}/{name}.png", tex.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(tex);
+        }
+        Save("icon", Emblem(512, 512, 11));
+        Save("splash_logo", Emblem(1024, 576, 12));
     }
 
     public static Dictionary<string, string> GenerateAll(string folder)

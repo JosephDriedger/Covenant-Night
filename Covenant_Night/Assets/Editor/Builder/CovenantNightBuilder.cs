@@ -124,6 +124,7 @@ public static class CovenantNightBuilder
         PlayerSettings.defaultScreenHeight = 720;
         PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
         PlayerSettings.resizableWindow = true;
+        ConfigureBranding();
 
         // URP: allow shadows from torch point lights, sensible shadow distance
         foreach (var path in new[] { "Assets/Settings/PC_RPAsset.asset", "Assets/Settings/Mobile_RPAsset.asset" })
@@ -143,6 +144,35 @@ public static class CovenantNightBuilder
             EditorUtility.SetDirty(asset);
         }
         AssetDatabase.SaveAssets();
+    }
+
+    // Custom game icon and splash screen (replaces the Unity logo splash).
+    static void ConfigureBranding()
+    {
+        const string dir = "Assets/Art/Branding";
+        IllustrationGenerator.GenerateBranding(dir);
+        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
+        var iconImp = (TextureImporter)AssetImporter.GetAtPath(dir + "/icon.png");
+        iconImp.textureType = TextureImporterType.Default;
+        iconImp.npotScale = TextureImporterNPOTScale.None;
+        iconImp.mipmapEnabled = false;
+        iconImp.SaveAndReimport();
+
+        var logoImp = (TextureImporter)AssetImporter.GetAtPath(dir + "/splash_logo.png");
+        logoImp.textureType = TextureImporterType.Sprite;
+        logoImp.mipmapEnabled = false;
+        logoImp.SaveAndReimport();
+
+        var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(dir + "/icon.png");
+        PlayerSettings.SetIcons(UnityEditor.Build.NamedBuildTarget.Unknown, new[] { icon }, IconKind.Application);
+
+        var logo = AssetDatabase.LoadAssetAtPath<Sprite>(dir + "/splash_logo.png");
+        PlayerSettings.SplashScreen.show = true;
+        PlayerSettings.SplashScreen.showUnityLogo = false;
+        PlayerSettings.SplashScreen.backgroundColor = new Color(0.02f, 0.03f, 0.07f, 1f);
+        PlayerSettings.SplashScreen.drawMode = PlayerSettings.SplashScreen.DrawMode.AllSequential;
+        PlayerSettings.SplashScreen.logos = new[] { PlayerSettings.SplashScreenLogo.Create(2.5f, logo) };
     }
 
     static CheckpointData[] BuildCheckpoints()
