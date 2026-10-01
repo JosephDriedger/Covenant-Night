@@ -5,7 +5,7 @@ using TMPro;
 
 // Displays a sequence of illustrated text panels (Unity UI canvas): zone intros, gate scene,
 // fail cutscene, epilogue. `yield return StoryPanelController.Instance.Show(beats)`.
-// Any key / click: first press completes the typewriter, the next advances.
+// Space / Enter / click / A: the first press completes the typewriter, a later one advances.
 public class StoryPanelController : MonoBehaviour
 {
     public static StoryPanelController Instance { get; private set; }
@@ -17,8 +17,10 @@ public class StoryPanelController : MonoBehaviour
     public TextMeshProUGUI bodyText;
     public TextMeshProUGUI continuePrompt;
     public Image           illustration;   // optional; sprite swapped per panel
-    public RectTransform[] captionParts;   // plate, heading, body: dropped lower over a live cutscene shot
-    public float           overlayDrop = 105f;
+    public RectTransform[] captionParts;   // plate, heading, body: re-laid out low on screen over a live cutscene shot
+    [Tooltip("Over a live shot: caption bottom edge, in canvas units above the screen bottom (clears the letterbox bar).")]
+    public float           overlayBottom = 122f;
+    public float           overlayBodySize = 28f;
 
     [Header("Timing")]
     public float fadeTime        = 0.4f;
@@ -37,19 +39,53 @@ public class StoryPanelController : MonoBehaviour
         if (illustration != null) illustration.enabled = false;
         if (captionParts != null)
         {
-            _captionBase = new Vector2[captionParts.Length];
-            for (int i = 0; i < captionParts.Length; i++) _captionBase[i] = captionParts[i].anchoredPosition;
+            _base = new RectState[captionParts.Length];
+            for (int i = 0; i < captionParts.Length; i++) _base[i] = new RectState(captionParts[i]);
+        }
+        _baseBodySize = bodyText.fontSize;
+    }
+
+    struct RectState
+    {
+        public Vector2 anchorMin, anchorMax, pivot, pos, size;
+        public RectState(RectTransform rt)
+        {
+            anchorMin = rt.anchorMin; anchorMax = rt.anchorMax; pivot = rt.pivot; pos = rt.anchoredPosition; size = rt.sizeDelta;
+        }
+        public void Apply(RectTransform rt)
+        {
+            rt.anchorMin = anchorMin; rt.anchorMax = anchorMax; rt.pivot = pivot; rt.anchoredPosition = pos; rt.sizeDelta = size;
         }
     }
 
-    Vector2[] _captionBase;
+    RectState[] _base;
+    float _baseBodySize;
 
-    // Over a live shot the caption sits low, toward the letterbox bar, so it covers less of the action.
-    void PlaceCaption(bool overlayMode)
+    // Over a live shot the caption is stacked up from just above the letterbox bar and sized to its text,
+    // so it covers as little of the action as possible and never runs into the bar. Full-screen panels
+    // keep the builder's layout.
+    void LayoutCaption(string text, bool overlayMode)
     {
-        if (captionParts == null || _captionBase == null) return;
-        for (int i = 0; i < captionParts.Length; i++)
-            captionParts[i].anchoredPosition = _captionBase[i] + (overlayMode ? Vector2.down * overlayDrop : Vector2.zero);
+        if (captionParts == null || _base == null || captionParts.Length < 3) return;
+        for (int i = 0; i < captionParts.Length; i++) _base[i].Apply(captionParts[i]);
+        bodyText.fontSize = overlayMode ? overlayBodySize : _baseBodySize;
+        if (!overlayMode) return;
+
+        RectTransform plate = captionParts[0], head = captionParts[1], body = captionParts[2];
+        const float pad = 16f, gap = 6f;
+        float bodyH = Mathf.Ceil(bodyText.GetPreferredValues(text ?? "", body.sizeDelta.x, 0f).y) + 4f;
+        float headH = head.sizeDelta.y;
+        PinToBottom(body, overlayBottom + pad, bodyH);
+        PinToBottom(head, overlayBottom + pad + bodyH + gap, headH);
+        PinToBottom(plate, overlayBottom, pad + bodyH + gap + headH + pad * 0.6f);
+    }
+
+    static void PinToBottom(RectTransform rt, float y, float height)
+    {
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+        rt.pivot = new Vector2(0.5f, 0f);
+        rt.anchoredPosition = new Vector2(0f, y);
+        rt.sizeDelta = new Vector2(rt.sizeDelta.x, height);
     }
 
     void SetIllustration(StoryBeat beat, bool overlayMode)
@@ -73,7 +109,7 @@ public class StoryPanelController : MonoBehaviour
         // Everything is set for the first beat before the panel becomes visible, so nothing stale (or the
         // illustration's blank default) can flash up during the fade-in.
         if (background != null) background.gameObject.SetActive(!overlayMode);
-        PlaceCaption(overlayMode);
+        LayoutCaption(beats[0].text, overlayMode);
         SetIllustration(beats[0], overlayMode);
         if (headingText != null) headingText.text = beats[0].heading ?? "";
         bodyText.text = "";
@@ -85,6 +121,7 @@ public class StoryPanelController : MonoBehaviour
         {
             SetIllustration(beat, overlayMode);
             if (headingText != null) headingText.text = beat.heading ?? "";
+            LayoutCaption(beat.text, overlayMode);
 
             yield return TypeAndWait(beat.text);
         }

@@ -25,7 +25,8 @@ public class IntroCutscene : MonoBehaviour
     public Transform jonathanWatchMark;
     public Transform spearTargetMark;      // where the thrown spear ends up, embedded in the wall
     public Transform planMark;             // where Jonathan stops beside David
-    public Transform doorwayLeadMark;
+    public Transform doorwayInMark;        // just inside the doorway; both pass through it on the way out
+    public Transform doorwayLeadMark;      // in the passage beyond the door
     public Transform doorwayFollowMark;
 
     [Header("Throne Room Shots")]
@@ -129,9 +130,9 @@ public class IntroCutscene : MonoBehaviour
         cam?.SetShot(shotSneak, pc.transform, 1.0f, cut: true);
         pc.SetCutsceneCrouch(true);
         david.SetCutsceneCrouch(true);
-        Coroutine jMove = StartCoroutine(CutsceneSequencer.MoveTo(pc.transform, doorwayLeadMark, 1.9f, isPlayer: true));
-        yield return new WaitForSecondsRealtime(0.7f);
-        Coroutine dMove = StartCoroutine(CutsceneSequencer.MoveTo(david.transform, doorwayFollowMark, 1.9f, isPlayer: false));
+        Coroutine jMove = StartCoroutine(Walk(pc.transform, true, doorwayInMark, doorwayLeadMark));
+        yield return new WaitForSecondsRealtime(0.9f);
+        Coroutine dMove = StartCoroutine(Walk(david.transform, false, doorwayInMark, doorwayFollowMark));
         yield return new WaitForSecondsRealtime(1.6f);
         if (story != null) yield return story.Show(new[] { beats.beats[3] }, overlayMode: true);
         yield return dMove;
@@ -161,6 +162,13 @@ public class IntroCutscene : MonoBehaviour
         pc.SetCutsceneCrouch(false);
         david.SetCutsceneCrouch(false);
         david.SetCutsceneControl(false);
+    }
+
+    // Crouched walk through a sequence of marks (so a route can bend through a doorway).
+    static IEnumerator Walk(Transform who, bool isPlayer, params Transform[] marks)
+    {
+        foreach (var m in marks)
+            if (m != null) yield return CutsceneSequencer.MoveTo(who, m, 1.9f, isPlayer);
     }
 
     // Slow push-in: moves the shot transform itself, which the camera follows every frame.

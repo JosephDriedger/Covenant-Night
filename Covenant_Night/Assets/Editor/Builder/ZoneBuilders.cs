@@ -130,6 +130,13 @@ public static class ZoneBuilders
         k.Block(new R(59, -1, 67, 0), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallS");
         k.Block(new R(57, -1, 59, 0), th - 3.1f, k.M.darkStone, GameLayers.Walls, 3.1f, "ThroneLintel");
         k.Block(new R(49, -1, 67, 19), 0.4f, k.M.woodDark, GameLayers.Walls, th, "ThroneCeiling");
+        // a torchlit servants' passage behind the south doorway, so it leads somewhere rather than into open sky
+        k.Ground(new R(56, -10, 60, -1), k.M.palace);
+        k.Block(new R(55, -11, 56, -1), th, k.M.darkStone, GameLayers.Walls, 0, "PassageWallW");
+        k.Block(new R(60, -11, 61, -1), th, k.M.darkStone, GameLayers.Walls, 0, "PassageWallE");
+        k.Block(new R(55, -11, 61, -10), th, k.M.darkStone, GameLayers.Walls, 0, "PassageWallS");
+        k.Block(new R(55, -11, 61, -1), 0.4f, k.M.woodDark, GameLayers.Walls, th, "PassageCeiling");
+        k.PlaceTorch(59.3f, -8.6f, true);
         k.Block(new R(55.5f, 12.2f, 60.5f, 17.2f), 0.3f, k.M.limestone, GameLayers.Walls, 0, "ThroneDais");
         k.Block(new R(57.2f, 0.2f, 58.8f, 12.2f), 0.03f, k.M.clothRed, GameLayers.Walls, 0, "ThroneCarpet");
         PrefabFactory.Prim(PrimitiveType.Cube, "ThroneSeat", k.envRoot, V3(58, 0.55f, 14.2f), new Vector3(1.5f, 0.5f, 1.2f), k.M.limestone);
@@ -156,8 +163,9 @@ public static class ZoneBuilders
         intro.jonathanWatchMark   = IMark("JonathanWatchMark", V3(63.4f, 0.05f, 7.6f), -62f);
         intro.spearTargetMark     = IMark("SpearTargetMark", V3(50.05f, 1.55f, 7.2f));
         intro.planMark            = IMark("PlanMark", V3(54.1f, 0.05f, 7.9f), -62f);
-        intro.doorwayLeadMark    = IMark("DoorwayLeadMark", V3(57.6f, 0.05f, 0.7f), 180f);
-        intro.doorwayFollowMark = IMark("DoorwayFollowMark", V3(58.5f, 0.05f, 1.8f), 180f);
+        intro.doorwayInMark      = IMark("DoorwayInMark", V3(58f, 0.05f, 1.3f), 180f);
+        intro.doorwayLeadMark    = IMark("DoorwayLeadMark", V3(57.9f, 0.05f, -3.6f), 180f);
+        intro.doorwayFollowMark  = IMark("DoorwayFollowMark", V3(58.1f, 0.05f, -1.8f), 180f);
         // Over David's right shoulder toward Saul on his throne, pushing in; the spear flies past David's head
         // and out of frame left, then an insert shows it buried in the wall beside him.
         intro.shotWide            = IMark("ShotWide", V3(51.2f, 2.0f, 5.33f));
@@ -168,7 +176,7 @@ public static class ZoneBuilders
         intro.shotReaction        = IMark("ShotReaction", V3(61.86f, 1.62f, 8.98f));
         intro.shotTwo             = IMark("ShotTwo", V3(51.85f, 1.6f, 5.25f));
         intro.lookTwo             = IMark("LookTwo", V3(53.45f, 1.3f, 8.25f));
-        intro.shotSneak           = IMark("ShotSneak", V3(61.5f, 1.6f, 6.8f));
+        intro.shotSneak           = IMark("ShotSneak", V3(60.4f, 1.6f, 6.8f));   // sightline runs through the doorway
         k.PlaceTorch(51.0f, 10.6f, true);     // lights David's spot by the west wall
         // Zone 1: they slip in from the west side of the entry court to the real spawn points.
         intro.approachDavidMark    = IMark("ApproachDavidMark", V3(-6.5f, 0.05f, 1.0f), 88f);
