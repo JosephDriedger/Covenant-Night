@@ -101,8 +101,12 @@ public class DavidCompanion : MonoBehaviour
 
     void UpdateCrouch()
     {
-        bool want = IsHushed ||
-            (PlayerController.Instance != null && PlayerController.Instance.IsCrouching && CurrentMode != Mode.Run);
+        SetCrouch(IsHushed ||
+            (PlayerController.Instance != null && PlayerController.Instance.IsCrouching && CurrentMode != Mode.Run));
+    }
+
+    void SetCrouch(bool want)
+    {
         if (want == IsCrouching) return;
         IsCrouching = want;
         if (_capsule != null)
@@ -111,6 +115,9 @@ public class DavidCompanion : MonoBehaviour
             _capsule.center = Vector3.up * (_capsule.height * 0.5f);
         }
     }
+
+    // Cutscenes run while gameplay (and so UpdateCrouch) is paused; this sets the pose directly.
+    public void SetCutsceneCrouch(bool on) => SetCrouch(on);
 
     void UpdateFollow()
     {

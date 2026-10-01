@@ -167,15 +167,17 @@ public class InputReader : MonoBehaviour
         g.dpad.up.isPressed || g.dpad.down.isPressed || g.dpad.left.isPressed || g.dpad.right.isPressed ||
         g.leftTrigger.isPressed || g.rightTrigger.isPressed;
 
-    // Used by story panels / credits: any key, click, or main gamepad button.
+    // Used by story panels / credits: deliberate confirm inputs only. Movement and stealth keys (WASD, Shift,
+    // Ctrl, ability hotkeys) are pressed constantly in play and used to dismiss story text before it was read.
     public static bool ConfirmPressedThisFrame()
     {
         if (ScriptedConfirm) { ScriptedConfirm = false; return true; }
 
         var k = Keyboard.current;
-        if (k != null && k.anyKey.wasPressedThisFrame) return true;
+        if (k != null && (k.spaceKey.wasPressedThisFrame || k.enterKey.wasPressedThisFrame || k.numpadEnterKey.wasPressedThisFrame))
+            return true;
         var m = Mouse.current;
-        if (m != null && (m.leftButton.wasPressedThisFrame || m.rightButton.wasPressedThisFrame)) return true;
+        if (m != null && m.leftButton.wasPressedThisFrame) return true;
         var g = Gamepad.current;
         if (g != null && (g.buttonSouth.wasPressedThisFrame || g.startButton.wasPressedThisFrame)) return true;
         return false;

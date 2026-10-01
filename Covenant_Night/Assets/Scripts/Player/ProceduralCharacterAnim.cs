@@ -14,14 +14,21 @@ public class ProceduralCharacterAnim : MonoBehaviour
     public bool      proceduralEnabled = true;
     [Tooltip("Extra head turn in degrees (civilians look toward sounds); smoothed.")]
     public float     lookYaw;
+    [Tooltip("Cutscenes: sit (Saul on his throne). Blends in and out.")]
+    public bool      seated;
+    [Tooltip("Cutscenes: David holds his harp in front of him instead of carrying it on his back.")]
+    public bool      holdHarp;
 
     PlayerController _player;
     DavidCompanion   _david;
     GuardFSM         _guard;
 
     Transform _hips, _torso, _head, _armL, _armR, _legL, _legR, _kneeL, _kneeR, _ankleL, _ankleR, _cloak, _spear;
+    Transform _harp, _skirt, _hem;
+    Vector3 _harpRestPos;
+    Quaternion _harpRestRot;
     Vector3 _lastPos;
-    float _speed, _phase, _t, _crouchT, _alertT, _alarmT, _wallT;
+    float _speed, _phase, _t, _crouchT, _alertT, _alarmT, _wallT, _seatT;
     float _seed;
 
     // one-shot animations
@@ -61,6 +68,10 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _ankleR = FindDeep(visual, "AnkleR");
         _cloak = FindDeep(visual, "Cloak");
         _spear = FindDeep(visual, "Spear");
+        _harp  = FindDeep(visual, "Harp");
+        _skirt = FindDeep(visual, "Skirt");
+        _hem   = FindDeep(visual, "Hem");
+        if (_harp != null) { _harpRestPos = _harp.localPosition; _harpRestRot = _harp.localRotation; }
         _lastPos = transform.position;
         _seed = Random.value * 20f;
     }
@@ -74,6 +85,7 @@ public class ProceduralCharacterAnim : MonoBehaviour
     public void PlayRaiseHand(float seconds = 3f)   { _raiseT = 0f; _raiseLen = seconds; }
     public void PlayLookAround(float seconds = 3f)  { _lookAroundT = 0f; _lookAroundLen = seconds; }   // cutscene: slow head sweep
     public void PlayFarewellWave(float seconds = 2f) { _waveT = 0f; _waveLen = seconds; }              // cutscene: raised arm waving
+    public void SnapSeated(bool on)       { seated = on; _seatT = on ? 1f : 0f; }                        // sit/stand with no blend
 
     // ── update ──────────────────────────────────────────────────────────────
 
@@ -108,6 +120,8 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _wallT   = Mathf.MoveTowards(_wallT, wallPress ? 1f : 0f, dt * 6f);
         _alertT  = Mathf.MoveTowards(_alertT, state != GuardState.Unaware ? 1f : 0f, dt * 4f);
         _alarmT  = Mathf.MoveTowards(_alarmT, state == GuardState.Alarmed ? 1f : 0f, dt * 5f);
+        _seatT   = Mathf.MoveTowards(_seatT, seated ? 1f : 0f, dt * 2.6f);
+        float seat = Mathf.SmoothStep(0f, 1f, _seatT);
 
         float moving = Mathf.Clamp01(_speed / 0.7f);
         float freq = 2.3f * (crouching ? 1.5f : 1f);
@@ -118,17 +132,18 @@ public class ProceduralCharacterAnim : MonoBehaviour
         float walkAmp   = Mathf.Clamp(_speed * 9f, 0f, sprinting || _alarmT > 0.5f ? 52f : 40f);
         float sneakAmp  = Mathf.Clamp(_speed * 17f, 0f, 32f);
         float legAmp = Mathf.Lerp(walkAmp, sneakAmp, _crouchT);
-        float armAmp = legAmp * 0.9f;
-        float lean = Mathf.Clamp(_speed * 3.2f, 0f, 16f) + _crouchT * 28f - _wallT * 6f;
+        float armAmp = legAmp * Mathf.Lerp(0.9f, 0.45f, _crouchT);   // a sneak keeps the arms in close
+        float lean = Mathf.Clamp(_speed * 3.2f, 0f, 16f) + _crouchT * 28f - _wallT * 6f - seat * 4f;
         float bob = Mathf.Abs(s) * 0.05f * moving * (1f - _crouchT);
         float breathe = Mathf.Sin(_t * 2.2f + _seed);
 
         // ── hips / legs ──
         float crouchDrop = 0.37f * _crouchT;      // matches the thigh / knee fold below so the feet stay planted
-        _hips.localPosition = new Vector3(0f, 0.98f - crouchDrop + bob, 0f);
+        // seated: hips drop onto the seat and move back over it, thighs level, shins hanging
+        _hips.localPosition = new Vector3(0f, 0.98f - crouchDrop + bob - seat * 0.46f, -seat * 0.36f);
         _hips.localRotation = Quaternion.Euler(0f, s * 5f * moving, s * 2f * moving);
 
-        float crouchFold = -55f * _crouchT;       // thighs forward
+        float crouchFold = -55f * _crouchT - 86f * seat;   // thighs forward
         float legLx = s * legAmp + crouchFold, legRx = -s * legAmp + crouchFold;
         _legL.localRotation = Quaternion.Euler(legLx, 0f, 0f);
         _legR.localRotation = Quaternion.Euler(legRx, 0f, 0f);
@@ -137,7 +152,7 @@ public class ProceduralCharacterAnim : MonoBehaviour
         float kneeLx = 0f, kneeRx = 0f, liftL = Mathf.Max(0f, -c), liftR = Mathf.Max(0f, c);
         if (_kneeL != null && _kneeR != null)
         {
-            float kneeFold = 105f * _crouchT;
+            float kneeFold = 105f * _crouchT + 86f * seat;
             float kneeStride = moving * Mathf.Lerp(38f, 22f, _crouchT);
             kneeLx = kneeFold + liftL * kneeStride;
             kneeRx = kneeFold + liftR * kneeStride;
@@ -159,10 +174,31 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _torso.localScale = new Vector3(1f, 1f + breathe * 0.012f, 1f);
 
         // ── arms ──
-        float armLx = -s * armAmp, armRx = s * armAmp;
+        // Arms hang under gravity. A forward-leaning torso tilts everything hung from the shoulders backward
+        // with it, so rotate the arms forward by most of the lean to keep them hanging near vertical.
+        float hang = -lean * 0.8f;
+        float armLx = -s * armAmp + hang, armRx = s * armAmp + hang;
         float armLz = -6f - _wallT * 22f, armRz = 6f + _wallT * 22f;
         float idleSway = breathe * 2f * (1f - moving);
         armLx += idleSway; armRx -= idleSway;
+        armLx -= 32f * seat; armRx -= 32f * seat;            // forearms resting toward the knees
+
+        // harp held upright against the chest; the one-shot below strums it
+        if (_harp != null)
+        {
+            if (holdHarp)
+            {
+                // cradled low against the body, arms angled down to its sides rather than held out straight
+                _harp.localPosition = new Vector3(0.02f, 0.02f, 0.3f);
+                _harp.localRotation = Quaternion.Euler(-6f, 0f, -4f);
+                armLx = -36f; armRx = -44f; armLz = 10f; armRz = -10f;
+            }
+            else
+            {
+                _harp.localPosition = _harpRestPos;
+                _harp.localRotation = _harpRestRot;
+            }
+        }
 
         bool guardLike = _guard != null;
         if (guardLike)
@@ -201,8 +237,8 @@ public class ProceduralCharacterAnim : MonoBehaviour
             {
                 float env = Mathf.Clamp01(Mathf.Min(k * 6f, (1f - k) * 6f));
                 float strum = Mathf.Sin(_t * 14f) * 12f * env;
-                armLx = Mathf.Lerp(armLx, -80f + strum, env);
-                armRx = Mathf.Lerp(armRx, -95f - strum, env);
+                armLx = Mathf.Lerp(armLx, (holdHarp ? -38f : -80f) + strum, env);
+                armRx = Mathf.Lerp(armRx, (holdHarp ? -50f : -95f) - strum, env);
                 armLz = Mathf.Lerp(armLz, 10f, env);
                 armRz = Mathf.Lerp(armRz, -10f, env);
                 _torso.localRotation *= Quaternion.Euler(-6f * env, Mathf.Sin(_t * 3f) * 6f * env, 0f);
@@ -298,8 +334,13 @@ public class ProceduralCharacterAnim : MonoBehaviour
 
         _head.localRotation = Quaternion.Euler(pitch, yaw, Mathf.Sin(_t * 1.3f + _seed) * 1.5f);
 
-        // ── cloak trails behind ──
+        // ── cloak: hangs under gravity (cancelling the torso's lean), flaring back a little with speed ──
         if (_cloak != null)
-            _cloak.localRotation = Quaternion.Euler(Mathf.Clamp(_speed * 5f, 0f, 32f) + Mathf.Sin(_t * 3f + _seed) * 2.5f + lean * 0.3f, 0f, Mathf.Sin(_t * 2f + _seed) * 1.5f);
+            _cloak.localRotation = Quaternion.Euler(-lean * 0.9f + Mathf.Clamp(_speed * 4f, 0f, 20f) + Mathf.Sin(_t * 3f + _seed) * 2.5f, 0f, Mathf.Sin(_t * 2f + _seed) * 1.5f);
+
+        // ── robe: the rigid skirt shortens as the hips drop, so it drapes to the floor instead of sinking into it ──
+        float drop = 1f - 0.38f * _crouchT - 0.42f * seat;
+        if (_skirt != null) _skirt.localScale = new Vector3(1f, drop, 1f);
+        if (_hem != null) _hem.localScale = new Vector3(1f, drop, 1f);
     }
 }

@@ -81,7 +81,7 @@ public static class StoryBuilder
               "Jonathan has sworn a covenant with David, and he intends to keep it.", warning),
             B("The Plan",
               "\"We leave by the eastern gate,\" Jonathan says, \"before the sun is up.\"\n\n" +
-              "David sets down the harp and follows.", wake),
+              "David slings his harp over his shoulder and follows.", wake),
             B("Slipping Past the Guards",
               "Jonathan has trained beside these men and knows how they watch. The glow of a guard's lantern shows what he can see. " +
               "Green means he sees nothing, amber means he suspects something, and red means he is coming.\n\n" +

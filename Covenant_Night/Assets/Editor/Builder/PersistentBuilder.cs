@@ -183,6 +183,7 @@ public static class PersistentBuilder
 
         // ── UI ──
         var hud = BuildHud();
+        BuildCinematicBars();
         var (storyCtl, _) = BuildStory();
         BuildFail(fail);
         var cardCtl = BuildZoneCard();
@@ -296,6 +297,22 @@ public static class PersistentBuilder
         return hud;
     }
 
+    // ── Cutscene letterbox ──────────────────────────────────────────────────
+
+    static void BuildCinematicBars()
+    {
+        var canvas = MakeCanvas("CinematicBars", 45);
+        var bars = canvas.AddComponent<CinematicBars>();
+        var top = MakeImage(canvas.transform, "Top", Color.black).rectTransform;
+        top.anchorMin = new Vector2(0, 1); top.anchorMax = new Vector2(1, 1); top.pivot = new Vector2(0.5f, 1);
+        top.anchoredPosition = Vector2.zero; top.sizeDelta = Vector2.zero;
+        var bottom = MakeImage(canvas.transform, "Bottom", Color.black).rectTransform;
+        bottom.anchorMin = new Vector2(0, 0); bottom.anchorMax = new Vector2(1, 0); bottom.pivot = new Vector2(0.5f, 0);
+        bottom.anchoredPosition = Vector2.zero; bottom.sizeDelta = Vector2.zero;
+        bars.top = top;
+        bars.bottom = bottom;
+    }
+
     // ── Story panel ─────────────────────────────────────────────────────────
 
     static (StoryPanelController, CanvasGroup) BuildStory()
@@ -310,6 +327,7 @@ public static class PersistentBuilder
 
         var ill = MakeImage(t, "Illustration", Color.white);
         ill.preserveAspect = true;
+        ill.enabled = false;     // a sprite-less Image draws as a blank white box; StoryPanelController enables it per beat
         var ir = ill.rectTransform;
         ir.anchorMin = ir.anchorMax = new Vector2(0.5f, 1); ir.pivot = new Vector2(0.5f, 1);
         ir.anchoredPosition = new Vector2(0, -28); ir.sizeDelta = new Vector2(1024, 576);
@@ -323,7 +341,7 @@ public static class PersistentBuilder
         var heading = MakeText(t, "Heading", "", 32, Gold, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -618), new Vector2(1400, 46), TextAlignmentOptions.Center, FontStyles.Bold);
         var body = MakeText(t, "Body", "", 31, Parchment, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -672), new Vector2(1420, 300), TextAlignmentOptions.Top);
         body.lineSpacing = 6;
-        var prompt = MakeText(t, "ContinuePrompt", "Press Any Key or Button", 24, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(600, 36), TextAlignmentOptions.Center);
+        var prompt = MakeText(t, "ContinuePrompt", "Press Space, Enter or Click to Continue", 24, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 26), new Vector2(600, 36), TextAlignmentOptions.Center);
 
         ctl.panelGroup = group;
         ctl.background = bg;
@@ -331,6 +349,7 @@ public static class PersistentBuilder
         ctl.bodyText = body;
         ctl.continuePrompt = prompt;
         ctl.illustration = ill;
+        ctl.captionParts = new[] { captionPlate.rectTransform, heading.rectTransform, body.rectTransform };
         return (ctl, group);
     }
 
@@ -607,7 +626,7 @@ public static class PersistentBuilder
             "See CREDITS.txt for attribution.\n\n" +
             "Thank you for playing.",
             32, new Color(0.85f, 0.83f, 0.78f), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -400), new Vector2(1500, 420), TextAlignmentOptions.Top);
-        MakeText(t, "Prompt", "Press Any Key to Play Again", 28, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(900, 40), TextAlignmentOptions.Center);
+        MakeText(t, "Prompt", "Press Space, Enter or A to Play Again", 28, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(900, 40), TextAlignmentOptions.Center);
 
         fail.winPanel = group;
         canvas.SetActive(false);

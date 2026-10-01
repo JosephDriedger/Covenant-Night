@@ -118,33 +118,63 @@ public static class ZoneBuilders
             return null;
         }
 
+        // An enclosed hall: walls, a ceiling (torchlight only, no moonlight), a south doorway, a dais and
+        // throne at the north end, a carpet runner, pillars and banners.
         var throneFloor = new R(50, 0, 66, 18);
         k.Ground(throneFloor, k.M.palace);
         float th = 4.5f;
         k.Block(new R(49, -1, 50, 19), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallW");
         k.Block(new R(66, -1, 67, 19), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallE");
         k.Block(new R(49, 18, 67, 19), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallN");
-        k.PlaceTorch(52, 16, true); k.PlaceTorch(64, 16, true);
-        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneSeat", k.envRoot, V3(58, 0.4f, 14.3f), new Vector3(1.6f, 0.8f, 1.4f), k.M.limestone);
-        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneBack", k.envRoot, V3(58, 1.4f, 15f), new Vector3(1.6f, 1.6f, 0.2f), k.M.limestone);
+        k.Block(new R(49, -1, 57, 0), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallS");
+        k.Block(new R(59, -1, 67, 0), th, k.M.darkStone, GameLayers.Walls, 0, "ThroneWallS");
+        k.Block(new R(57, -1, 59, 0), th - 3.1f, k.M.darkStone, GameLayers.Walls, 3.1f, "ThroneLintel");
+        k.Block(new R(49, -1, 67, 19), 0.4f, k.M.woodDark, GameLayers.Walls, th, "ThroneCeiling");
+        k.Block(new R(55.5f, 12.2f, 60.5f, 17.2f), 0.3f, k.M.limestone, GameLayers.Walls, 0, "ThroneDais");
+        k.Block(new R(57.2f, 0.2f, 58.8f, 12.2f), 0.03f, k.M.clothRed, GameLayers.Walls, 0, "ThroneCarpet");
+        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneSeat", k.envRoot, V3(58, 0.55f, 14.2f), new Vector3(1.5f, 0.5f, 1.2f), k.M.limestone);
+        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneBack", k.envRoot, V3(58, 1.55f, 14.85f), new Vector3(1.6f, 1.9f, 0.2f), k.M.gold);
+        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneArmL", k.envRoot, V3(57.2f, 0.95f, 14.2f), new Vector3(0.15f, 0.3f, 1.1f), k.M.gold);
+        PrefabFactory.Prim(PrimitiveType.Cube, "ThroneArmR", k.envRoot, V3(58.8f, 0.95f, 14.2f), new Vector3(0.15f, 0.3f, 1.1f), k.M.gold);
+        foreach (var p in new[] { V(53, 4), V(63, 4), V(53, 11.5f), V(63, 11.5f) }) k.Pillar(p.x, p.y, th, 0.8f);
+        k.Banner(55, 17.95f, Vector3.back, 4.2f, 1.1f, 2.6f); k.Banner(61, 17.95f, Vector3.back, 4.2f, 1.1f, 2.6f);
+        k.PlaceTorch(51, 15.5f, true); k.PlaceTorch(65, 15.5f, true);
+        k.PlaceTorch(51, 2.5f); k.PlaceTorch(65, 2.5f);
+        k.PlaceTorch(55, 13.5f, true); k.PlaceTorch(61, 13.5f);
 
         var saulGo = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(k.P.saul, k.scene);
         saulGo.name = "Saul";
         saulGo.transform.SetParent(k.guardsRoot, false);
-        saulGo.transform.SetPositionAndRotation(V3(58, 0.05f, 14), Quaternion.Euler(0, 180, 0));
+        saulGo.transform.SetPositionAndRotation(V3(58, 0.35f, 13.55f), Quaternion.Euler(0, 180, 0));   // seated on the throne
 
         intro.beats = story.intro;
         intro.saul = saulGo.transform;
         intro.saulSpearVisual = FindNamed(saulGo.transform, "Spear");
         intro.thrownSpearPrefab = k.P.thrownSpear;
-        intro.saulMark        = IMark("SaulMark", V3(58, 0.05f, 14), 180f);
-        intro.davidHarpMark   = IMark("DavidHarpMark", V3(58, 0.05f, 8f));
-        intro.jonathanWatchMark = IMark("JonathanWatchMark", V3(58, 0.05f, 2f));
-        intro.spearTargetMark = IMark("SpearTargetMark", V3(51.2f, 1.6f, 7f));
-        intro.doorwayMark     = IMark("DoorwayMark", V3(58, 0.05f, 1f));
-        intro.shotThrone      = IMark("ShotThrone", V3(63f, 2.2f, 9f));
-        intro.shotSneak       = IMark("ShotSneak", V3(60f, 1.9f, 2f));
-        intro.approachMark    = IMark("ApproachMark", V3(0f, 0.05f, 1.5f));
+        // David plays before the throne near the west wall; the spear passes beside his head into that wall.
+        intro.davidHarpMark       = IMark("DavidHarpMark", V3(52.8f, 0.05f, 8.6f), 47f);
+        intro.jonathanWatchMark   = IMark("JonathanWatchMark", V3(63.4f, 0.05f, 7.6f), -62f);
+        intro.spearTargetMark     = IMark("SpearTargetMark", V3(50.05f, 1.55f, 7.2f));
+        intro.planMark            = IMark("PlanMark", V3(54.1f, 0.05f, 7.9f), -62f);
+        intro.doorwayLeadMark    = IMark("DoorwayLeadMark", V3(57.6f, 0.05f, 0.7f), 180f);
+        intro.doorwayFollowMark = IMark("DoorwayFollowMark", V3(58.5f, 0.05f, 1.8f), 180f);
+        // Over David's right shoulder toward Saul on his throne, pushing in; the spear flies past David's head
+        // and out of frame left, then an insert shows it buried in the wall beside him.
+        intro.shotWide            = IMark("ShotWide", V3(51.2f, 2.0f, 5.33f));
+        intro.shotWideEnd         = IMark("ShotWideEnd", V3(51.87f, 1.7f, 6.37f));
+        intro.lookWide            = IMark("LookWide", V3(56.2f, 1.35f, 12.0f));
+        intro.shotInsert          = IMark("ShotInsert", V3(54.2f, 1.55f, 6.6f));    // David in profile, the spear side-on in the wall
+        intro.lookInsert          = IMark("LookInsert", V3(51.9f, 1.45f, 8.2f));
+        intro.shotReaction        = IMark("ShotReaction", V3(61.86f, 1.62f, 8.98f));
+        intro.shotTwo             = IMark("ShotTwo", V3(51.85f, 1.6f, 5.25f));
+        intro.lookTwo             = IMark("LookTwo", V3(53.45f, 1.3f, 8.25f));
+        intro.shotSneak           = IMark("ShotSneak", V3(61.5f, 1.6f, 6.8f));
+        k.PlaceTorch(51.0f, 10.6f, true);     // lights David's spot by the west wall
+        // Zone 1: they slip in from the west side of the entry court to the real spawn points.
+        intro.approachDavidMark    = IMark("ApproachDavidMark", V3(-6.5f, 0.05f, 1.0f), 88f);
+        intro.approachJonathanMark = IMark("ApproachJonathanMark", V3(-5.3f, 0.05f, 2.4f), 85f);
+        intro.shotApproach         = IMark("ShotApproach", V3(4.5f, 2.8f, 0.6f));
+        intro.lookApproach         = IMark("LookApproach", V3(-1.8f, 0.9f, 4.2f));
 
         k.Ambience(new[] { V3(-27, 3, 20), V3(27, 3, 50), V3(0, 3, 78) });
         k.BakeNavMesh();
@@ -520,8 +550,10 @@ public static class ZoneBuilders
         };
         seq.lookAtGate = Mark("LookAtGate", V3(0, 2.6f, 63), 0);
         seq.shotBluff     = Shot("ShotBluff",     V3(-4.2f, 1.9f, 53.8f));
-        seq.shotFarewell  = Shot("ShotFarewell",  V3(-2.4f, 1.75f, 58.4f));
+        seq.shotFarewell  = Shot("ShotFarewell",  V3(-0.2f, 1.85f, 54.4f));    // over Jonathan's right shoulder
+        seq.lookFarewell  = Mark("LookFarewell",  V3(0.2f, 1.5f, 66f), 0);
         seq.shotEmptyGate = Shot("ShotEmptyGate", V3(0, 2.1f, 55.5f));
+        seq.shotEpilogue  = Shot("ShotEpilogue",  V3(0.6f, 1.75f, 61.2f));     // in the open gateway, facing Jonathan
         seq.shotBluff.LookAt(V3(0, 1.6f, 60.6f));
         seq.shotEmptyGate.LookAt(seq.lookAtGate);
         seq.gateBluffBeats = story.gateBluff;

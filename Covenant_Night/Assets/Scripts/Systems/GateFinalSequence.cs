@@ -35,7 +35,9 @@ public class GateFinalSequence : MonoBehaviour
     [Header("Camera Shots")]
     public Transform shotBluff;
     public Transform shotFarewell;
+    public Transform lookFarewell;          // a point beyond the gate: David walks away into depth
     public Transform shotEmptyGate;
+    public Transform shotEpilogue;          // from inside the open gateway, back toward Jonathan at the threshold
     public Transform lookAtGate;
 
     [Header("Audio")]
@@ -133,36 +135,58 @@ public class GateFinalSequence : MonoBehaviour
 
         // 3. Gate opens
         pc.GetComponent<ProceduralCharacterAnim>()?.PlayRaiseHand(3.6f);
-        if (sfxSource != null && gateCreak != null) sfxSource.PlayOneShot(gateCreak);
-        Vector3 cmdStart = commander != null ? commander.position : Vector3.zero;
-        Vector3 lStart = gateLeft != null ? gateLeft.position : Vector3.zero;
-        Vector3 rStart = gateRight != null ? gateRight.position : Vector3.zero;
-        for (float t = 0f; t < 3.5f; t += Time.unscaledDeltaTime)
-        {
-            float k = Mathf.SmoothStep(0f, 1f, t / 3.5f);
-            if (gateLeft != null)  gateLeft.position  = lStart + Vector3.left  * (gateOpenDistance * k);
-            if (gateRight != null) gateRight.position = rStart + Vector3.right * (gateOpenDistance * k);
-            if (commander != null) commander.position = cmdStart + commanderStepAside * Mathf.Clamp01(k * 1.4f);
-            yield return null;
-        }
+        yield return OpenGate(1f, 3.5f, commanderStepsAside: true);
 
-        // 4. David walks through the gate into the hills; Jonathan watches
-        cam?.SetShot(shotFarewell, david.transform);
-        pc.GetComponent<ProceduralCharacterAnim>()?.PlayFarewellWave(2.5f);
-        if (davidExitPath != null)
-            foreach (var p in davidExitPath)
-                yield return CutsceneSequencer.MoveTo(david.transform, p, 1.9f, isPlayer: false);
+        // 4. Over Jonathan's shoulder: David walks out through the gate into the hills. The farewell caption
+        //    comes up once he is through, while he keeps walking.
+        FrameFarewell(cam, david);
+        Coroutine walk = StartCoroutine(WalkOut(david.transform, 2.1f));
+        yield return new WaitForSecondsRealtime(0.8f);
+        pc.GetComponent<ProceduralCharacterAnim>()?.PlayFarewellWave(3f);
+        yield return new WaitForSecondsRealtime(3.4f);
 
         if (farewellBeats != null && story != null) yield return story.Show(farewellBeats.beats, overlayMode: true);
+        StopCoroutine(walk);
 
-        // 5. Epilogue over the empty gate: a longer, held shot instead of an illustration cut
+        // 5. Epilogue: reverse angle on Jonathan, alone at the threshold, looking out after his friend
         david.gameObject.SetActive(false);
-        cam?.SetShot(shotEmptyGate, lookAtGate);
+        if (shotEpilogue != null) cam?.SetShot(shotEpilogue, pc.transform, 1.45f, cut: true);
+        else cam?.SetShot(shotEmptyGate, lookAtGate, cut: true);
         TensionAudioManager.Instance?.PlayEpilogue();
         yield return new WaitForSecondsRealtime(2.4f);
         if (epilogueBeats != null && story != null) yield return story.Show(epilogueBeats.beats, overlayMode: true);
 
         GameManager.Instance.TriggerWin();
+    }
+
+    IEnumerator OpenGate(float fraction, float duration, bool commanderStepsAside)
+    {
+        if (sfxSource != null && gateCreak != null) sfxSource.PlayOneShot(gateCreak);
+        Vector3 cmdStart = commander != null ? commander.position : Vector3.zero;
+        Vector3 lStart = gateLeft != null ? gateLeft.position : Vector3.zero;
+        Vector3 rStart = gateRight != null ? gateRight.position : Vector3.zero;
+        for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
+        {
+            float k = Mathf.SmoothStep(0f, 1f, t / duration);
+            float open = gateOpenDistance * fraction * k;
+            if (gateLeft != null)  gateLeft.position  = lStart + Vector3.left  * open;
+            if (gateRight != null) gateRight.position = rStart + Vector3.right * open;
+            if (commanderStepsAside && commander != null) commander.position = cmdStart + commanderStepAside * Mathf.Clamp01(k * 1.4f);
+            yield return null;
+        }
+    }
+
+    void FrameFarewell(ThirdPersonCamera cam, DavidCompanion david)
+    {
+        if (lookFarewell != null) cam?.SetShot(shotFarewell, lookFarewell, cut: true);
+        else cam?.SetShot(shotFarewell, david.transform, 1.2f, cut: true);
+    }
+
+    IEnumerator WalkOut(Transform who, float speed)
+    {
+        if (davidExitPath == null) yield break;
+        foreach (var p in davidExitPath)
+            yield return CutsceneSequencer.MoveTo(who, p, speed, isPlayer: false);
     }
 
     // Jonathan is seized before he can bluff his way through, but David — already close to the gate — slips
@@ -177,18 +201,33 @@ public class GateFinalSequence : MonoBehaviour
         GameManager.Instance.Pause();
         david.SetCutsceneControl(true);
 
-        cam?.SetShot(shotBluff, lookAtGate);
+        // The commander leaves his post to confront Jonathan, which is what leaves the gate unwatched.
+        cam?.SetShot(shotBluff, lookAtGate, cut: true);
         pc.GetComponent<ProceduralCharacterAnim>()?.PlayFlinch();
+        Transform confront = null;
+        Coroutine stride = null;
+        if (commander != null)
+        {
+            Vector3 toCmd = commander.position - pc.transform.position; toCmd.y = 0f;
+            confront = new GameObject("CommanderConfront").transform;
+            confront.position = pc.transform.position + toCmd.normalized * 1.3f;
+            confront.rotation = Quaternion.LookRotation(-toCmd.normalized);
+            stride = StartCoroutine(CutsceneSequencer.MoveTo(commander, confront, 2.4f, isPlayer: false));
+        }
         if (detainedBeats != null && story != null) yield return story.Show(detainedBeats.beats, overlayMode: true);
 
-        cam?.SetShot(shotFarewell, david.transform);
+        // Unnoticed, David eases the gate ajar and slips out.
         if (davidMark != null) david.transform.SetPositionAndRotation(davidMark.position, davidMark.rotation);
-        if (davidExitPath != null)
-            foreach (var p in davidExitPath)
-                yield return CutsceneSequencer.MoveTo(david.transform, p, 2.2f, isPlayer: false);
+        FrameFarewell(cam, david);
+        StartCoroutine(OpenGate(0.45f, 1.8f, commanderStepsAside: false));
+        Coroutine walk = StartCoroutine(WalkOut(david.transform, 2.1f));
+        yield return new WaitForSecondsRealtime(5.5f);
+        StopCoroutine(walk);
+        if (stride != null) StopCoroutine(stride);
+        if (confront != null) Destroy(confront.gameObject);
 
         david.gameObject.SetActive(false);
-        cam?.SetShot(shotEmptyGate, lookAtGate);
+        cam?.SetShot(shotEmptyGate, lookAtGate, cut: true);
         yield return new WaitForSecondsRealtime(1.6f);
         if (aloneEpilogueBeats != null && story != null) yield return story.Show(aloneEpilogueBeats.beats, overlayMode: true);
 

@@ -29,6 +29,7 @@ public class ThirdPersonCamera : MonoBehaviour
     [Header("FOV")]
     public float standingFov = 62f;
     public float crouchFov   = 54f;
+    public float shotFov     = 50f;    // cutscene lens: a little longer than play for tighter framing
     public float fovSharpness = 5f;
 
     float  _yaw, _pitch;
@@ -38,12 +39,34 @@ public class ThirdPersonCamera : MonoBehaviour
 
     // Cutscene shot
     Transform _shotPoint, _shotLookAt;
+    float _shotLookHeight;
     float _shotBlend;   // 0 = gameplay, 1 = shot
+    Vector3 _lastShotPos;
+    Quaternion _lastShotRot = Quaternion.identity;
+
+    public bool InShot => _shotPoint != null || _shotBlend > 0.001f;
+
+    [Header("Cutscene Key Light")]
+    public float keyLightIntensity = 1.8f;
+    Light _keyLight;
 
     void Awake()
     {
         Instance = this;
         _cam = GetComponent<Camera>();
+        _gameplayFov = standingFov;
+
+        // A soft fill that rides with the camera during cutscene shots so faces read at night; off in play.
+        var kl = new GameObject("CutsceneKeyLight");
+        kl.transform.SetParent(transform, false);
+        kl.transform.localPosition = new Vector3(0.7f, 0.6f, 0f);
+        _keyLight = kl.AddComponent<Light>();
+        _keyLight.type = LightType.Point;
+        _keyLight.color = new Color(1f, 0.9f, 0.78f);
+        _keyLight.range = 11f;
+        _keyLight.shadows = LightShadows.None;
+        _keyLight.intensity = 0f;
+        _keyLight.enabled = false;
         _pitch = startPitch;
         _currentDistance = distance;
         if (collisionMask.value == 0) collisionMask = GameLayers.CameraBlockers;
@@ -95,24 +118,37 @@ public class ThirdPersonCamera : MonoBehaviour
         float shotTarget = _shotPoint != null ? 1f : 0f;
         _shotBlend = Mathf.MoveTowards(_shotBlend, shotTarget, Time.unscaledDeltaTime * 1.2f);
 
-        if (_shotBlend > 0.001f && _shotPoint != null)
+        if (_shotPoint != null)
         {
-            Quaternion shotRot = _shotLookAt != null
-                ? Quaternion.LookRotation((_shotLookAt.position - _shotPoint.position).normalized)
+            _lastShotPos = _shotPoint.position;
+            _lastShotRot = _shotLookAt != null
+                ? Quaternion.LookRotation((_shotLookAt.position + Vector3.up * _shotLookHeight - _shotPoint.position).normalized)
                 : _shotPoint.rotation;
+        }
+
+        // Blending in and out both run between the gameplay pose and the last shot pose, so clearing a
+        // shot glides back to play instead of snapping. The slight lift keeps the path over the actors' heads.
+        if (_shotBlend > 0.001f)
+        {
             float t = Mathf.SmoothStep(0f, 1f, _shotBlend);
-            transform.SetPositionAndRotation(
-                Vector3.Lerp(gameplayPos, _shotPoint.position, t),
-                Quaternion.Slerp(gameplayRot, shotRot, t));
+            Vector3 pos = Vector3.Lerp(gameplayPos, _lastShotPos, t) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * 0.8f);
+            transform.SetPositionAndRotation(pos, Quaternion.Slerp(gameplayRot, _lastShotRot, t));
         }
         else transform.SetPositionAndRotation(gameplayPos, gameplayRot);
+
+        float key = Mathf.SmoothStep(0f, 1f, _shotBlend) * keyLightIntensity;
+        _keyLight.enabled = key > 0.01f;
+        _keyLight.intensity = key;
 
         // FOV
         var pc = PlayerController.Instance;
         float fovTarget = pc != null && pc.IsCrouching ? crouchFov : standingFov;
+        _gameplayFov = Mathf.Lerp(_gameplayFov, fovTarget, 1f - Mathf.Exp(-fovSharpness * Time.unscaledDeltaTime));
         if (_cam != null)
-            _cam.fieldOfView = Mathf.Lerp(_cam.fieldOfView, fovTarget, 1f - Mathf.Exp(-fovSharpness * Time.unscaledDeltaTime));
+            _cam.fieldOfView = Mathf.Lerp(_gameplayFov, shotFov, Mathf.SmoothStep(0f, 1f, _shotBlend));
     }
+
+    float _gameplayFov = 62f;
 
     // Instantly re-orient behind a heading (used when a zone loads).
     public void SnapBehind(float yawDegrees)
@@ -126,10 +162,18 @@ public class ThirdPersonCamera : MonoBehaviour
         LateUpdate();
     }
 
-    public void SetShot(Transform shotPoint, Transform lookAt)
+    // lookHeight raises the aim point above lookAt (characters' pivots are at their feet). cut skips the
+    // glide from the gameplay camera, for a hard cut straight onto the shot.
+    public void SetShot(Transform shotPoint, Transform lookAt, float lookHeight = 0f, bool cut = false)
     {
         _shotPoint = shotPoint;
         _shotLookAt = lookAt;
+        _shotLookHeight = lookHeight;
+        if (cut && shotPoint != null)
+        {
+            _shotBlend = 1f;
+            LateUpdate();
+        }
     }
 
     public void ClearShot() => _shotPoint = null;

@@ -34,11 +34,25 @@ public class HUD : MonoBehaviour
 
     float _messageTimer;
     bool  _harpUsed;
+    CanvasGroup _group;
 
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        _group = GetComponent<CanvasGroup>();
+        if (_group == null) _group = gameObject.AddComponent<CanvasGroup>();
+        _group.interactable = false;
+        _group.blocksRaycasts = false;
+    }
+
+    // Gameplay readouts fade out while a cutscene shot or a story panel is up.
+    void LateUpdate()
+    {
+        var cam = ThirdPersonCamera.Instance;
+        var story = StoryPanelController.Instance;
+        bool cinematic = (cam != null && cam.InShot) || (story != null && story.IsShowing);
+        _group.alpha = Mathf.MoveTowards(_group.alpha, cinematic ? 0f : 1f, Time.unscaledDeltaTime * 3f);
     }
 
     void OnDestroy() { if (Instance == this) Instance = null; }

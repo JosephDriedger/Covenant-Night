@@ -522,8 +522,10 @@ public static class PrefabFactory
     static GameObject BuildThrownSpear(Mats m)
     {
         var root = new GameObject("ThrownSpear");
-        Prim(PrimitiveType.Cylinder, "Shaft", root.transform, new Vector3(0, 0, 0.45f), new Vector3(0.035f, 0.5f, 0.035f), m.spearWood, false, new Vector3(90, 0, 0));
-        Prim(PrimitiveType.Sphere, "Tip", root.transform, new Vector3(0, 0, 0.95f), Vector3.one * 0.07f, m.metal);
+        // a full-length spear: 2 m shaft from the root along +z, leaf-shaped iron head ending at z = 2.25
+        Prim(PrimitiveType.Cylinder, "Shaft", root.transform, new Vector3(0, 0, 1.0f), new Vector3(0.05f, 1.0f, 0.05f), m.spearWood, false, new Vector3(90, 0, 0));
+        Prim(PrimitiveType.Sphere, "Tip", root.transform, new Vector3(0, 0, 2.1f), new Vector3(0.1f, 0.06f, 0.32f), m.metal);
+        Prim(PrimitiveType.Cylinder, "Binding", root.transform, new Vector3(0, 0, 1.93f), new Vector3(0.065f, 0.05f, 0.065f), m.leather, false, new Vector3(90, 0, 0));
         return Save(root, "ThrownSpear");
     }
 }

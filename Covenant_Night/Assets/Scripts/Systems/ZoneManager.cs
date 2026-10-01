@@ -140,13 +140,20 @@ public class ZoneManager : MonoBehaviour
         // The intro cutscene repositions the characters into its own set before anything is revealed,
         // so the player's first view of the zone is the cutscene rather than a jump-cut from the spawn.
         bool playIntro = index == 0 && !restoreCheckpoint && !skipBeats && IntroCutscene.Instance != null;
+        bool playEntry = !playIntro && !restoreCheckpoint && !skipBeats;
         if (playIntro) IntroCutscene.Instance.PrepareBeforeReveal();
+        else if (playEntry) PrepareZoneEntryShot(index);
 
         yield return Fade(0f);
 
         // Cutscene for the upcoming zone, played live over the now-loaded scene (not on a checkpoint restart).
         if (playIntro) yield return IntroCutscene.Instance.Play(CurrentEntry.jonathanSpawn, CurrentEntry.davidSpawn);
-        else if (!restoreCheckpoint && !skipBeats) yield return PlayZoneEntryCinematic(index);
+        else if (playEntry) yield return PlayZoneEntryCinematic(index);
+
+        // The zone's title card marks the start of play, after any cutscene rather than over it.
+        string sceneName = zoneSceneNames[index];
+        ZoneNameCard.Instance?.Show(CurrentEntry != null ? CurrentEntry.displayName : sceneName.Replace("_", " "),
+                                    CurrentEntry != null ? CurrentEntry.subtitle : null);
 
         IsTransitioning = false;
         GameManager.Instance.ResumePlay();
@@ -155,33 +162,56 @@ public class ZoneManager : MonoBehaviour
     // A lightweight camera shot and gesture over the live scene, framed off the zone's own entry spawn
     // so no per-zone marks are needed, with the existing caption text layered on top. Zone 0 falls back
     // to this (plain text, no cutscene) only if no IntroCutscene is present in the scene.
+    Transform _entryShot, _entryLook;
+
+    bool HasEntryBeats(int index) =>
+        zoneEntryBeats != null && index < zoneEntryBeats.Length && zoneEntryBeats[index] != null;
+
+    // A two-shot from ahead of the pair, at face height, looking back at them; pulled in if a wall or prop
+    // is in the way. Set before the fade-in so the zone is revealed on this shot, not on a jump cut.
+    void PrepareZoneEntryShot(int index)
+    {
+        if (index == 0 || !HasEntryBeats(index) || CurrentEntry == null || CurrentEntry.jonathanSpawn == null) return;
+
+        Transform spawn = CurrentEntry.jonathanSpawn;
+        Vector3 mid = spawn.position;
+        if (CurrentEntry.davidSpawn != null) mid = (mid + CurrentEntry.davidSpawn.position) * 0.5f;
+
+        _entryLook = new GameObject("ZoneEntryLook").transform;
+        _entryLook.position = mid + Vector3.up * 1.3f;
+        // well off to one side, since David spawns directly behind Jonathan and would otherwise be hidden
+        Vector3 want = mid + spawn.rotation * new Vector3(2.7f, 1.65f, 2.6f);
+        Vector3 toCam = want - _entryLook.position;
+        if (Physics.SphereCast(_entryLook.position, 0.3f, toCam.normalized, out RaycastHit hit, toCam.magnitude, GameLayers.CameraBlockers, QueryTriggerInteraction.Ignore))
+            want = _entryLook.position + toCam.normalized * Mathf.Max(1.2f, hit.distance - 0.2f);
+        _entryShot = new GameObject("ZoneEntryShot").transform;
+        _entryShot.position = want;
+
+        ThirdPersonCamera.Instance?.SetShot(_entryShot, _entryLook, cut: true);
+    }
+
     IEnumerator PlayZoneEntryCinematic(int index)
     {
-        if (zoneEntryBeats == null || index >= zoneEntryBeats.Length || zoneEntryBeats[index] == null) yield break;
+        if (!HasEntryBeats(index)) yield break;
         var story = StoryPanelController.Instance;
 
-        if (index == 0 || CurrentEntry == null || CurrentEntry.jonathanSpawn == null)
+        if (_entryShot == null)
         {
             if (story != null) yield return story.Show(zoneEntryBeats[index].beats);
             yield break;
         }
 
-        var cam = ThirdPersonCamera.Instance;
-        Transform spawn = CurrentEntry.jonathanSpawn;
-        var shot = new GameObject("ZoneEntryShot").transform;
-        shot.SetPositionAndRotation(spawn.position + spawn.rotation * new Vector3(2.2f, 1.7f, -2.6f), Quaternion.identity);
-        var look = new GameObject("ZoneEntryLook").transform;
-        look.position = spawn.position + spawn.rotation * new Vector3(0f, 1.4f, -0.9f);
-
-        cam?.SetShot(shot, look);
         jonathan.GetComponent<ProceduralCharacterAnim>()?.PlayLookAround(2.6f);
         davidCompanion.GetComponent<ProceduralCharacterAnim>()?.PlayGesture();
+        yield return new WaitForSecondsRealtime(0.6f);
 
         if (story != null) yield return story.Show(zoneEntryBeats[index].beats, overlayMode: true);
 
-        cam?.ClearShot();
-        Destroy(shot.gameObject);
-        Destroy(look.gameObject);
+        // Clearing the shot glides the camera round behind Jonathan into play.
+        ThirdPersonCamera.Instance?.ClearShot();
+        Destroy(_entryShot.gameObject);
+        Destroy(_entryLook.gameObject);
+        _entryShot = _entryLook = null;
     }
 
     IEnumerator LoadZone(int index, bool restoreCheckpoint)
@@ -239,8 +269,6 @@ public class ZoneManager : MonoBehaviour
         }
         else cp.Save(jonathan, david, abilities.StoneCount, abilities.DecoyCount);
 
-        string title = CurrentEntry != null ? CurrentEntry.displayName : sceneName.Replace("_", " ");
-        ZoneNameCard.Instance?.Show(title, CurrentEntry != null ? CurrentEntry.subtitle : null);
         HUD.Instance?.UpdateZone(index + 1, zoneSceneNames.Length);
         HUD.Instance?.UpdateBestTime(ZoneTimes.Format(ZoneTimes.GetBest(sceneName)));
     }
