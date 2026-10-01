@@ -28,6 +28,9 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [x] New Game+: finishing the game once unlocks a Mixed-difficulty picker (Easy/Medium/Hard chosen per zone)
 - [x] Local personal-best time per zone, shown on the HUD and updated when a zone is beaten faster
 - [x] Safe-area HUD and console performance defaults; Windows player built and verified through the ending
+- [x] Baked lighting pass for the static geometry (bakes from an interactive Editor session; no-ops safely in headless batch mode, which lacks a GPU render context)
+- [x] Second ending (Jonathan detained at the gate, David slips through alone) and a dedicated rooftop traversal route in Zone 4
+- [x] Design document rewritten for the one-person scope and current systems; store page copy drafted (`docs/STORE_PAGE.md`)
 
 ## To do
 
@@ -35,8 +38,6 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [ ] Replace generated audio with authored or licensed recordings and a real underscore
 - [ ] Replace primitive-built characters with rigged humanoids and Mixamo clips (the animator already exposes Speed / IsCrouching / IsAlerted)
 - [ ] Hand-painted story illustrations
-- [ ] Baked lighting pass for the static geometry
 - [ ] Build and test macOS and Linux players
 - [ ] Console ports (SDKs, controller glyphs, certification, per-platform performance pass)
-- [ ] Stretch: second ending, dedicated rooftop traversal route in Zone 4, animated intro
-- [ ] Final CREDITS.txt and store page
+- [ ] Automated PlayMode tests

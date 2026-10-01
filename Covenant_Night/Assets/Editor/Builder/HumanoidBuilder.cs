@@ -71,14 +71,17 @@ public static class HumanoidBuilder
         Part(hips, "Skirt", Skirt(), robe, Vector3.zero);
         Part(hips, "Hem", Hem(), trim, Vector3.zero);
 
-        // legs: hip pivot -> thigh, knee pivot -> shin + foot (feet peek out under the hem; the knee lets a sneak fold properly)
-        foreach (var side in new[] { ("LegL", "KneeL", -0.13f), ("LegR", "KneeR", 0.13f) })
+        // legs: hip pivot -> thigh, knee pivot -> shin, ankle pivot -> foot (feet peek out under the hem; the knee
+        // lets a sneak fold properly, and the ankle counter-rotates against the thigh/knee so the sole stays
+        // roughly flat on the ground instead of the foot rigidly mirroring the shin)
+        foreach (var side in new[] { ("LegL", "KneeL", "AnkleL", -0.13f), ("LegR", "KneeR", "AnkleR", 0.13f) })
         {
-            var leg = Pivot(hips, side.Item1, new Vector3(side.Item3, -0.05f, 0));
+            var leg = Pivot(hips, side.Item1, new Vector3(side.Item4, -0.05f, 0));
             Part(leg, "Thigh", Thigh(), m.skin, Vector3.zero);
             var knee = Pivot(leg, side.Item2, new Vector3(0, -0.5f, 0));
             Part(knee, "Shin", Shin(), m.skin, Vector3.zero);
-            Part(knee, "Foot", Foot(), m.leather, new Vector3(0, -0.45f, 0));
+            var ankle = Pivot(knee, side.Item3, new Vector3(0, -0.45f, 0));
+            Part(ankle, "Foot", Foot(), m.leather, Vector3.zero);
         }
 
         // torso

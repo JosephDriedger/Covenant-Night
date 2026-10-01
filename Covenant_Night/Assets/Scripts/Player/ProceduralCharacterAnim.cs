@@ -19,7 +19,7 @@ public class ProceduralCharacterAnim : MonoBehaviour
     DavidCompanion   _david;
     GuardFSM         _guard;
 
-    Transform _hips, _torso, _head, _armL, _armR, _legL, _legR, _kneeL, _kneeR, _cloak, _spear;
+    Transform _hips, _torso, _head, _armL, _armR, _legL, _legR, _kneeL, _kneeR, _ankleL, _ankleR, _cloak, _spear;
     Vector3 _lastPos;
     float _speed, _phase, _t, _crouchT, _alertT, _alarmT, _wallT;
     float _seed;
@@ -57,6 +57,8 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _legR  = FindDeep(visual, "LegR");
         _kneeL = FindDeep(visual, "KneeL");     // absent on older prefabs: the legs then stay rigid
         _kneeR = FindDeep(visual, "KneeR");
+        _ankleL = FindDeep(visual, "AnkleL");    // absent on older prefabs: the feet then mirror the shin rigidly
+        _ankleR = FindDeep(visual, "AnkleR");
         _cloak = FindDeep(visual, "Cloak");
         _spear = FindDeep(visual, "Spear");
         _lastPos = transform.position;
@@ -127,16 +129,29 @@ public class ProceduralCharacterAnim : MonoBehaviour
         _hips.localRotation = Quaternion.Euler(0f, s * 5f * moving, s * 2f * moving);
 
         float crouchFold = -55f * _crouchT;       // thighs forward
-        _legL.localRotation = Quaternion.Euler(s * legAmp + crouchFold, 0f, 0f);
-        _legR.localRotation = Quaternion.Euler(-s * legAmp + crouchFold, 0f, 0f);
+        float legLx = s * legAmp + crouchFold, legRx = -s * legAmp + crouchFold;
+        _legL.localRotation = Quaternion.Euler(legLx, 0f, 0f);
+        _legR.localRotation = Quaternion.Euler(legRx, 0f, 0f);
 
         // knees: folded back in a sneak, and lifting the swinging leg while walking
+        float kneeLx = 0f, kneeRx = 0f, liftL = Mathf.Max(0f, -c), liftR = Mathf.Max(0f, c);
         if (_kneeL != null && _kneeR != null)
         {
             float kneeFold = 105f * _crouchT;
             float kneeStride = moving * Mathf.Lerp(38f, 22f, _crouchT);
-            _kneeL.localRotation = Quaternion.Euler(kneeFold + Mathf.Max(0f, -c) * kneeStride, 0f, 0f);
-            _kneeR.localRotation = Quaternion.Euler(kneeFold + Mathf.Max(0f, c) * kneeStride, 0f, 0f);
+            kneeLx = kneeFold + liftL * kneeStride;
+            kneeRx = kneeFold + liftR * kneeStride;
+            _kneeL.localRotation = Quaternion.Euler(kneeLx, 0f, 0f);
+            _kneeR.localRotation = Quaternion.Euler(kneeRx, 0f, 0f);
+        }
+
+        // ankles: counter-rotate against the thigh + knee so the sole stays roughly flat during stance, with a
+        // slight relaxed toe-down as the foot leaves the ground on the swing — stops the foot rigidly mirroring
+        // the shin, which is what reads as a stiff toy-soldier gait.
+        if (_ankleL != null && _ankleR != null)
+        {
+            _ankleL.localRotation = Quaternion.Euler(Mathf.Lerp(-(legLx + kneeLx) * 0.85f, 12f, liftL), 0f, 0f);
+            _ankleR.localRotation = Quaternion.Euler(Mathf.Lerp(-(legRx + kneeRx) * 0.85f, 12f, liftR), 0f, 0f);
         }
 
         // ── torso ──
