@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -502,6 +503,67 @@ public static class PersistentBuilder
         return rt;
     }
 
+    // One table cell on the Controls page, left-aligned at (x, y-centre): plain text with {key} icons inline.
+    static void ControlCell(Transform parent, Dictionary<string, Sprite> glyphs, string spec, float x, float y)
+    {
+        float cx = x;
+        foreach (var part in System.Text.RegularExpressions.Regex.Split(spec, @"(\{\w+\})"))
+        {
+            if (part.Length == 0) continue;
+            if (part[0] == '{')
+            {
+                cx += ControllerGlyph(parent, glyphs, part.Substring(1, part.Length - 2), cx, y) + 4f;
+                continue;
+            }
+            string text = part.Trim();
+            if (text.Length == 0) { cx += 8f; continue; }
+            var t = MakeText(parent, "Cell", text, 23, Parchment, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f),
+                             new Vector2(cx, y), new Vector2(900, 38), TextAlignmentOptions.MidlineLeft);
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            float w = t.GetPreferredValues(text).x;
+            t.rectTransform.sizeDelta = new Vector2(w + 2f, 38f);
+            cx += w + 8f;
+        }
+    }
+
+    // A controller button icon: the shape sprite, plus a text label for buttons identified by letters.
+    // Returns its width.
+    static float ControllerGlyph(Transform parent, Dictionary<string, Sprite> glyphs, string key, float x, float y)
+    {
+        var xbA = new Color(0.45f, 0.80f, 0.30f); var xbB = new Color(0.93f, 0.30f, 0.27f);
+        var xbX = new Color(0.30f, 0.58f, 0.98f); var xbY = new Color(0.98f, 0.80f, 0.20f);
+        var grey = new Color(0.86f, 0.87f, 0.90f);
+        (string shape, string label, Color color, float size) g = key switch
+        {
+            "xb_a"   => ("disc", "A", xbA, 22f),  "xb_b" => ("disc", "B", xbB, 22f),
+            "xb_x"   => ("disc", "X", xbX, 22f),  "xb_y" => ("disc", "Y", xbY, 22f),
+            "xb_ls"  => ("stick", "LS", grey, 14f), "xb_rs" => ("stick", "RS", grey, 14f),
+            "xb_lb"  => ("bumper", "LB", grey, 14f), "xb_rb" => ("bumper", "RB", grey, 14f),
+            "xb_menu" => ("menu", null, grey, 0f),
+            "ps_l"   => ("stick", "L", grey, 17f), "ps_r" => ("stick", "R", grey, 17f), "ps_l3" => ("stick", "L3", grey, 14f),
+            "ps_l1"  => ("bumper", "L1", grey, 14f), "ps_r1" => ("bumper", "R1", grey, 14f),
+            "ps_options" => ("options", null, grey, 0f),
+            _ => (key, null, grey, 0f),      // ps_cross / ps_circle / ps_square / ps_triangle / dpad_*: shape only
+        };
+        const float s = 38f;
+        var img = MakeImage(parent, "Glyph_" + key, Color.white);
+        img.sprite = glyphs.TryGetValue(g.shape, out var spr) ? spr : null;
+        img.preserveAspect = true;
+        var rt = img.rectTransform;
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.anchoredPosition = new Vector2(x, y);
+        rt.sizeDelta = new Vector2(s, s);
+        if (g.label != null)
+        {
+            var t = MakeText(img.transform, "Label", g.label, g.size, g.color, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                             Vector2.zero, new Vector2(s, s), TextAlignmentOptions.Center, FontStyles.Bold);
+            t.font = TMP_Settings.defaultFontAsset;      // a plain sans reads best on a button
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+        }
+        return s;
+    }
+
     static TextMeshProUGUI MakeColumn(Transform parent, string name, string text, float size, Color color, float left, float top, float width, float height)
     {
         var t = MakeText(parent, name, text, size, color, new Vector2(0.5f, 0.5f), new Vector2(0, 1), new Vector2(left, top), new Vector2(width, height), TextAlignmentOptions.TopLeft);
@@ -595,30 +657,43 @@ public static class PersistentBuilder
         var cShade = MakeImage(controls, "Shade", new Color(0.02f, 0.02f, 0.045f, 0.96f));
         Stretch(cShade.rectTransform);
         MakeText(controls, "Heading", "Controls", 80, Gold, mid, mid, new Vector2(0, 450), new Vector2(1200, 110), TextAlignmentOptions.Center, FontStyles.Bold);
-        // Four columns: action, keyboard & mouse, Xbox, PlayStation (rows line up across all four).
-        MakeColumn(controls, "KeyboardHeader",    "Keyboard & Mouse", 30, Gold, -500, 375, 470, 44).fontStyle = FontStyles.Bold;
-        MakeColumn(controls, "XboxHeader",        "Xbox",             30, Gold,  -40, 375, 440, 44).fontStyle = FontStyles.Bold;
-        MakeColumn(controls, "PlayStationHeader", "PlayStation",      30, Gold,  410, 375, 520, 44).fontStyle = FontStyles.Bold;
-        MakeColumn(controls, "Actions",
-            "Move\nLook\nSneak (Silent)\nSprint (Loud)\nShadow-Step at a Wall\nThrow a Stone\nDrop a Decoy\nDavid: Follow, Wait, Run\nHush David\nHarp\nPause",
-            23, Parchment, -900, 325, 390, 420);
-        MakeColumn(controls, "Keyboard",
-            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft Click\nG\n1, 2, 3  (E toggles Follow / Wait)\nQ\nH\nEsc",
-            23, Parchment, -500, 325, 470, 420);
-        MakeColumn(controls, "Xbox",
-            "Left Stick\nRight Stick\nHold B\nClick Left Stick (LS)\nHold A\nX\nRB\nD-Pad Left, Right, Down  (Y toggles)\nLB\nD-Pad Up\nMenu",
-            23, Parchment, -40, 325, 440, 420);
-        MakeColumn(controls, "PlayStation",
-            "Left Stick\nRight Stick\nHold Circle\nClick L3\nHold Cross\nSquare\nR1\nD-Pad Left, Right, Down  (Triangle toggles)\nL1\nD-Pad Up\nOptions",
-            23, Parchment, 410, 325, 520, 420);
-        MakeColumn(controls, "NotesHeader", "Field Notes", 32, Gold, -880, -85, 800, 44).fontStyle = FontStyles.Bold;
+        // Four columns: action, keyboard & mouse, Xbox, PlayStation. Controller cells show button icons;
+        // {key} in a cell is an icon (see ControllerGlyph), the rest is text.
+        MakeColumn(controls, "KeyboardHeader",    "Keyboard & Mouse", 30, Gold, -500, 380, 470, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "XboxHeader",        "Xbox",             30, Gold,  -40, 380, 440, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "PlayStationHeader", "PlayStation",      30, Gold,  410, 380, 520, 44).fontStyle = FontStyles.Bold;
+        var glyphs = GlyphGenerator.Generate();
+        var rows = new (string action, string keys, string xbox, string ps)[]
+        {
+            ("Move",                     "W A S D",                           "{xb_ls}",                                  "{ps_l}"),
+            ("Look",                     "Mouse",                             "{xb_rs}",                                  "{ps_r}"),
+            ("Sneak (Silent)",           "Hold Shift",                        "Hold {xb_b}",                              "Hold {ps_circle}"),
+            ("Sprint (Loud)",            "Hold Ctrl or Cmd",                  "Click {xb_ls}",                            "Click {ps_l3}"),
+            ("Shadow-Step at a Wall",    "Hold Space",                        "Hold {xb_a}",                              "Hold {ps_cross}"),
+            ("Throw a Stone",            "Left Click",                        "{xb_x}",                                   "{ps_square}"),
+            ("Drop a Decoy",             "G",                                 "{xb_rb}",                                  "{ps_r1}"),
+            ("David: Follow, Wait, Run", "1, 2, 3  (E toggles Follow / Wait)", "{dpad_left}{dpad_right}{dpad_down}  {xb_y} toggles", "{dpad_left}{dpad_right}{dpad_down}  {ps_triangle} toggles"),
+            ("Hush David",               "Q",                                 "{xb_lb}",                                  "{ps_l1}"),
+            ("Harp",                     "H",                                 "{dpad_up}",                                "{dpad_up}"),
+            ("Pause",                    "Esc",                               "{xb_menu}",                                "{ps_options}"),
+        };
+        const float rowTop = 318f, rowH = 38f;
+        for (int i = 0; i < rows.Length; i++)
+        {
+            float y = rowTop - i * rowH;
+            ControlCell(controls, glyphs, rows[i].action, -900, y);
+            ControlCell(controls, glyphs, rows[i].keys, -500, y);
+            ControlCell(controls, glyphs, rows[i].xbox, -40, y);
+            ControlCell(controls, glyphs, rows[i].ps, 410, y);
+        }
+        MakeColumn(controls, "NotesHeader", "Field Notes", 32, Gold, -880, -95, 800, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "Notes",
             "Guard cones: green sees nothing, amber is suspicious, red is chasing you.\n" +
             "Sneak near guards and dogs. Sprinting and thrown stones can be heard from far off.\n" +
             "Torchlight gives you away. Walls and shadows hide you; a shadow-step makes you nearly invisible.\n" +
             "A thrown stone draws a guard from his post. The harp calms one who has only heard something.\n" +
             "David follows you. Leave him waiting in cover, then run him to the next golden marker.",
-            27, Parchment, -880, -135, 1760, 300);
+            27, Parchment, -880, -145, 1760, 300);
         ctl.controlsBackBtn = MakeButton(controls, "Back", "Back", new Vector2(0, -455), new Vector2(400, 64), 32);
         ctl.controlsPage = controls.gameObject;
 
