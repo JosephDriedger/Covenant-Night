@@ -26,11 +26,11 @@ public class AudioLib
         Write("alert_sting",        AudioSynth.AlertSting(),    0.9f);
         Write("stone_clatter",      AudioSynth.StoneClatter(),  0.8f);
         Write("dog_bark",           AudioSynth.DogBark(),       0.85f);
-        Write("harp_calm",          AudioSynth.HarpCalm(),      0.8f);
-        Write("gate_creak",         AudioSynth.GateCreak(),     0.8f);
-        Write("epilogue_phrase",    AudioSynth.EpiloguePhrase(),0.7f);
+        Write("harp_calm",          AudioSynth.HarpCalm(),      0.5f);
+        Write("gate_creak",         AudioSynth.GateCreak(),     0.3f);
+        Write("epilogue_phrase",    AudioSynth.EpiloguePhrase(),0.5f);
         Write("pickup",             AudioSynth.Pickup(),        0.7f);
-        Write("whistle_call",       AudioSynth.Whistle(),       0.8f);
+        Write("whistle_call",       AudioSynth.Whistle(),       0.22f);
         for (int i = 0; i < 3; i++)
         {
             Write($"step_stone_{i}", AudioSynth.Footstep("stone", i), 0.7f);

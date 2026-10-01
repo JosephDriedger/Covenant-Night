@@ -139,7 +139,7 @@ public static class ZoneBuilders
         k.PlaceTorch(59.3f, -8.6f, true);
         // the doorway's door: shut when the scene opens; Jonathan pushes it open into the passage as he leads David out
         intro.throneDoor = k.GateLeaf(introRoot.transform, "ThroneDoor", V3(57.05f, 0f, -0.5f), +1f, 1.9f, 3.0f, face: +1f);
-        intro.doorSfx = PrefabFactory.AddSource(intro.throneDoor.gameObject, null, k.MX.sfx, false, false, 0.25f, 30f);
+        intro.doorSfx = PrefabFactory.AddSource(intro.throneDoor.gameObject, null, k.MX.sfx, false, false, 0.7f, 30f);
         intro.doorCreak = k.A.creak;
         k.Block(new R(55.5f, 12.2f, 60.5f, 17.2f), 0.3f, k.M.limestone, GameLayers.Walls, 0, "ThroneDais");
         k.Block(new R(57.2f, 0.2f, 58.8f, 12.2f), 0.03f, k.M.clothRed, GameLayers.Walls, 0, "ThroneCarpet");
