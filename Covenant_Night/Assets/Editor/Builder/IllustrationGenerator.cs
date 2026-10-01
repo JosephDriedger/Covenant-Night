@@ -199,70 +199,74 @@ public static class IllustrationGenerator
                 }
         }
 
-        public void Line(Vector2 a, Vector2 b, float thick, Color c)
+        // Anti-aliased even-odd fill of closed polylines given in pixel space (4 sub-scanlines per row).
+        public void FillContours(List<Vector2[]> contours, Color c)
         {
-            Vector2 d = (b - a).normalized, n = new Vector2(-d.y, d.x) * thick * 0.5f, e = d * thick * 0.5f;
-            Poly(new[] { a - e + n, b + e + n, b + e - n, a - e - n }, c);
-        }
-
-        // Block capitals on a 0.7 x 1 unit cell (y down), stroked with Line; enough for "COVENANT NIGHT".
-        static readonly Dictionary<char, Vector2[][]> Glyphs = BuildGlyphs();
-
-        static Vector2[] Arc(float a0, float a1)
-        {
-            var p = new Vector2[25];
-            for (int i = 0; i < p.Length; i++)
+            float minY = float.MaxValue, maxY = float.MinValue;
+            foreach (var p in contours) foreach (var v in p) { minY = Mathf.Min(minY, v.y); maxY = Mathf.Max(maxY, v.y); }
+            var cov = new float[W];
+            var xs = new List<(float x, int dir)>();
+            for (int y = Mathf.Max(0, (int)minY); y <= Mathf.Min(H - 1, (int)maxY); y++)
             {
-                float t = Mathf.Deg2Rad * Mathf.Lerp(a0, a1, i / (p.Length - 1f));
-                p[i] = new Vector2(0.35f + 0.35f * Mathf.Cos(t), 0.5f + 0.5f * Mathf.Sin(t));
+                Array.Clear(cov, 0, W);
+                for (int sub = 0; sub < 4; sub++)
+                {
+                    float sy = y + (sub + 0.5f) / 4f;
+                    xs.Clear();
+                    foreach (var p in contours)
+                        for (int i = 0; i < p.Length; i++)
+                        {
+                            Vector2 a = p[i], b = p[(i + 1) % p.Length];
+                            if ((a.y <= sy && b.y > sy) || (b.y <= sy && a.y > sy))
+                                xs.Add((a.x + (sy - a.y) / (b.y - a.y) * (b.x - a.x), a.y < b.y ? 1 : -1));
+                        }
+                    xs.Sort((p, q) => p.x.CompareTo(q.x));
+                    int wind = 0;
+                    for (int i = 0; i + 1 < xs.Count; i++)
+                    {
+                        wind += xs[i].dir;
+                        if (wind == 0) continue;
+                        float x0 = Mathf.Max(0f, xs[i].x), x1 = Mathf.Min(W, xs[i + 1].x);
+                        for (int x = (int)x0; x < x1 && x < W; x++)
+                            cov[x] += 0.25f * (Mathf.Min(x + 1f, x1) - Mathf.Max(x, x0));
+                    }
+                }
+                for (int x = 0; x < W; x++)
+                    if (cov[x] > 0f) Blend(x, y, new Color(c.r, c.g, c.b, c.a * Mathf.Clamp01(cov[x])));
             }
-            return p;
         }
 
-        static Dictionary<char, Vector2[][]> BuildGlyphs()
+        // One line of text in the given TTF, centred on (cx, baselineY); `capPx` is the capital-letter height in pixels.
+        void TextLine(TtfOutlines font, string s, float cx, float baselineY, float capPx, float tracking, Color col)
         {
-            Vector2 V(float x, float y) => new Vector2(x, y);
-            return new Dictionary<char, Vector2[][]>
-            {
-                ['C'] = new[] { Arc(-40f, -320f) },
-                ['O'] = new[] { Arc(0f, 360f) },
-                ['V'] = new[] { new[] { V(0, 0), V(.35f, 1), V(.7f, 0) } },
-                ['E'] = new[] { new[] { V(.65f, 0), V(0, 0), V(0, 1), V(.65f, 1) }, new[] { V(0, .5f), V(.5f, .5f) } },
-                ['N'] = new[] { new[] { V(0, 1), V(0, 0), V(.7f, 1), V(.7f, 0) } },
-                ['A'] = new[] { new[] { V(0, 1), V(.35f, 0), V(.7f, 1) }, new[] { V(.14f, .68f), V(.56f, .68f) } },
-                ['T'] = new[] { new[] { V(0, 0), V(.7f, 0) }, new[] { V(.35f, 0), V(.35f, 1) } },
-                ['I'] = new[] { new[] { V(.35f, 0), V(.35f, 1) }, new[] { V(.12f, 0), V(.58f, 0) }, new[] { V(.12f, 1), V(.58f, 1) } },
-                ['G'] = new[] { Arc(-40f, -360f), new[] { V(.7f, .5f), V(.4f, .5f) } },
-                ['H'] = new[] { new[] { V(0, 0), V(0, 1) }, new[] { V(.7f, 0), V(.7f, 1) }, new[] { V(0, .5f), V(.7f, .5f) } },
-            };
-        }
+            float capUnits = 0f;
+            foreach (var cont in font.Outline('H')) foreach (var v in cont) capUnits = Mathf.Max(capUnits, v.y);
+            float k = capPx / capUnits;
 
-        // Draws a line of text centred on (cx, cy), scaled so it is `width` pixels wide.
-        void TextLine(string s, float cx, float cy, float width, float letterH, Color col)
-        {
-            float cellW = letterH * 0.7f, gap = letterH * 0.34f;
-            float total = s.Length * cellW + (s.Length - 1) * gap;
-            float k = width > 0f ? width / total : 1f;
-            float x = cx - total * k * 0.5f, thick = letterH * k * 0.085f;
+            float total = 0f;
+            for (int i = 0; i < s.Length; i++) total += font.Advance(s[i]) * k + (i < s.Length - 1 ? tracking : 0f);
+            float x = cx - total * 0.5f;
             foreach (char ch in s)
             {
-                if (Glyphs.TryGetValue(ch, out var strokes))
-                    foreach (var stroke in strokes)
-                        for (int i = 0; i + 1 < stroke.Length; i++)
-                            Line(new Vector2(x + stroke[i].x * letterH * k, cy - letterH * k * 0.5f + stroke[i].y * letterH * k),
-                                 new Vector2(x + stroke[i + 1].x * letterH * k, cy - letterH * k * 0.5f + stroke[i + 1].y * letterH * k),
-                                 thick, col);
-                x += (cellW + gap) * k;
+                var contours = new List<Vector2[]>();
+                foreach (var cont in font.Outline(ch))
+                {
+                    var px2 = new Vector2[cont.Length];
+                    for (int i = 0; i < cont.Length; i++) px2[i] = new Vector2(x + cont[i].x * k, baselineY - cont[i].y * k);
+                    contours.Add(px2);
+                }
+                FillContours(contours, col);
+                x += font.Advance(ch) * k + tracking;
             }
         }
 
-        // "COVENANT" over "NIGHT" in warm torch gold, with a soft glow behind.
-        public void Title(float cx, float cy, float width)
+        // "COVENANT" over "NIGHT" in Cinzel, torch gold, with a soft glow behind.
+        public void Title(TtfOutlines font, float cx, float cy, float capPx)
         {
             var gold = new Color(1f, 0.82f, 0.48f, 1f);
-            Glow(cx, cy, width * 0.45f, Warm, 0.10f);
-            TextLine("COVENANT", cx, cy - 46, width, 62f, gold);
-            TextLine("NIGHT", cx, cy + 46, width * 0.61f, 62f, gold);
+            Glow(cx, cy, W * 0.4f, Warm, 0.10f);
+            TextLine(font, "COVENANT", cx, cy - capPx * 0.2f, capPx, capPx * 0.22f, gold);
+            TextLine(font, "NIGHT", cx, cy + capPx * 1.35f, capPx, capPx * 0.22f, gold);
         }
 
         public Texture2D ToTexture()
@@ -493,7 +497,7 @@ public static class IllustrationGenerator
         c.Figure(cx + 24 * u, baseY, 92 * u, dark);
         if (title) c.Rect(0, baseY, w, totalH, new Color(0.02f, 0.02f, 0.05f, 1f));
         c.Vignette(0.75f);
-        if (title) c.Title(w / 2f, h + band * 0.5f, w * 0.52f);
+        if (title) c.Title(new TtfOutlines("Assets/Fonts/Cinzel.ttf"), w / 2f, h + band * 0.5f, 68f);
         return c;
     }
 
