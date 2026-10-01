@@ -24,8 +24,8 @@ flow does not work for Unity 6 or your licence type, game.ci documents the alter
 ## Cutting a release
 
 ```
-git tag v0.1.0
-git push origin v0.1.0
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 The workflow builds the Windows and macOS players, packages them, and attaches the installer and the disk image to a new release for the tag.

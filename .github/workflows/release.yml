@@ -1,6 +1,6 @@
 # Builds the Windows installer and the macOS disk image and attaches both to a GitHub Release.
 #
-#   Release:  git tag v0.1.0 && git push origin v0.1.0
+#   Release:  git tag v1.0.0 && git push origin v1.0.0
 #   Dry run:  Actions > Release > Run workflow (builds everything, uploads the files as run artifacts, no release)
 #
 # Needs a Unity licence in the repository secrets; see docs/RELEASING.md.

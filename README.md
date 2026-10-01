@@ -139,7 +139,7 @@ The result is `installer/Output/CovenantNight-Setup.exe`, which is not committed
 
 ### Releases (Windows installer + macOS disk image)
 
-Pushing a version tag (`git tag v0.1.0 && git push origin v0.1.0`) runs the [release workflow](.github/workflows/release.yml), which builds both players on GitHub's runners and attaches `CovenantNight-Setup.exe` (Windows) and `CovenantNight-<version>-macOS.dmg` (macOS) to a GitHub Release. The one-time Unity licence setup and the macOS Gatekeeper notes are in [docs/RELEASING.md](docs/RELEASING.md). To build on a Mac by hand, use `installer/mac/make-dmg.sh`.
+Pushing a version tag (`git tag v1.0.0 && git push origin v1.0.0`) runs the [release workflow](.github/workflows/release.yml), which builds both players on GitHub's runners and attaches `CovenantNight-Setup.exe` (Windows) and `CovenantNight-<version>-macOS.dmg` (macOS) to a GitHub Release. The one-time Unity licence setup and the macOS Gatekeeper notes are in [docs/RELEASING.md](docs/RELEASING.md). To build on a Mac by hand, use `installer/mac/make-dmg.sh`.
 
 ## Screenshots
 
