@@ -86,19 +86,19 @@ Gibeah is divided into five linearly connected zones, each with at least two rou
 
 ## Controls
 
-| Action | Keyboard / mouse | Gamepad |
-|--------|------------------|---------|
-| Move / look | WASD / mouse | Left stick / right stick |
-| Sneak (silent) | Left Shift (hold) | B / Circle (hold) |
-| Sprint (loud) | Left Ctrl or Cmd (hold) | L3 |
-| Shadow Step | Space (hold, beside a wall) | A / Cross (hold) |
-| Throw a stone | Left mouse | X / Square |
-| Drop a decoy | G | Right Shoulder |
-| David: Follow / Wait / Run | 1 / 2 / 3 | D-pad left / right / down |
-| David: toggle Follow / Wait | E | Y / Triangle |
-| Hush David | Q | Left Shoulder |
-| Harp Calm | H | D-pad up |
-| Pause menu (controls, settings, main menu, quit) | Esc | Start |
+| Action | Keyboard / mouse | Xbox | PlayStation |
+|--------|------------------|------|-------------|
+| Move / look | WASD / mouse | Left stick / right stick | Left stick / right stick |
+| Sneak (silent) | Left Shift (hold) | B (hold) | Circle (hold) |
+| Sprint (loud) | Left Ctrl or Cmd (hold) | Click left stick (LS) | L3 |
+| Shadow Step | Space (hold, beside a wall) | A (hold) | Cross (hold) |
+| Throw a stone | Left mouse | X | Square |
+| Drop a decoy | G | RB | R1 |
+| David: Follow / Wait / Run | 1 / 2 / 3 | D-pad left / right / down | D-pad left / right / down |
+| David: toggle Follow / Wait | E | Y | Triangle |
+| Hush David | Q | LB | L1 |
+| Harp Calm | H | D-pad up | D-pad up |
+| Pause menu (controls, settings, main menu, quit) | Esc | Menu | Options |
 
 ## Difficulty
 

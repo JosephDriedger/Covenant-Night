@@ -595,17 +595,22 @@ public static class PersistentBuilder
         var cShade = MakeImage(controls, "Shade", new Color(0.02f, 0.02f, 0.045f, 0.96f));
         Stretch(cShade.rectTransform);
         MakeText(controls, "Heading", "Controls", 80, Gold, mid, mid, new Vector2(0, 450), new Vector2(1200, 110), TextAlignmentOptions.Center, FontStyles.Bold);
-        MakeColumn(controls, "KeyboardHeader", "Keyboard & Mouse", 30, Gold, -380, 375, 620, 44).fontStyle = FontStyles.Bold;
-        MakeColumn(controls, "GamepadHeader", "Gamepad", 30, Gold, 250, 375, 620, 44).fontStyle = FontStyles.Bold;
+        // Four columns: action, keyboard & mouse, Xbox, PlayStation (rows line up across all four).
+        MakeColumn(controls, "KeyboardHeader",    "Keyboard & Mouse", 30, Gold, -500, 375, 470, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "XboxHeader",        "Xbox",             30, Gold,  -40, 375, 440, 44).fontStyle = FontStyles.Bold;
+        MakeColumn(controls, "PlayStationHeader", "PlayStation",      30, Gold,  410, 375, 520, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "Actions",
             "Move\nLook\nSneak (Silent)\nSprint (Loud)\nShadow-Step at a Wall\nThrow a Stone\nDrop a Decoy\nDavid: Follow, Wait, Run\nHush David\nHarp\nPause",
-            23, Parchment, -880, 325, 480, 420);
+            23, Parchment, -900, 325, 390, 420);
         MakeColumn(controls, "Keyboard",
-            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft Click\nG\n1, 2, 3 (E Toggles Follow and Wait)\nQ\nH\nEsc",
-            23, Parchment, -380, 325, 620, 420);
-        MakeColumn(controls, "Gamepad",
-            "Left Stick\nRight Stick\nHold B / Circle\nClick L3\nHold A / Cross\nX / Square\nRight Shoulder\nD-Pad Left, Right, Down (Y Toggles)\nLeft Shoulder\nD-Pad Up\nStart",
-            23, Parchment, 250, 325, 620, 420);
+            "W A S D\nMouse\nHold Shift\nHold Ctrl or Cmd\nHold Space\nLeft Click\nG\n1, 2, 3  (E toggles Follow / Wait)\nQ\nH\nEsc",
+            23, Parchment, -500, 325, 470, 420);
+        MakeColumn(controls, "Xbox",
+            "Left Stick\nRight Stick\nHold B\nClick Left Stick (LS)\nHold A\nX\nRB\nD-Pad Left, Right, Down  (Y toggles)\nLB\nD-Pad Up\nMenu",
+            23, Parchment, -40, 325, 440, 420);
+        MakeColumn(controls, "PlayStation",
+            "Left Stick\nRight Stick\nHold Circle\nClick L3\nHold Cross\nSquare\nR1\nD-Pad Left, Right, Down  (Triangle toggles)\nL1\nD-Pad Up\nOptions",
+            23, Parchment, 410, 325, 520, 420);
         MakeColumn(controls, "NotesHeader", "Field Notes", 32, Gold, -880, -85, 800, 44).fontStyle = FontStyles.Bold;
         MakeColumn(controls, "Notes",
             "Guard cones: green sees nothing, amber is suspicious, red is chasing you.\n" +
