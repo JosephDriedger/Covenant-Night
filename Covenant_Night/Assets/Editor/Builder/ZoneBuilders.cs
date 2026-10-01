@@ -528,6 +528,16 @@ public static class ZoneBuilders
         box.isTrigger = true; box.size = new Vector3(12, 3, 7);
         var seq = finale.AddComponent<GateFinalSequence>();
 
+        // the same wayfinding shaft of light as the other zones' exits, rising just beyond the gate
+        var gateBeacon = new GameObject("GateBeacon");
+        gateBeacon.transform.SetParent(k.envRoot, false);
+        foreach (var (bname, w) in new[] { ("Beacon", 1.8f), ("BeaconCore", 0.7f) })
+        {
+            var b = PrefabFactory.Prim(PrimitiveType.Cylinder, bname, gateBeacon.transform, V3(0, 15f, 66f), new Vector3(w, 15f, w), k.M.exitBeam);
+            b.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+        seq.beacon = gateBeacon;
+
         Transform Mark(string name, Vector3 pos, float yaw)
         {
             var t = new GameObject(name).transform;

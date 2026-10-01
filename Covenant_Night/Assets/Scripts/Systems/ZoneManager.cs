@@ -28,6 +28,7 @@ public class ZoneManager : MonoBehaviour
 
     public int  CurrentZoneIndex { get; private set; } = -1;
     public ZoneEntry CurrentEntry { get; private set; }
+    public Transform CurrentExitPoint { get; private set; }
     public bool IsTransitioning   { get; private set; }
 
     string _loadedZoneScene;
@@ -133,6 +134,7 @@ public class ZoneManager : MonoBehaviour
             yield return SceneManager.UnloadSceneAsync(_loadedZoneScene);
             _loadedZoneScene = null;
             CurrentEntry = null;
+            CurrentExitPoint = null;
         }
 
         yield return LoadZone(index, restoreCheckpoint);
@@ -228,6 +230,7 @@ public class ZoneManager : MonoBehaviour
 
         Scene scene = SceneManager.GetSceneByName(sceneName);
         CurrentEntry = FindEntry(scene);
+        CurrentExitPoint = FindExitPoint(scene);
         GameDifficulty.ZoneIndex = index;
         GameDifficulty.ZoneScale = CurrentEntry != null ? CurrentEntry.difficulty : 1f;
         Torch.AmbientVisibility = CurrentEntry != null ? CurrentEntry.ambientVisibility : 0.35f;
@@ -271,6 +274,19 @@ public class ZoneManager : MonoBehaviour
 
         HUD.Instance?.UpdateZone(index + 1, zoneSceneNames.Length);
         HUD.Instance?.UpdateBestTime(ZoneTimes.Format(ZoneTimes.GetBest(sceneName)));
+    }
+
+    // Where the HUD's exit marker points: the zone's exit arch, or the gate finale in the last zone.
+    static Transform FindExitPoint(Scene scene)
+    {
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            var exit = root.GetComponentInChildren<ZoneExit>(true);
+            if (exit != null) return exit.transform;
+            var gate = root.GetComponentInChildren<GateFinalSequence>(true);
+            if (gate != null) return gate.transform;
+        }
+        return null;
     }
 
     static ZoneEntry FindEntry(Scene scene)

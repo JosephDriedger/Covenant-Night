@@ -58,7 +58,9 @@ public static class PersistentBuilder
         var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         var t = go.AddComponent<TextMeshProUGUI>();
-        t.font = TMP_Settings.defaultFontAsset;
+        // Titles and headings (bold or large) are set in the inscriptional display face, reading text in the serif.
+        bool display = (style & FontStyles.Bold) != 0 || size >= 76f;
+        t.font = (display ? FontLibrary.Display : FontLibrary.Text) ?? TMP_Settings.defaultFontAsset;
         t.text = text;
         t.fontSize = size;
         t.color = color;
@@ -294,6 +296,29 @@ public static class PersistentBuilder
         rr.anchorMin = rr.anchorMax = new Vector2(0.5f, 0.5f); rr.pivot = new Vector2(0.5f, 0.5f);
         rr.sizeDelta = new Vector2(7, 7); rr.anchoredPosition = Vector2.zero;
         hud.reticle = ret.gameObject;
+
+        // exit marker: a pale diamond and distance over the zone's exit, pinned to the screen edge when off screen
+        var exitInd = canvas.AddComponent<ExitIndicator>();
+        var mk = new GameObject("ExitMarker", typeof(RectTransform));
+        mk.transform.SetParent(canvas.transform, false);
+        var mrt = mk.GetComponent<RectTransform>();
+        mrt.anchorMin = mrt.anchorMax = mrt.pivot = new Vector2(0.5f, 0.5f);
+        mrt.sizeDelta = new Vector2(220, 90);
+        var mg = mk.AddComponent<CanvasGroup>();
+        mg.alpha = 0f; mg.interactable = false; mg.blocksRaycasts = false;
+        var exitTint = new Color(0.88f, 0.95f, 1f, 0.95f);
+        var diamond = MakeImage(mk.transform, "Diamond", exitTint).rectTransform;
+        diamond.anchorMin = diamond.anchorMax = diamond.pivot = new Vector2(0.5f, 0.5f);
+        diamond.anchoredPosition = new Vector2(0, 12); diamond.sizeDelta = new Vector2(24, 24);
+        diamond.localRotation = Quaternion.Euler(0, 0, 45);
+        var pip = MakeImage(mk.transform, "Pip", new Color(0.05f, 0.07f, 0.12f, 0.9f)).rectTransform;
+        pip.anchorMin = pip.anchorMax = pip.pivot = new Vector2(0.5f, 0.5f);
+        pip.anchoredPosition = new Vector2(0, 12); pip.sizeDelta = new Vector2(10, 10);
+        pip.localRotation = Quaternion.Euler(0, 0, 45);
+        var exitLabel = MakeText(mk.transform, "Label", "Exit", 26, exitTint, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -20), new Vector2(220, 36), TextAlignmentOptions.Center);
+        exitInd.marker = mrt;
+        exitInd.label = exitLabel;
+        exitInd.group = mg;
         return hud;
     }
 
@@ -415,7 +440,8 @@ public static class PersistentBuilder
         c.fadeDuration = 0.06f;
         b.colors = c;
 
-        MakeText(img.transform, "Label", label, fontSize, Parchment, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, size, TextAlignmentOptions.Center);
+        var lt = MakeText(img.transform, "Label", label, fontSize, Parchment, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, size, TextAlignmentOptions.Center);
+        if (FontLibrary.Display != null) lt.font = FontLibrary.Display;
         return b;
     }
 
@@ -522,7 +548,7 @@ public static class PersistentBuilder
         MakeText(diff, "Heading", "Choose Your Night", 96, Gold, mid, mid, new Vector2(0, 390), new Vector2(1500, 130), TextAlignmentOptions.Center, FontStyles.Bold);
         MakeText(diff, "Note", "On Easy, Medium and Hard, a capture only restarts the current zone.", 34, Parchment, mid, mid, new Vector2(0, 300), new Vector2(1500, 50), TextAlignmentOptions.Center);
         var dSize = new Vector2(1100, 104);
-        string Sub(string s) => "\n<size=62%><color=#C9C3B0>" + s + "</color></size>";
+        string Sub(string s) => "\n<font=\"" + FontLibrary.TextName + "\"><size=62%><color=#C9C3B0>" + s + "</color></size></font>";
         ctl.easyBtn     = MakeButton(diff, "Easy",     "Easy" + Sub("Slower, near-sighted guards. More stones and more time to hide."), new Vector2(0, 170), dSize);
         ctl.mediumBtn   = MakeButton(diff, "Medium",   "Medium" + Sub("The intended experience."), new Vector2(0, 50), dSize);
         ctl.hardBtn     = MakeButton(diff, "Hard",     "Hard" + Sub("Keener guards, less time to hide and fewer stones."), new Vector2(0, -70), dSize);
@@ -613,6 +639,7 @@ public static class PersistentBuilder
     static void BuildCredits(FailStateHandler fail)
     {
         var canvas = MakeCanvas("CreditsPanel", 80);
+        canvas.AddComponent<GraphicRaycaster>();
         var group = Group(canvas, 0f);
         var t = canvas.transform;
         var bg = MakeImage(t, "Black", new Color(0.01f, 0.01f, 0.03f, 1f));
@@ -623,10 +650,13 @@ public static class PersistentBuilder
         MakeText(t, "Body",
             "A stealth game of loyalty, shadow, and sacrifice\nBased on 1 Samuel 19 and 20\n\n" +
             "Design, code, sound and illustration by one person.\n" +
-            "See CREDITS.txt for attribution.\n\n" +
+            "Typefaces: Cinzel and Cardo, under the SIL Open Font License.\n\n" +
             "Thank you for playing.",
             32, new Color(0.85f, 0.83f, 0.78f), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -400), new Vector2(1500, 420), TextAlignmentOptions.Top);
-        MakeText(t, "Prompt", "Press Space, Enter or A to Play Again", 28, new Color(1, 1, 1, 0.55f), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(900, 40), TextAlignmentOptions.Center);
+
+        var btnSize = new Vector2(380, 76);
+        fail.playAgainBtn = MakeButton(t, "PlayAgain", "Play Again", new Vector2(-210, -390), btnSize);
+        fail.mainMenuBtn  = MakeButton(t, "MainMenu",  "Main Menu",  new Vector2(210, -390), btnSize);
 
         fail.winPanel = group;
         canvas.SetActive(false);

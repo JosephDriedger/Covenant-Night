@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Audio;
+using UnityEngine.Rendering;
 using TMPro;
 
 // Builds every gameplay prefab from primitives (no custom modelling): Jonathan, David, three guard types,
@@ -222,11 +223,23 @@ public static class PrefabFactory
         var lockGo = Prim(PrimitiveType.Cube, "LockBarrier", root.transform, new Vector3(0, 1.6f, 0.4f), new Vector3(8f, 3.2f, 0.12f), m.lockRed);
         lockGo.SetActive(false);
 
+        // Wayfinding: a pale shaft of light rising from the gateway, visible over the rooftops from anywhere in
+        // the zone, and a glowing threshold across the opening itself.
+        var beacon = Prim(PrimitiveType.Cylinder, "Beacon", root.transform, new Vector3(0, 15f, 0.6f), new Vector3(1.8f, 15f, 1.8f), m.exitBeam);
+        var core   = Prim(PrimitiveType.Cylinder, "BeaconCore", root.transform, new Vector3(0, 15f, 0.6f), new Vector3(0.7f, 15f, 0.7f), m.exitBeam);
+        var sill   = Prim(PrimitiveType.Cube, "Threshold", root.transform, new Vector3(0, 0.03f, 0), new Vector3(8f, 0.02f, 1.6f), m.exitGlow);
+        foreach (var r in new[] { beacon, core, sill })
+        {
+            var rend = r.GetComponent<Renderer>();
+            rend.shadowCastingMode = ShadowCastingMode.Off;
+            rend.receiveShadows = false;
+        }
+
         var lg = new GameObject("ExitGlow");
         lg.transform.SetParent(root.transform, false);
         lg.transform.localPosition = new Vector3(0, 3.3f, -0.5f);
         var l = lg.AddComponent<Light>();
-        l.type = LightType.Point; l.color = new Color(1f, 0.85f, 0.5f); l.range = 8f; l.intensity = 1.2f;
+        l.type = LightType.Point; l.color = new Color(0.85f, 0.93f, 1f); l.range = 11f; l.intensity = 2.2f;
 
         var ze = root.AddComponent<ZoneExit>();
         ze.lockVisual = lockGo;

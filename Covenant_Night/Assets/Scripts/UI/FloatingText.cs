@@ -11,12 +11,18 @@ public class FloatingText : MonoBehaviour
     Vector3 _start;
     Camera _cam;
 
+    static TMP_FontAsset _font;
+    static bool _fontLoaded;
+
     public static FloatingText Spawn(Vector3 worldPosition, string message, Color color, float size = 3f, float life = 1.6f)
     {
+        if (!_fontLoaded) { _font = Resources.Load<TMP_FontAsset>("Fonts & Materials/Cardo SDF"); _fontLoaded = true; }
+
         var go = new GameObject("FloatingText");
         go.transform.position = worldPosition;
         var ft = go.AddComponent<FloatingText>();
         ft._tmp = go.AddComponent<TextMeshPro>();
+        if (_font != null) ft._tmp.font = _font;
         ft._tmp.text = message;
         ft._tmp.fontSize = size;
         ft._tmp.color = color;

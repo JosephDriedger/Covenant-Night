@@ -40,6 +40,9 @@ public class GateFinalSequence : MonoBehaviour
     public Transform shotEpilogue;          // from inside the open gateway, back toward Jonathan at the threshold
     public Transform lookAtGate;
 
+    [Tooltip("Wayfinding light beyond the gate; switched off once either ending begins.")]
+    public GameObject beacon;
+
     [Header("Audio")]
     public AudioSource sfxSource;
     public AudioClip   gateCreak;
@@ -122,6 +125,7 @@ public class GateFinalSequence : MonoBehaviour
         var story = StoryPanelController.Instance;
 
         GameManager.Instance.Pause();
+        if (beacon != null) beacon.SetActive(false);
         AlarmSystem.Instance?.Reset();
         david.SetCutsceneControl(true);
 
@@ -199,6 +203,7 @@ public class GateFinalSequence : MonoBehaviour
         var story = StoryPanelController.Instance;
 
         GameManager.Instance.Pause();
+        if (beacon != null) beacon.SetActive(false);
         david.SetCutsceneControl(true);
 
         // The commander leaves his post to confront Jonathan, which is what leaves the gate unwatched.

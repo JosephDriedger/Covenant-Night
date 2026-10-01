@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using TMPro;
 
 // Listens for GameManager fail/win events and drives the UI response.
@@ -22,6 +24,8 @@ public class FailStateHandler : MonoBehaviour
     [Header("Win / Credits UI")]
     public CanvasGroup winPanel;
     public TextMeshProUGUI creditsSubText;
+    public Button playAgainBtn;
+    public Button mainMenuBtn;
     public string winSubText = "David is beyond the gate. The covenant holds.";
     public string alternateSubText = "Jonathan is taken, but David is free. The covenant holds, even at its cost.";
 
@@ -124,12 +128,25 @@ public class FailStateHandler : MonoBehaviour
             yield return Fade(winPanel, 0f, 1f, 1.5f);
         }
 
-        // Credits: wait, then any key restarts the whole game from the Persistent scene
+        // Credits: after a short pause the Play Again / Main Menu buttons become usable (mouse, keyboard or pad).
         yield return new WaitForSecondsRealtime(creditsInputDelay);
-        while (!InputReader.ConfirmPressedThisFrame()) yield return null;
-        MenuController.SkipTitleOnce = true;
-        SceneManager.LoadScene("Persistent");     // Single mode: unloads every zone and rebuilds all managers
+        if (playAgainBtn != null) playAgainBtn.onClick.AddListener(PlayAgain);
+        if (mainMenuBtn != null)  mainMenuBtn.onClick.AddListener(ReturnToMainMenu);
+        if (winPanel != null) { winPanel.interactable = true; winPanel.blocksRaycasts = true; }
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        if (EventSystem.current != null && playAgainBtn != null)
+            EventSystem.current.SetSelectedGameObject(playAgainBtn.gameObject);
     }
+
+    // Reloading Persistent (single mode) unloads every zone and rebuilds all managers.
+    void PlayAgain()
+    {
+        MenuController.SkipTitleOnce = true;
+        SceneManager.LoadScene("Persistent");
+    }
+
+    void ReturnToMainMenu() => SceneManager.LoadScene("Persistent");
 
     IEnumerator Fade(CanvasGroup cg, float from, float to, float duration)
     {

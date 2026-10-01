@@ -27,6 +27,9 @@ public static class CovenantNightBuilder
         EnsureTagsAndLayers();
         ConfigureProject();
 
+        Step("Building font assets (Cinzel, Cardo)");
+        FontLibrary.Build();
+
         Step("Synthesising audio");
         var audio = AudioLib.Build();
 

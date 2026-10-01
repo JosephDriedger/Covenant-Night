@@ -440,6 +440,7 @@ public class ZoneKit
         var lintel = go.transform.Find("Lintel");
         lintel.localScale = new Vector3(width + 2.6f, 0.5f, 1f);
         go.transform.Find("LockBarrier").localScale = new Vector3(width, 3.2f, 0.12f);
+        go.transform.Find("Threshold").localScale = new Vector3(width, 0.02f, 1.6f);
         PlaceTorch(x - px - 1.2f, z - 1f);
         PlaceTorch(x + px + 1.2f, z - 1f);
         return go.GetComponent<ZoneExit>();

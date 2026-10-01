@@ -12,7 +12,14 @@ in this build are original and generated procedurally by the project's editor to
 Engine and packages
 -------------------
 Unity 6 (Universal Render Pipeline), Input System, AI Navigation, TextMeshPro (Unity Technologies).
-Default UI font: Liberation Sans (SIL Open Font License), shipped with TextMeshPro.
+
+Fonts
+-----
+Cinzel by The Cinzel Project Authors — https://github.com/NDISCOVER/Cinzel — SIL Open Font License 1.1
+    Copyright 2020 The Cinzel Project Authors. Used for titles, headings and buttons.
+Cardo by David J. Perry — https://fonts.google.com/specimen/Cardo — SIL Open Font License 1.1
+    Copyright (c) 2002-2011, David J. Perry. Used for story text and on-screen readouts.
+Both licenses are included in full in Covenant_Night/Assets/Fonts.
 
 Placeholders that may be replaced later
 ---------------------------------------

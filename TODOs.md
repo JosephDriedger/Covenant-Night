@@ -25,6 +25,9 @@ menu **Covenant Night > Build Everything**), so the old manual editor checklist 
 - [x] Cinematic intro, zone-transition and ending cutscenes: live camera shots and character performance (ProceduralCharacterAnim gestures) over the 3D scene, captions overlaid, in place of the old static illustration panels
 - [x] Intro cutscene opens with Saul hurling his spear at David in the throne room (new Saul character + thrown-spear prop), then Jonathan actually walks David out, hushed and crouched, to the zone's real starting point
 - [x] Cutscene polish pass, checked frame by frame in headless captures of the built player: an enclosed, torchlit throne room; shots framed on the characters (no floor-level aim points); letterbox bars, a camera key light and a hidden HUD during cutscenes; the zone title card after the cutscene instead of over it; no blank-illustration flash; captions that can't be skipped by stray movement keys
+- [x] Clearer exits: a shaft of light over each zone's exit (and beyond the eastern gate), a glowing threshold, and an on-screen exit marker with distance that pins to the screen edge when the exit is out of view
+- [x] Typography: Cinzel (inscriptional capitals) for titles, headings and buttons, Cardo (a scholarly serif) for story text; both SIL Open Font License, credited in CREDITS.txt
+- [x] End screen: Play Again and Main Menu buttons (mouse, keyboard or gamepad)
 - [x] Animation fixes: ankle joints, arms and cloak hang under gravity when leaning (no board-stiff cloak), robe shortens over bent knees when crouching, seated pose, harp held in the hands
 - [x] Difficulty: Easy / Medium / Hard (a capture restarts the zone) and Hardcore (one life, faster and smarter guards); guard sharpness and moonlight rise zone by zone; every zone verified beatable in every mode
 - [x] New Game+: finishing the game once unlocks a Mixed-difficulty picker (Easy/Medium/Hard chosen per zone)

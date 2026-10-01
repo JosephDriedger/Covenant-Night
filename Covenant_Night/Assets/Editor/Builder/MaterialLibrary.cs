@@ -13,7 +13,7 @@ public class Mats
     public Material hairBlack, hairBrown, hairGrey, leather, straw;
     public Material civA, civB, civC, civD, civE, civF;
     public Material skin, jonRobe, jonSash, jonCloak, davRobe, davScarf, guardBody, guardSentry, cmdBody, helmet, spearWood, plume, dogFur;
-    public Material hideDisc, waypointRing, waypointBeam, lockRed, cone, aimMarker;
+    public Material hideDisc, waypointRing, waypointBeam, lockRed, cone, aimMarker, exitBeam, exitGlow;
 
     public Material Wall(int i)
     {
@@ -100,6 +100,9 @@ public static class MaterialLibrary
         m.glowParticle    = ParticleAdditive("GlowParticle",    TextureLib.Dot, new Color(1f, 1f, 1f, 1f));
         m.hideDisc     = TransparentUnlit("HidingSpotDisc", new Color(0.3f, 0.5f, 1f, 0.28f));
         m.waypointRing = TransparentUnlit("WaypointRing",   new Color(1f, 0.85f, 0.3f, 0.45f));
+        // Zone exits: pale moonlight white, distinct from gold waypoints, blue hiding spots and the red lock
+        m.exitBeam     = TransparentUnlit("ExitBeam",       new Color(0.85f, 0.95f, 1f, 0.14f));
+        m.exitGlow     = TransparentUnlit("ExitGlow",       new Color(0.85f, 0.95f, 1f, 0.55f));
         m.waypointBeam = TransparentUnlit("WaypointBeam",   new Color(1f, 0.85f, 0.3f, 0.25f));
         m.lockRed      = TransparentUnlit("ExitLocked",     new Color(1f, 0.1f, 0.05f, 0.45f));
         m.cone         = GetOrCreate("DetectionCone", "Sprites/Default");     // vertex-coloured, fades toward the far edge
