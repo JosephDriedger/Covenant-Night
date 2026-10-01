@@ -116,6 +116,25 @@ Open `Covenant_Night` in Unity 6000.3.14f1. The scenes, prefabs, materials, audi
 
 Windows, macOS and Linux builds are under **Covenant Night > Build ... Player**. The Windows player is built and verified end to end. Console notes and requirements are in [docs/PLATFORMS.md](docs/PLATFORMS.md).
 
+### Windows installer
+
+The installer is an [Inno Setup 6](https://jrsoftware.org/isinfo.php) script in `installer/`, with a night-themed wizard (side panel, header image and icon).
+
+1. Build the Windows player, which writes `Covenant_Night/Builds/Windows`:
+
+   ```
+   Unity -batchmode -nographics -projectPath Covenant_Night -executeMethod CovenantNightBuilder.BuildWindowsPlayerBatch
+   ```
+
+   (or **Covenant Night > Build Windows Player** in the Editor).
+2. Compile the installer:
+
+   ```
+   "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\CovenantNight.iss
+   ```
+
+The result is `installer/Output/CovenantNight-Setup.exe`, which is not committed. Bump `AppVersion` in `installer/CovenantNight.iss` for a new release. The wizard images and icon in `installer/` are plain files and can be replaced.
+
 ## Screenshots
 
 Renders of each zone are in [docs/screenshots](docs/screenshots).
