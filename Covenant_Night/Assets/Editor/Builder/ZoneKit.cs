@@ -439,11 +439,36 @@ public class ZoneKit
         go.transform.Find("PillarR").localPosition = new Vector3(px, 1.9f, 0);
         var lintel = go.transform.Find("Lintel");
         lintel.localScale = new Vector3(width + 2.6f, 0.5f, 1f);
-        go.transform.Find("LockBarrier").localScale = new Vector3(width, 3.2f, 0.12f);
+        var barrier = go.transform.Find("LockBarrier");
+        barrier.localScale = new Vector3(width, 3.2f, 0.12f);
+        barrier.localPosition = new Vector3(0, 1.6f, -0.75f);       // in front of the shut gate, so it reads
         go.transform.Find("Threshold").localScale = new Vector3(width, 0.02f, 1.6f);
         PlaceTorch(x - px - 1.2f, z - 1f);
         PlaceTorch(x + px + 1.2f, z - 1f);
-        return go.GetComponent<ZoneExit>();
+
+        // A wooden double gate in the arch: shut until Jonathan approaches, then it swings open away from him.
+        var ze = go.GetComponent<ZoneExit>();
+        ze.doorL = GateLeaf(go.transform, "GateL", new Vector3(-width * 0.5f, 0f, -0.3f), +1f, width * 0.5f);
+        ze.doorR = GateLeaf(go.transform, "GateR", new Vector3(+width * 0.5f, 0f, -0.3f), -1f, width * 0.5f);
+        ze.sfx = PrefabFactory.AddSource(go, null, MX.sfx, false, false, 0.9f, 40f);
+        ze.creak = A.creak;
+        return ze;
+    }
+
+    // One wooden, iron-banded door leaf on a hinge pivot; dir is the side the leaf extends toward from the
+    // hinge (+1 = +x). Rotating the hinge about y swings the leaf.
+    public Transform GateLeaf(Transform parent, string name, Vector3 hingeLocal, float dir, float leafWidth, float h = 3.6f, float face = -1f)
+    {
+        const float thick = 0.16f;
+        var hinge = new GameObject(name + "Hinge").transform;
+        hinge.SetParent(parent, false);
+        hinge.localPosition = hingeLocal;
+        float cx = dir * leafWidth * 0.5f;
+        PrefabFactory.Prim(PrimitiveType.Cube, name, hinge, new Vector3(cx, h * 0.5f, 0f), new Vector3(leafWidth - 0.06f, h, thick), M.woodDark);
+        foreach (float y in new[] { h * 0.15f, h * 0.5f, h * 0.85f })
+            PrefabFactory.Prim(PrimitiveType.Cube, name + "Band", hinge, new Vector3(cx, y, face * (thick * 0.5f + 0.02f)), new Vector3(leafWidth - 0.1f, 0.13f, 0.05f), M.metal);
+        PrefabFactory.Prim(PrimitiveType.Cylinder, name + "Ring", hinge, new Vector3(dir * (leafWidth - 0.35f), Mathf.Min(1.5f, h * 0.45f), face * (thick * 0.5f + 0.05f)), new Vector3(0.18f, 0.02f, 0.18f), M.metal, false, new Vector3(90, 0, 0));
+        return hinge;
     }
 
     public ZoneEntry Entry(string display, string subtitle, Vector2 jonathanXZ, float yaw, Vector2[] runWaypoints, float difficulty = 1f, float ambient = 0.35f)

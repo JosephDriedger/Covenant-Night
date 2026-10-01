@@ -25,6 +25,9 @@ public class IntroCutscene : MonoBehaviour
     public Transform jonathanWatchMark;
     public Transform spearTargetMark;      // where the thrown spear ends up, embedded in the wall
     public Transform planMark;             // where Jonathan stops beside David
+    public Transform throneDoor;           // hinge of the doorway's door; swings open into the passage
+    public AudioSource doorSfx;
+    public AudioClip doorCreak;
     public Transform doorwayInMark;        // just inside the doorway; both pass through it on the way out
     public Transform doorwayLeadMark;      // in the passage beyond the door
     public Transform doorwayFollowMark;
@@ -131,6 +134,7 @@ public class IntroCutscene : MonoBehaviour
         pc.SetCutsceneCrouch(true);
         david.SetCutsceneCrouch(true);
         Coroutine jMove = StartCoroutine(Walk(pc.transform, true, doorwayInMark, doorwayLeadMark));
+        StartCoroutine(OpenDoorAhead(pc.transform));
         yield return new WaitForSecondsRealtime(0.9f);
         Coroutine dMove = StartCoroutine(Walk(david.transform, false, doorwayInMark, doorwayFollowMark));
         yield return new WaitForSecondsRealtime(1.6f);
@@ -162,6 +166,21 @@ public class IntroCutscene : MonoBehaviour
         pc.SetCutsceneCrouch(false);
         david.SetCutsceneCrouch(false);
         david.SetCutsceneControl(false);
+    }
+
+    // Jonathan pushes the door open as he reaches it (it swings away from him, into the passage).
+    IEnumerator OpenDoorAhead(Transform jonathan)
+    {
+        if (throneDoor == null || doorwayInMark == null) yield break;
+        while ((jonathan.position - doorwayInMark.position).sqrMagnitude > 1.6f * 1.6f) yield return null;
+        _jAnim?.PlayRaiseHand(0.8f);
+        if (doorSfx != null && doorCreak != null) doorSfx.PlayOneShot(doorCreak);
+        for (float t = 0f; t < 1.1f; t += Time.unscaledDeltaTime)
+        {
+            throneDoor.localRotation = Quaternion.Euler(0f, 100f * Mathf.SmoothStep(0f, 1f, t / 1.1f), 0f);
+            yield return null;
+        }
+        throneDoor.localRotation = Quaternion.Euler(0f, 100f, 0f);
     }
 
     // Crouched walk through a sequence of marks (so a route can bend through a doorway).

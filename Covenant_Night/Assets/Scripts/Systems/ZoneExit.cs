@@ -14,9 +14,20 @@ public class ZoneExit : MonoBehaviour
     [Tooltip("Red barrier shown while the exit is locked.")]
     public GameObject lockVisual;
 
+    [Header("Gate")]
+    [Tooltip("Hinge pivots of the two door leaves; they swing open (away from the approach) as Jonathan nears and stay shut during an alarm.")]
+    public Transform doorL;
+    public Transform doorR;
+    public float openAngle  = 100f;
+    public float openRadius = 9f;
+    public float openSpeed  = 0.9f;     // fraction of the full swing per second
+    public AudioSource sfx;
+    public AudioClip   creak;
+
     BoxCollider _box;
     bool _fired;
     float _messageCooldown;
+    float _open;
 
     void OnEnable()
     {
@@ -51,8 +62,25 @@ public class ZoneExit : MonoBehaviour
         return p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z && p.y > -1f && p.y < b.max.y;
     }
 
+    void UpdateGate()
+    {
+        if (doorL == null && doorR == null) return;
+        var pc = PlayerController.Instance;
+        bool alarmed = lockDuringAlarm && AlarmSystem.Instance != null && AlarmSystem.Instance.IsAlarmed;
+        bool near = pc != null && pc.transform.position.y > -50f &&
+                    (pc.transform.position - transform.position).sqrMagnitude < openRadius * openRadius;
+        float target = near && !alarmed ? 1f : 0f;
+        if (target > _open && _open <= 0f && sfx != null && creak != null) sfx.PlayOneShot(creak);
+        _open = Mathf.MoveTowards(_open, target, Time.deltaTime * openSpeed);
+
+        float a = Mathf.SmoothStep(0f, 1f, _open) * openAngle;
+        if (doorL != null) doorL.localRotation = Quaternion.Euler(0f, -a, 0f);
+        if (doorR != null) doorR.localRotation = Quaternion.Euler(0f, a, 0f);
+    }
+
     void Update()
     {
+        UpdateGate();
         if (_fired || !JonathanInside()) return;
         if (GameManager.Instance != null && GameManager.Instance.IsPaused) return;
 

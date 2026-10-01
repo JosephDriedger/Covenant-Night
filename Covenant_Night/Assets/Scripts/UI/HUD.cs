@@ -52,7 +52,8 @@ public class HUD : MonoBehaviour
         var cam = ThirdPersonCamera.Instance;
         var story = StoryPanelController.Instance;
         bool cinematic = (cam != null && cam.InShot) || (story != null && story.IsShowing);
-        _group.alpha = Mathf.MoveTowards(_group.alpha, cinematic ? 0f : 1f, Time.unscaledDeltaTime * 3f);
+        // gone at once when a cutscene starts (it usually starts on a cut or under a fade), eased back in after
+        _group.alpha = cinematic ? 0f : Mathf.MoveTowards(_group.alpha, 1f, Time.unscaledDeltaTime * 3f);
     }
 
     void OnDestroy() { if (Instance == this) Instance = null; }
