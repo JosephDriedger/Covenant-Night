@@ -199,6 +199,72 @@ public static class IllustrationGenerator
                 }
         }
 
+        public void Line(Vector2 a, Vector2 b, float thick, Color c)
+        {
+            Vector2 d = (b - a).normalized, n = new Vector2(-d.y, d.x) * thick * 0.5f, e = d * thick * 0.5f;
+            Poly(new[] { a - e + n, b + e + n, b + e - n, a - e - n }, c);
+        }
+
+        // Block capitals on a 0.7 x 1 unit cell (y down), stroked with Line; enough for "COVENANT NIGHT".
+        static readonly Dictionary<char, Vector2[][]> Glyphs = BuildGlyphs();
+
+        static Vector2[] Arc(float a0, float a1)
+        {
+            var p = new Vector2[25];
+            for (int i = 0; i < p.Length; i++)
+            {
+                float t = Mathf.Deg2Rad * Mathf.Lerp(a0, a1, i / (p.Length - 1f));
+                p[i] = new Vector2(0.35f + 0.35f * Mathf.Cos(t), 0.5f + 0.5f * Mathf.Sin(t));
+            }
+            return p;
+        }
+
+        static Dictionary<char, Vector2[][]> BuildGlyphs()
+        {
+            Vector2 V(float x, float y) => new Vector2(x, y);
+            return new Dictionary<char, Vector2[][]>
+            {
+                ['C'] = new[] { Arc(-40f, -320f) },
+                ['O'] = new[] { Arc(0f, 360f) },
+                ['V'] = new[] { new[] { V(0, 0), V(.35f, 1), V(.7f, 0) } },
+                ['E'] = new[] { new[] { V(.65f, 0), V(0, 0), V(0, 1), V(.65f, 1) }, new[] { V(0, .5f), V(.5f, .5f) } },
+                ['N'] = new[] { new[] { V(0, 1), V(0, 0), V(.7f, 1), V(.7f, 0) } },
+                ['A'] = new[] { new[] { V(0, 1), V(.35f, 0), V(.7f, 1) }, new[] { V(.14f, .68f), V(.56f, .68f) } },
+                ['T'] = new[] { new[] { V(0, 0), V(.7f, 0) }, new[] { V(.35f, 0), V(.35f, 1) } },
+                ['I'] = new[] { new[] { V(.35f, 0), V(.35f, 1) }, new[] { V(.12f, 0), V(.58f, 0) }, new[] { V(.12f, 1), V(.58f, 1) } },
+                ['G'] = new[] { Arc(-40f, -360f), new[] { V(.7f, .5f), V(.4f, .5f) } },
+                ['H'] = new[] { new[] { V(0, 0), V(0, 1) }, new[] { V(.7f, 0), V(.7f, 1) }, new[] { V(0, .5f), V(.7f, .5f) } },
+            };
+        }
+
+        // Draws a line of text centred on (cx, cy), scaled so it is `width` pixels wide.
+        void TextLine(string s, float cx, float cy, float width, float letterH, Color col)
+        {
+            float cellW = letterH * 0.7f, gap = letterH * 0.34f;
+            float total = s.Length * cellW + (s.Length - 1) * gap;
+            float k = width > 0f ? width / total : 1f;
+            float x = cx - total * k * 0.5f, thick = letterH * k * 0.085f;
+            foreach (char ch in s)
+            {
+                if (Glyphs.TryGetValue(ch, out var strokes))
+                    foreach (var stroke in strokes)
+                        for (int i = 0; i + 1 < stroke.Length; i++)
+                            Line(new Vector2(x + stroke[i].x * letterH * k, cy - letterH * k * 0.5f + stroke[i].y * letterH * k),
+                                 new Vector2(x + stroke[i + 1].x * letterH * k, cy - letterH * k * 0.5f + stroke[i + 1].y * letterH * k),
+                                 thick, col);
+                x += (cellW + gap) * k;
+            }
+        }
+
+        // "COVENANT" over "NIGHT" in warm torch gold, with a soft glow behind.
+        public void Title(float cx, float cy, float width)
+        {
+            var gold = new Color(1f, 0.82f, 0.48f, 1f);
+            Glow(cx, cy, width * 0.45f, Warm, 0.10f);
+            TextLine("COVENANT", cx, cy - 46, width, 62f, gold);
+            TextLine("NIGHT", cx, cy + 46, width * 0.61f, 62f, gold);
+        }
+
         public Texture2D ToTexture()
         {
             var t = new Texture2D(W, H, TextureFormat.RGBA32, false);
@@ -402,9 +468,10 @@ public static class IllustrationGenerator
 
     // Emblem used for the app icon (square) and the splash logo (wide): a full moon over the city gate, torch-lit,
     // with Jonathan and David as small silhouettes standing in the opening.
-    static Canvas Emblem(int w, int h, int seed)
+    static Canvas Emblem(int w, int totalH, int seed, bool title = false)
     {
-        var c = new Canvas(w, h);
+        int band = title ? 230 : 0, h = totalH - band;
+        var c = new Canvas(w, totalH);
         c.Gradient(Night1, Night2);
         c.Stars(w * h / 1400, seed, h * 6 / 10);
         float u = h / 512f;
@@ -424,7 +491,9 @@ public static class IllustrationGenerator
         var dark = new Color(0.02f, 0.02f, 0.05f, 1f);
         c.Figure(cx - 22 * u, baseY, 112 * u, dark);
         c.Figure(cx + 24 * u, baseY, 92 * u, dark);
+        if (title) c.Rect(0, baseY, w, totalH, new Color(0.02f, 0.02f, 0.05f, 1f));
         c.Vignette(0.75f);
+        if (title) c.Title(w / 2f, h + band * 0.5f, w * 0.52f);
         return c;
     }
 
@@ -439,7 +508,7 @@ public static class IllustrationGenerator
             UnityEngine.Object.DestroyImmediate(tex);
         }
         Save("icon", Emblem(512, 512, 11));
-        Save("splash_logo", Emblem(1024, 576, 12));
+        Save("splash_logo", Emblem(1024, 800, 12, true));
     }
 
     public static Dictionary<string, string> GenerateAll(string folder)
