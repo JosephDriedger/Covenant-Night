@@ -106,3 +106,6 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
 # Local tool settings
+
+# Installer output
+installer/Output/
