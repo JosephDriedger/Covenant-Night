@@ -168,6 +168,13 @@ MonoBehaviour:
   requireDavid: 1
   davidMaxDistance: 6
   lockVisual: {fileID: 5607505665727395090}
+  doorL: {fileID: 0}
+  doorR: {fileID: 0}
+  openAngle: 100
+  openRadius: 9
+  openSpeed: 0.9
+  sfx: {fileID: 0}
+  creak: {fileID: 0}
 --- !u!1 &1208509374948747722
 GameObject:
   m_ObjectHideFlags: 0
