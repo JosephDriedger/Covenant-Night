@@ -34,7 +34,7 @@ MonoBehaviour:
 
 
       David
-      sets down the harp and follows.'
+      slings his harp over his shoulder and follows.'
     sprite: {fileID: 21300000, guid: 8e06c2766017d8847976c9f7d18aae72, type: 3}
   - heading: Slipping Past the Guards
     text: 'Jonathan has trained beside these men and knows how they watch. The glow
