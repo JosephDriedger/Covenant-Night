@@ -3,12 +3,17 @@
 ; 1. Build the player:  Unity -batchmode -projectPath Covenant_Night -executeMethod CovenantNightBuilder.BuildWindowsPlayerBatch
 ;    (or Covenant Night > Build Windows Player in the Editor). It writes Covenant_Night\Builds\Windows.
 ; 2. Compile this script:  ISCC.exe installer\CovenantNight.iss   ->  installer\Output\CovenantNight-Setup.exe
+;    (the release workflow passes /DPlayerDir=<folder> and /DAppVersion=<x.y.z> to override the defaults below)
 
 #define AppName      "Covenant Night"
-#define AppVersion   "0.1.0"
+#ifndef AppVersion
+  #define AppVersion "0.1.0"
+#endif
 #define AppPublisher "Covenant Night"
 #define AppExe       "CovenantNight.exe"
-#define PlayerDir    "..\Covenant_Night\Builds\Windows"
+#ifndef PlayerDir
+  #define PlayerDir "..\Covenant_Night\Builds\Windows"
+#endif
 
 [Setup]
 AppId={{6F2B8C1E-4D37-4A9B-9E15-C07E4A5D1B32}

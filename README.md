@@ -137,6 +137,10 @@ The installer is an [Inno Setup 6](https://jrsoftware.org/isinfo.php) script in 
 
 The result is `installer/Output/CovenantNight-Setup.exe`, which is not committed. Bump `AppVersion` in `installer/CovenantNight.iss` for a new release. The wizard images and icon in `installer/` are plain files and can be replaced.
 
+### Releases (Windows installer + macOS disk image)
+
+Pushing a version tag (`git tag v0.1.0 && git push origin v0.1.0`) runs the [release workflow](.github/workflows/release.yml), which builds both players on GitHub's runners and attaches `CovenantNight-Setup.exe` (Windows) and `CovenantNight-<version>-macOS.dmg` (macOS) to a GitHub Release. The one-time Unity licence setup and the macOS Gatekeeper notes are in [docs/RELEASING.md](docs/RELEASING.md). To build on a Mac by hand, use `installer/mac/make-dmg.sh`.
+
 ## Screenshots
 
 Renders of each zone are in [docs/screenshots](docs/screenshots).
@@ -150,7 +154,8 @@ Covenant_Night/Assets/
 ├── Editor/Builder/ Generators for scenes, prefabs, audio, art and UI
 ├── Prefabs/  Materials/  Audio/  Art/  ScriptableObjects/
 docs/               Game design document, platform notes, screenshots
-installer/          Inno Setup script and night-themed wizard art for the Windows installer
+installer/          Inno Setup script and night-themed wizard art (Windows installer), make-dmg.sh (macOS disk image)
+.github/workflows/  Release workflow: builds both players and publishes the installer and .dmg
 ```
 
 ---

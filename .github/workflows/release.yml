@@ -1,0 +1,124 @@
+# Builds the Windows installer and the macOS disk image and attaches both to a GitHub Release.
+#
+#   Release:  git tag v0.1.0 && git push origin v0.1.0
+#   Dry run:  Actions > Release > Run workflow (builds everything, uploads the files as run artifacts, no release)
+#
+# Needs a Unity licence in the repository secrets; see docs/RELEASING.md.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  UNITY_VERSION: 6000.3.14f1
+  PROJECT_PATH: Covenant_Night
+
+jobs:
+  player:
+    name: Player (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [StandaloneWindows64, StandaloneOSX]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.PROJECT_PATH }}/Library
+          key: Library-${{ matrix.target }}-${{ hashFiles(format('{0}/Packages/manifest.json', env.PROJECT_PATH), format('{0}/ProjectSettings/ProjectVersion.txt', env.PROJECT_PATH)) }}
+          restore-keys: Library-${{ matrix.target }}-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: ${{ matrix.target }}
+          buildName: CovenantNight
+          versioning: None
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: player-${{ matrix.target }}
+          path: build/${{ matrix.target }}
+          if-no-files-found: error
+
+  windows-installer:
+    name: Windows installer
+    needs: player
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: player-StandaloneWindows64
+          path: player
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile the installer
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0-dev' }
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DPlayerDir=$env:GITHUB_WORKSPACE\player" "/DAppVersion=$version" installer\CovenantNight.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CovenantNight-Setup
+          path: installer/Output/CovenantNight-Setup.exe
+          if-no-files-found: error
+
+  mac-dmg:
+    name: macOS disk image
+    needs: player
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: player-StandaloneOSX
+          path: player
+
+      - name: Make the .dmg
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          [ "$GITHUB_REF_TYPE" = "tag" ] || version="0.0.0-dev"
+          bash installer/mac/make-dmg.sh player "installer/Output/CovenantNight-${version}-macOS.dmg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CovenantNight-macOS
+          path: installer/Output/*.dmg
+          if-no-files-found: error
+
+  release:
+    name: GitHub Release
+    if: github.ref_type == 'tag'
+    needs: [windows-installer, mac-dmg]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: CovenantNight-Setup
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: CovenantNight-macOS
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
